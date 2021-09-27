@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	homedir "github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
@@ -29,8 +30,17 @@ This can be configured using a yaml file and the --config flag, or by
 using appropriately named environment variables, for example "nats-name-prefix"
 can be set using an environment variable named "NATS_NAME_PREFIX"
 `,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
+	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		// Bind flags that haven't been set to the values from viper of we have them
+		cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
+			// Bind the flag to viper only if it has a non-empty default
+			if f.DefValue != "" || f.Changed {
+				viper.BindPFlag(f.Name, f)
+			}
+		})
+
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		log.WithFields(log.Fields{
 			"nats-servers":     viper.Get("nats-servers"),
@@ -101,7 +111,7 @@ func initConfig() {
 		viper.SetConfigName(".k8s-source")
 	}
 
-	replacer := strings.NewReplacer(".", "_")
+	replacer := strings.NewReplacer("-", "_")
 
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv() // read in environment variables that match
