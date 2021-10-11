@@ -11,16 +11,16 @@ import (
 
 // PersistentVolumeSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client
-func PersistentVolumeSource(cs *kubernetes.Clientset, nss *NamespaceStorage) ResourceSource {
+func PersistentVolumeSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "persistentvolume",
-		MapGet:   MapPersistentVolumeGet,
-		MapList:  MapPersistentVolumeList,
+		ItemType:   "persistentvolume",
+		MapGet:     MapPersistentVolumeGet,
+		MapList:    MapPersistentVolumeList,
+		Namespaced: false,
 	}
 
-	source.LoadFunctions(
-		cs.CoreV1().PersistentVolumes().Get,
-		cs.CoreV1().PersistentVolumes().List,
+	source.LoadFunction(
+		cs.CoreV1().PersistentVolumes,
 	)
 
 	return source

@@ -10,16 +10,16 @@ import (
 )
 
 // PodSource returns a ResourceSource for Pods for a given client and namespace
-func PodSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func PodSource(cs *kubernetes.Clientset) ResourceSource {
 	podsBackend := ResourceSource{
-		ItemType: "pod",
-		MapGet:   MapPodGet,
-		MapList:  MapPodList,
+		ItemType:   "pod",
+		MapGet:     MapPodGet,
+		MapList:    MapPodList,
+		Namespaced: true,
 	}
 
-	podsBackend.LoadFunctions(
-		cs.CoreV1().Pods(namespace).Get,
-		cs.CoreV1().Pods(namespace).List,
+	podsBackend.LoadFunction(
+		cs.CoreV1().Pods,
 	)
 
 	return podsBackend

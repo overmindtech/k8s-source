@@ -10,16 +10,16 @@ import (
 
 // ConfigMapSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func ConfigMapSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func ConfigMapSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "configMap",
-		MapGet:   MapConfigMapGet,
-		MapList:  MapConfigMapList,
+		ItemType:   "configMap",
+		MapGet:     MapConfigMapGet,
+		MapList:    MapConfigMapList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.CoreV1().ConfigMaps(namespace).Get,
-		cs.CoreV1().ConfigMaps(namespace).List,
+	source.LoadFunction(
+		cs.CoreV1().ConfigMaps,
 	)
 
 	return source

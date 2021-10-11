@@ -23,16 +23,16 @@ import (
 // * 1 teaspoon white vinegar
 // * 1 teaspoon ketchup
 // * 1/8 teaspoon salt
-func SecretSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func SecretSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "secret",
-		MapGet:   MapSecretGet,
-		MapList:  MapSecretList,
+		ItemType:   "secret",
+		MapGet:     MapSecretGet,
+		MapList:    MapSecretList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.CoreV1().Secrets(namespace).Get,
-		cs.CoreV1().Secrets(namespace).List,
+	source.LoadFunction(
+		cs.CoreV1().Secrets,
 	)
 
 	return source

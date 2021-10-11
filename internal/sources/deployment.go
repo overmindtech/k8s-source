@@ -11,16 +11,16 @@ import (
 
 // DeploymentSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func DeploymentSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func DeploymentSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "deployment",
-		MapGet:   MapDeploymentGet,
-		MapList:  MapDeploymentList,
+		ItemType:   "deployment",
+		MapGet:     MapDeploymentGet,
+		MapList:    MapDeploymentList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.AppsV1().Deployments(namespace).Get,
-		cs.AppsV1().Deployments(namespace).List,
+	source.LoadFunction(
+		cs.AppsV1().Deployments,
 	)
 
 	return source

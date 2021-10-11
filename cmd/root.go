@@ -110,8 +110,7 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 		var k8sHost string
 		var k8sPort string
 		var nss sources.NamespaceStorage
-		var namespaces []string
-		var clusterName string
+		var sourceList []discovery.Source
 
 		k8sURL, err = url.Parse(rc.Host)
 
@@ -137,10 +136,10 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 		if k8sPort == "" || k8sPort == "443" {
 			// If a port isn't specific or it's a standard port then just return
 			// the hostname
-			clusterName = k8sHost
+			sources.ClusterName = k8sHost
 		} else {
 			// If it is running on a custom port then return host:port
-			clusterName = k8sHost + ":" + k8sPort
+			sources.ClusterName = k8sHost + ":" + k8sPort
 		}
 
 		// Get list of namspaces
@@ -149,14 +148,12 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 			CacheDuration: (10 * time.Second),
 		}
 
-		namespaces, err = nss.Namespaces()
+		// Load all sources
+		for _, srcFunction := range sources.SourceFunctions {
+			src := srcFunction(clientSet)
+			src.NSS = &nss
 
-		if err != nil {
-			// If we can't get namespaces then raise an error but keep going since
-			// we might be able to get non-namespaced components
-			log.WithFields(log.Fields{
-				"error": err.Error(),
-			}).Error("Failed to get namespaces, continuing")
+			sourceList = append(sourceList, &src)
 		}
 
 		e := discovery.Engine{
@@ -173,7 +170,7 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 			MaxParallelExecutions: maxParallel,
 		}
 
-		e.AddSources()
+		e.AddSources(sourceList...)
 	},
 }
 

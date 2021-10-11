@@ -14,16 +14,16 @@ const PVCType = "persistentVolumeClaim"
 
 // PVCSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func PVCSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func PVCSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: PVCType,
-		MapGet:   MapPVCGet,
-		MapList:  MapPVCList,
+		ItemType:   PVCType,
+		MapGet:     MapPVCGet,
+		MapList:    MapPVCList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.CoreV1().PersistentVolumeClaims(namespace).Get,
-		cs.CoreV1().PersistentVolumeClaims(namespace).List,
+	source.LoadFunction(
+		cs.CoreV1().PersistentVolumeClaims,
 	)
 
 	return source

@@ -11,16 +11,16 @@ import (
 
 // ReplicaSetSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func ReplicaSetSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func ReplicaSetSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "replicaset",
-		MapGet:   MapReplicaSetGet,
-		MapList:  MapReplicaSetList,
+		ItemType:   "replicaset",
+		MapGet:     MapReplicaSetGet,
+		MapList:    MapReplicaSetList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.AppsV1().ReplicaSets(namespace).Get,
-		cs.AppsV1().ReplicaSets(namespace).List,
+	source.LoadFunction(
+		cs.AppsV1().ReplicaSets,
 	)
 
 	return source

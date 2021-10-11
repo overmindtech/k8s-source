@@ -11,16 +11,16 @@ import (
 
 // ReplicationControllerSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func ReplicationControllerSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func ReplicationControllerSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "replicationcontroller",
-		MapGet:   MapReplicationControllerGet,
-		MapList:  MapReplicationControllerList,
+		ItemType:   "replicationcontroller",
+		MapGet:     MapReplicationControllerGet,
+		MapList:    MapReplicationControllerList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.CoreV1().ReplicationControllers(namespace).Get,
-		cs.CoreV1().ReplicationControllers(namespace).List,
+	source.LoadFunction(
+		cs.CoreV1().ReplicationControllers,
 	)
 
 	return source

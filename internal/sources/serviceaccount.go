@@ -10,16 +10,16 @@ import (
 
 // ServiceAccountSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func ServiceAccountSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func ServiceAccountSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "serviceaccount",
-		MapGet:   MapServiceAccountGet,
-		MapList:  MapServiceAccountList,
+		ItemType:   "serviceaccount",
+		MapGet:     MapServiceAccountGet,
+		MapList:    MapServiceAccountList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.CoreV1().ServiceAccounts(namespace).Get,
-		cs.CoreV1().ServiceAccounts(namespace).List,
+	source.LoadFunction(
+		cs.CoreV1().ServiceAccounts,
 	)
 
 	return source

@@ -12,16 +12,16 @@ import (
 
 // RoleBindingSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func RoleBindingSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func RoleBindingSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "rolebinding",
-		MapGet:   MapRoleBindingGet,
-		MapList:  MapRoleBindingList,
+		ItemType:   "rolebinding",
+		MapGet:     MapRoleBindingGet,
+		MapList:    MapRoleBindingList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.RbacV1().RoleBindings(namespace).Get,
-		cs.RbacV1().RoleBindings(namespace).List,
+	source.LoadFunction(
+		cs.RbacV1().RoleBindings,
 	)
 
 	return source

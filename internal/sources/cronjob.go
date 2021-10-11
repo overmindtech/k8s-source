@@ -11,16 +11,16 @@ import (
 
 // CronJobSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func CronJobSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func CronJobSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "cronjob",
-		MapGet:   MapCronJobGet,
-		MapList:  MapCronJobList,
+		ItemType:   "cronjob",
+		MapGet:     MapCronJobGet,
+		MapList:    MapCronJobList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.BatchV1beta1().CronJobs(namespace).Get,
-		cs.BatchV1beta1().CronJobs(namespace).List,
+	source.LoadFunction(
+		cs.BatchV1beta1().CronJobs,
 	)
 
 	return source

@@ -13,18 +13,17 @@ import (
 
 // NodeSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client
-func NodeSource(cs *kubernetes.Clientset, nss *NamespaceStorage) ResourceSource {
+func NodeSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "node",
-		NSS:      nss,
+		ItemType:   "node",
+		Namespaced: false,
 	}
 
 	source.MapGet = source.MapNodeGet
 	source.MapList = source.MapNodeList
 
-	source.LoadFunctions(
-		cs.CoreV1().Nodes().Get,
-		cs.CoreV1().Nodes().List,
+	source.LoadFunction(
+		cs.CoreV1().Nodes,
 	)
 
 	return source

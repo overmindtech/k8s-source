@@ -11,6 +11,23 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type ContextDetails struct {
+	ClusterName string
+	Namespace   string
+}
+
+// ParseContext Parses the custer and context name out of a given SDP context
+// given that the naming convention is {clusterName}.{namespace}
+func ParseContext(itemContext string) ContextDetails {
+	// Namespaces cannot contain a dot
+	lastInd := strings.LastIndex(itemContext, ".")
+
+	return ContextDetails{
+		ClusterName: itemContext[:lastInd],
+		Namespace:   itemContext[lastInd+1:],
+	}
+}
+
 // Selector represents a set of key value pairs that we are going to use as a
 // selector
 type Selector map[string]string

@@ -12,16 +12,16 @@ import (
 
 // StatefulSetSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func StatefulSetSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func StatefulSetSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "statefulset",
-		MapGet:   MapStatefulSetGet,
-		MapList:  MapStatefulSetList,
+		ItemType:   "statefulset",
+		MapGet:     MapStatefulSetGet,
+		MapList:    MapStatefulSetList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.AppsV1().StatefulSets(namespace).Get,
-		cs.AppsV1().StatefulSets(namespace).List,
+	source.LoadFunction(
+		cs.AppsV1().StatefulSets,
 	)
 
 	return source

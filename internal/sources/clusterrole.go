@@ -11,16 +11,16 @@ import (
 
 // ClusterRoleSource returns a ResourceSource for ClusterRoleClaims for a given
 // client
-func ClusterRoleSource(cs *kubernetes.Clientset, nss *NamespaceStorage) ResourceSource {
+func ClusterRoleSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "clusterrole",
-		MapGet:   MapClusterRoleGet,
-		MapList:  MapClusterRoleList,
+		ItemType:   "clusterrole",
+		MapGet:     MapClusterRoleGet,
+		MapList:    MapClusterRoleList,
+		Namespaced: false,
 	}
 
-	source.LoadFunctions(
-		cs.RbacV1beta1().ClusterRoles().Get,
-		cs.RbacV1beta1().ClusterRoles().List,
+	source.LoadFunction(
+		cs.RbacV1beta1().ClusterRoles,
 	)
 
 	return source

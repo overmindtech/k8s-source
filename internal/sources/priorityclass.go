@@ -11,16 +11,16 @@ import (
 
 // PriorityClassSource returns a ResourceSource for PriorityClassClaims for a given
 // client
-func PriorityClassSource(cs *kubernetes.Clientset, nss *NamespaceStorage) ResourceSource {
+func PriorityClassSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "priorityclass",
-		MapGet:   MapPriorityClassGet,
-		MapList:  MapPriorityClassList,
+		ItemType:   "priorityclass",
+		MapGet:     MapPriorityClassGet,
+		MapList:    MapPriorityClassList,
+		Namespaced: false,
 	}
 
-	source.LoadFunctions(
-		cs.SchedulingV1().PriorityClasses().Get,
-		cs.SchedulingV1().PriorityClasses().List,
+	source.LoadFunction(
+		cs.SchedulingV1().PriorityClasses,
 	)
 
 	return source

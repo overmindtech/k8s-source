@@ -3,6 +3,7 @@ package sources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -20,9 +21,6 @@ var apiTimeoutDefault = (10 * time.Second)
 var apiTimeoutSet = false
 var apiTimeout time.Duration
 
-// BackendPackage is the name of this backend package
-const BackendPackage = "k8s"
-
 // ClusterName stores the name of the cluster, this is also used as the context
 // for non-namespaced items. This designed to be user by namespaced items to
 // create linked item requests on non-namespaced items
@@ -31,15 +29,20 @@ var ClusterName string
 // NamespacedSourceFunction is a function that accepts a kubernetes client and
 // namespace, and returns a ResourceSource for a given type. This also satisfies
 // the Backend interface
-type NamespacedSourceFunction func(cs *kubernetes.Clientset, namespace string) ResourceSource
+type NamespacedSourceFunction func(cs *kubernetes.Clientset) ResourceSource
 
 // NonNamespacedSourceFunction is a function that accepts a kubernetes client and
 // returns a ResourceSource for a given type. This also satisfies the Backend
 // interface
-type NonNamespacedSourceFunction func(cs *kubernetes.Clientset, nss *NamespaceStorage) ResourceSource
+type NonNamespacedSourceFunction func(cs *kubernetes.Clientset) ResourceSource
 
-// NamespacedSourceFunctions is the list of functions to load
-var NamespacedSourceFunctions = []NamespacedSourceFunction{
+// SourceFunction is a function that accepts a kubernetes client and returns a
+// ResourceSource for a given type. This also satisfies the discovery.Source
+// interface
+type SourceFunction func(cs *kubernetes.Clientset) ResourceSource
+
+// SourceFunctions is the list of functions to load
+var SourceFunctions = []SourceFunction{
 	PodSource,
 	ServiceSource,
 	PVCSource,
@@ -63,10 +66,6 @@ var NamespacedSourceFunctions = []NamespacedSourceFunction{
 	RoleBindingSource,
 	RoleSource,
 	EndpointSliceSource,
-}
-
-// NonNamespacedSourceFunctions is the list of functions to load
-var NonNamespacedSourceFunctions = []NonNamespacedSourceFunction{
 	NamespaceSource,
 	NodeSource,
 	PersistentVolumeSource,
@@ -85,8 +84,6 @@ var NonNamespacedSourceFunctions = []NonNamespacedSourceFunction{
 // but there is still a very real chance that there will be panics so be
 // careful doing anything non-standard with this struct
 type ResourceSource struct {
-	// the context of the items that will be returned by this source
-	ItemContext string
 	// The type of items that will be returned from this source
 	ItemType string
 	// A function that will accept an interface and return a list of items. The
@@ -100,30 +97,61 @@ type ResourceSource struct {
 	// whatever format it is expecting, the proceed to map to an item
 	MapGet func(interface{}) (*sdp.Item, error)
 
+	// Whether or not this source is for namespaced resources
+	Namespaced bool
+
 	// NSS Namespace storage for when backends need to lookup the list of
 	// namespaces
 	NSS *NamespaceStorage
 
-	// getFunction and listFunction are populated by LoadFunctions
-	getFunction  reflect.Value
-	listFunction reflect.Value
+	// interfaceFunction is used to store the function which, when called,
+	// returns an interface that we can call Get() and List() against in order
+	// to get item details
+	interfaceFunction reflect.Value
 }
 
-// LoadFunctions performs validation on the supplied Get and List functions,
-// ensuring that they have valid inputs and outputs.
+// LoadFunctions performs validation on the supplied interface function. This
+// function should retrun an interface which has Get() and List() methods
 //
-// A get should be:
+// A Get should be:
 //   func(ctx context.Context, name string, opts metaV1.GetOptions)
 //
 // A List should be:
 //   List(ctx context.Context, opts metaV1.ListOptions)
 //
-func (rs *ResourceSource) LoadFunctions(getFunction interface{}, listFunction interface{}) error {
+func (rs *ResourceSource) LoadFunction(interfaceFunction interface{}) error {
 	// Reflect to values
-	getFunctionValue := reflect.ValueOf(getFunction)
-	listFunctionValue := reflect.ValueOf(listFunction)
-	getFunctionType := reflect.TypeOf(getFunction)
-	listFunctionType := reflect.TypeOf(listFunction)
+	interfaceFunctionValue := reflect.ValueOf(interfaceFunction)
+	interfaceFunctionType := reflect.TypeOf(interfaceFunction)
+
+	switch interfaceFunctionType.NumIn() {
+	case 0:
+		// Do nothing
+	case 1:
+		if interfaceFunctionType.In(0).Kind() != reflect.String {
+			return errors.New("interfaceFunction first argument must be a string")
+		}
+	default:
+		return errors.New("interfaceFunction should have 0 or 1 parameters")
+	}
+
+	if interfaceFunctionType.Out(0).Kind() != reflect.Interface {
+		return errors.New("interfaceFunction return value should be an interface")
+	}
+
+	getFunctionValue := interfaceFunctionValue.MethodByName("Get")
+	listFunctionValue := interfaceFunctionValue.MethodByName("List")
+
+	if getFunctionValue.IsZero() {
+		return errors.New("interfaceFunction does not have a 'Get' method")
+	}
+
+	if listFunctionValue.IsZero() {
+		return errors.New("interfaceFunction does not have a 'List' method")
+	}
+
+	getFunctionType := getFunctionValue.Type()
+	listFunctionType := listFunctionValue.Type()
 
 	// Validate that they are functions
 	if getFunctionValue.Kind() != reflect.Func {
@@ -172,8 +200,7 @@ func (rs *ResourceSource) LoadFunctions(getFunction interface{}, listFunction in
 	}
 
 	// Save values for later use
-	rs.getFunction = getFunctionValue
-	rs.listFunction = listFunctionValue
+	rs.interfaceFunction = interfaceFunctionValue
 
 	return nil
 }
@@ -208,7 +235,7 @@ func (rs *ResourceSource) Get(itemContext string, name string) (*sdp.Item, error
 	}
 
 	// Call the function
-	returns = rs.getFunction.Call(params)
+	returns = rs.getFunction(itemContext).Call(params)
 
 	if e := returns[1].Interface(); e != nil {
 		if err, ok := e.(error); ok {
@@ -224,7 +251,7 @@ func (rs *ResourceSource) Get(itemContext string, name string) (*sdp.Item, error
 // Find finds all items that the backend possibly can. It maybe be possible that
 // this might not be an exhaustive list though in the case of kubernetes it is
 // unlikely
-func (rs *ResourceSource) Find() ([]*sdp.Item, error) {
+func (rs *ResourceSource) Find(itemContext string) ([]*sdp.Item, error) {
 	var ctx context.Context
 	var ctxValue reflect.Value
 	var opts metaV1.ListOptions
@@ -246,7 +273,7 @@ func (rs *ResourceSource) Find() ([]*sdp.Item, error) {
 	}
 
 	// Call the function
-	returns = rs.listFunction.Call(params)
+	returns = rs.listFunction(itemContext).Call(params)
 
 	// Check if the error is nil. If it's nil then we know there wasn't an
 	// error. If not then we know there was an error
@@ -265,7 +292,7 @@ func (rs *ResourceSource) Find() ([]*sdp.Item, error) {
 // *Note:* Additional changes will be made to the ListOptions object after
 // deserialization such as limiting the scope to items of the same type as the
 // current ResourceSource, and drooping any options such as "Watch"
-func (rs *ResourceSource) Search(query string) ([]*sdp.Item, error) {
+func (rs *ResourceSource) Search(itemContext string, query string) ([]*sdp.Item, error) {
 	var ctx context.Context
 	var ctxValue reflect.Value
 	var opts metaV1.ListOptions
@@ -282,7 +309,7 @@ func (rs *ResourceSource) Search(query string) ([]*sdp.Item, error) {
 		log.WithFields(log.Fields{
 			"query":      query,
 			"type":       rs.ItemType,
-			"context":    rs.ItemContext,
+			"context":    itemContext,
 			"parseError": err.Error(),
 		}).Error("error while parsing query")
 
@@ -299,7 +326,7 @@ func (rs *ResourceSource) Search(query string) ([]*sdp.Item, error) {
 	}
 
 	// Call the function
-	returns = rs.listFunction.Call(params)
+	returns = rs.listFunction(itemContext).Call(params)
 
 	// Check for an error
 	if returns[1].Interface() != nil {
@@ -314,20 +341,58 @@ func (rs *ResourceSource) Type() string {
 	return rs.ItemType
 }
 
-// BackendPackage Returns the name of the backend package. This is used for
-// debugging and logging (Required)
-func (rs *ResourceSource) BackendPackage() string {
-	return BackendPackage
+// Name returns a descriptive name for the source, used in logging and metadata
+func (rs *ResourceSource) Name() string {
+	return fmt.Sprintf("k8s-%v", rs.ItemType)
 }
 
-// Context If this backend is returning items for a context other than the
-// "local" context (this usually means the machine that the backend is running
-// on) then it should return what context it *is* for using this method. This
-// will be useful for things like pulling data from many kubernetes clusters or
-// namespaces, in this case the context would need to include this information
-// to ensure that the items are always unique (Optional)
-func (rs *ResourceSource) Context() string {
-	return rs.ItemContext
+// Context Returns the list of contexts that this source is capable of findinf
+// items for. This is usually the name of the cluster, plus any namespaces in
+// the format {clusterName}.{namespace}
+func (rs *ResourceSource) Contexts() []string {
+	contexts := make([]string, 0)
+
+	if rs.Namespaced {
+		namespaces, _ := rs.NSS.Namespaces()
+
+		for _, namespace := range namespaces {
+			contexts = append(contexts, ClusterName+"."+namespace)
+		}
+	} else {
+		contexts = append(contexts, ClusterName)
+	}
+
+	return contexts
+}
+
+// Weight The weight of this source, used for conflict resolution. Currently
+// returns a static value of 100
+func (rs *ResourceSource) Weight() int {
+	return 100
+}
+
+func (rs *ResourceSource) getFunction(itemContext string) reflect.Value {
+	contextDetails := ParseContext(itemContext)
+	interfaceFunctionArgs := make([]reflect.Value, 0)
+
+	if rs.Namespaced {
+		// If the interface function is namespaced we need to pass in the namespace that we want to query
+		interfaceFunctionArgs = append(interfaceFunctionArgs, reflect.ValueOf(contextDetails.Namespace))
+	}
+
+	return rs.interfaceFunction.Call(interfaceFunctionArgs)[0]
+}
+
+func (rs *ResourceSource) listFunction(itemContext string) reflect.Value {
+	contextDetails := ParseContext(itemContext)
+	interfaceFunctionArgs := make([]reflect.Value, 0)
+
+	if rs.Namespaced {
+		// If the interface function is namespaced we need to pass in the namespace that we want to query
+		interfaceFunctionArgs = append(interfaceFunctionArgs, reflect.ValueOf(contextDetails.Namespace))
+	}
+
+	return rs.interfaceFunction.Call(interfaceFunctionArgs)[0]
 }
 
 // Backends is the main loader function for this backend package. It will be

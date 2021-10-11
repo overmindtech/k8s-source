@@ -10,16 +10,16 @@ import (
 
 // EndpointSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func EndpointSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func EndpointSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "endpoint",
-		MapGet:   MapEndpointGet,
-		MapList:  MapEndpointList,
+		ItemType:   "endpoint",
+		MapGet:     MapEndpointGet,
+		MapList:    MapEndpointList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.CoreV1().Endpoints(namespace).Get,
-		cs.CoreV1().Endpoints(namespace).List,
+	source.LoadFunction(
+		cs.CoreV1().Endpoints,
 	)
 
 	return source

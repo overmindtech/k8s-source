@@ -12,16 +12,16 @@ import (
 
 // EndpointSliceSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func EndpointSliceSource(cs *kubernetes.Clientset, namespace string) ResourceSource {
+func EndpointSliceSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "endpointslice",
-		MapGet:   MapEndpointSliceGet,
-		MapList:  MapEndpointSliceList,
+		ItemType:   "endpointslice",
+		MapGet:     MapEndpointSliceGet,
+		MapList:    MapEndpointSliceList,
+		Namespaced: true,
 	}
 
-	source.LoadFunctions(
-		cs.DiscoveryV1beta1().EndpointSlices(namespace).Get,
-		cs.DiscoveryV1beta1().EndpointSlices(namespace).List,
+	source.LoadFunction(
+		cs.DiscoveryV1beta1().EndpointSlices,
 	)
 
 	return source

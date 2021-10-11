@@ -11,16 +11,16 @@ import (
 
 // NamespaceSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func NamespaceSource(cs *kubernetes.Clientset, nss *NamespaceStorage) ResourceSource {
+func NamespaceSource(cs *kubernetes.Clientset) ResourceSource {
 	source := ResourceSource{
-		ItemType: "namespace",
-		MapGet:   MapNamespaceGet,
-		MapList:  MapNamespaceList,
+		ItemType:   "namespace",
+		MapGet:     MapNamespaceGet,
+		MapList:    MapNamespaceList,
+		Namespaced: false,
 	}
 
-	source.LoadFunctions(
-		cs.CoreV1().Namespaces().Get,
-		cs.CoreV1().Namespaces().List,
+	source.LoadFunction(
+		cs.CoreV1().Namespaces,
 	)
 
 	return source
