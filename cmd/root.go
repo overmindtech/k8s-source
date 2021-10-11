@@ -2,11 +2,19 @@ package cmd
 
 import (
 	"fmt"
+	"net"
+	"net/url"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/dylanratcliffe/discovery"
+	"github.com/dylanratcliffe/k8s-source/internal/sources"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	homedir "github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
@@ -42,14 +50,130 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		natsServers := viper.GetStringSlice("nats-servers")
+		natsNamePrefix := viper.GetString("nats-name-prefix")
+		natsCAFile := viper.GetString("nats-ca-file")
+		natsJWTFile := viper.GetString("nats-jwt-file")
+		natsNKeyFile := viper.GetString("nats-nkey-file")
+		kubeconfig := viper.GetString("kubeconfig")
+		maxParallel := viper.GetInt("max-parallel")
+		hostname, err := os.Hostname()
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Could not determine hostname for use in NATS connection name")
+
+			os.Exit(1)
+		}
+
 		log.WithFields(log.Fields{
-			"nats-servers":     viper.Get("nats-servers"),
-			"nats-name-prefix": viper.Get("nats-name-prefix"),
-			"nats-ca-file":     viper.Get("nats-ca-file"),
-			"nats-jwt-file":    viper.Get("nats-jwt-file"),
-			"nats-nkey-file":   viper.Get("nats-nkey-file"),
-			"kubeconfig":       viper.Get("kubeconfig"),
+			"nats-servers":     natsServers,
+			"nats-name-prefix": natsNamePrefix,
+			"nats-ca-file":     natsCAFile,
+			"nats-jwt-file":    natsJWTFile,
+			"nats-nkey-file":   natsNKeyFile,
+			"kubeconfig":       kubeconfig,
 		}).Info("Got config")
+
+		var rc *rest.Config
+		var clientSet *kubernetes.Clientset
+
+		// Load kubernetes config
+		rc, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Could not load kubernetes config")
+
+			os.Exit(1)
+		}
+
+		// Create clientset
+		clientSet, err = kubernetes.NewForConfig(rc)
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Could not create kubernetes client")
+
+			os.Exit(1)
+		}
+
+		//
+		// Discover info
+		//
+		// Now that we have a connection to the kubernetes cluster we need to go
+		// about generating some sources.
+		var k8sURL *url.URL
+		var k8sHost string
+		var k8sPort string
+		var nss sources.NamespaceStorage
+		var namespaces []string
+		var clusterName string
+
+		k8sURL, err = url.Parse(rc.Host)
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Errorf("Could not parse kubernetes url: %v", rc.Host)
+
+			os.Exit(1)
+		}
+
+		// Calculate the cluster name
+		k8sHost, k8sPort, err = net.SplitHostPort(k8sURL.Host)
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Errorf("Could not detect port from host: %v", k8sURL.Host)
+
+			os.Exit(1)
+		}
+
+		if k8sPort == "" || k8sPort == "443" {
+			// If a port isn't specific or it's a standard port then just return
+			// the hostname
+			clusterName = k8sHost
+		} else {
+			// If it is running on a custom port then return host:port
+			clusterName = k8sHost + ":" + k8sPort
+		}
+
+		// Get list of namspaces
+		nss = sources.NamespaceStorage{
+			CS:            clientSet,
+			CacheDuration: (10 * time.Second),
+		}
+
+		namespaces, err = nss.Namespaces()
+
+		if err != nil {
+			// If we can't get namespaces then raise an error but keep going since
+			// we might be able to get non-namespaced components
+			log.WithFields(log.Fields{
+				"error": err.Error(),
+			}).Error("Failed to get namespaces, continuing")
+		}
+
+		e := discovery.Engine{
+			Name: "kubernetes-source",
+			NATSOptions: &discovery.NATSOptions{
+				URLs:           natsServers,
+				ConnectionName: fmt.Sprintf("%v.%v", natsNamePrefix, hostname),
+				ConnectTimeout: (10 * time.Second), // TODO: Make configurable
+				NumRetries:     999,                // We are in a container so wait forever
+				CAFile:         natsCAFile,
+				NkeyFile:       natsNKeyFile,
+				JWTFile:        natsJWTFile,
+			},
+			MaxParallelExecutions: maxParallel,
+		}
+
+		e.AddSources()
 	},
 }
 
@@ -79,6 +203,7 @@ func init() {
 	rootCmd.PersistentFlags().String("nats-jwt-file", "", "Path to the file containing the user JWT")
 	rootCmd.PersistentFlags().String("nats-nkey-file", "", "Path to the file containing the NKey seed")
 	rootCmd.PersistentFlags().String("kubeconfig", "/etc/srcman/config/kubeconfig", "Path to the kubeconfig file containing cluster details")
+	rootCmd.PersistentFlags().Int("max-parallel", 12, "Max number of requests to run in parallel")
 
 	// Bind these to viper
 	viper.BindPFlags(rootCmd.PersistentFlags())
