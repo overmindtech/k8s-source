@@ -4,8 +4,8 @@ go 1.17
 
 // Direct dependencies of my codebase
 require (
-	github.com/dylanratcliffe/discovery v0.1.2
-	github.com/dylanratcliffe/sdp-go v0.0.0-20211006154629-54e1a4d9b8ce
+	github.com/dylanratcliffe/discovery v0.1.5
+	github.com/dylanratcliffe/sdp-go v0.1.0
 	github.com/dylanratcliffe/sdpcache v0.1.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sirupsen/logrus v1.8.1

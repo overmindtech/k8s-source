@@ -141,12 +141,13 @@ func (rs *ResourceSource) LoadFunction(interfaceFunction interface{}) error {
 
 	getFunctionValue := interfaceFunctionValue.MethodByName("Get")
 	listFunctionValue := interfaceFunctionValue.MethodByName("List")
+	zeroValue := reflect.Value{}
 
-	if getFunctionValue.IsZero() {
+	if getFunctionValue == zeroValue {
 		return errors.New("interfaceFunction does not have a 'Get' method")
 	}
 
-	if listFunctionValue.IsZero() {
+	if listFunctionValue == zeroValue {
 		return errors.New("interfaceFunction does not have a 'List' method")
 	}
 
@@ -218,6 +219,8 @@ func (rs *ResourceSource) Get(itemContext string, name string) (*sdp.Item, error
 	var nameValue reflect.Value
 	var params []reflect.Value
 	var returns []reflect.Value
+	var function reflect.Value
+	var err error
 
 	// TODO: Add API timeout
 	ctx = context.Background()
@@ -235,7 +238,13 @@ func (rs *ResourceSource) Get(itemContext string, name string) (*sdp.Item, error
 	}
 
 	// Call the function
-	returns = rs.getFunction(itemContext).Call(params)
+	function, err = rs.getFunction(itemContext)
+
+	if err != nil {
+		return nil, err
+	}
+
+	returns = function.Call(params)
 
 	if e := returns[1].Interface(); e != nil {
 		if err, ok := e.(error); ok {
@@ -257,7 +266,9 @@ func (rs *ResourceSource) Find(itemContext string) ([]*sdp.Item, error) {
 	var opts metaV1.ListOptions
 	var optsValue reflect.Value
 	var params []reflect.Value
+	var function reflect.Value
 	var returns []reflect.Value
+	var err error
 
 	// TODO: Add API timeout
 	ctx = context.Background()
@@ -272,8 +283,18 @@ func (rs *ResourceSource) Find(itemContext string) ([]*sdp.Item, error) {
 		optsValue,
 	}
 
+	// TODO: The below relies on being able to parse out the context from the
+	// query. However it's entirely possible that the context could be '*', so
+	// we need to be able to handle that
+
 	// Call the function
-	returns = rs.listFunction(itemContext).Call(params)
+	function, err = rs.listFunction(itemContext)
+
+	if err != nil {
+		return nil, err
+	}
+
+	returns = function.Call(params)
 
 	// Check if the error is nil. If it's nil then we know there wasn't an
 	// error. If not then we know there was an error
@@ -299,6 +320,7 @@ func (rs *ResourceSource) Search(itemContext string, query string) ([]*sdp.Item,
 	var optsValue reflect.Value
 	var params []reflect.Value
 	var returns []reflect.Value
+	var function reflect.Value
 	var err error
 
 	// TODO: Add API timeout
@@ -326,7 +348,13 @@ func (rs *ResourceSource) Search(itemContext string, query string) ([]*sdp.Item,
 	}
 
 	// Call the function
-	returns = rs.listFunction(itemContext).Call(params)
+	function, err = rs.listFunction(itemContext)
+
+	if err != nil {
+		return nil, err
+	}
+
+	returns = function.Call(params)
 
 	// Check for an error
 	if returns[1].Interface() != nil {
@@ -371,8 +399,13 @@ func (rs *ResourceSource) Weight() int {
 	return 100
 }
 
-func (rs *ResourceSource) getFunction(itemContext string) reflect.Value {
-	contextDetails := ParseContext(itemContext)
+func (rs *ResourceSource) getFunction(itemContext string) (reflect.Value, error) {
+	contextDetails, err := ParseContext(itemContext)
+
+	if err != nil {
+		return reflect.Value{}, err
+	}
+
 	interfaceFunctionArgs := make([]reflect.Value, 0)
 
 	if rs.Namespaced {
@@ -380,11 +413,16 @@ func (rs *ResourceSource) getFunction(itemContext string) reflect.Value {
 		interfaceFunctionArgs = append(interfaceFunctionArgs, reflect.ValueOf(contextDetails.Namespace))
 	}
 
-	return rs.interfaceFunction.Call(interfaceFunctionArgs)[0]
+	return rs.interfaceFunction.Call(interfaceFunctionArgs)[0], nil
 }
 
-func (rs *ResourceSource) listFunction(itemContext string) reflect.Value {
-	contextDetails := ParseContext(itemContext)
+func (rs *ResourceSource) listFunction(itemContext string) (reflect.Value, error) {
+	contextDetails, err := ParseContext(itemContext)
+
+	if err != nil {
+		return reflect.Value{}, err
+	}
+
 	interfaceFunctionArgs := make([]reflect.Value, 0)
 
 	if rs.Namespaced {
@@ -392,7 +430,7 @@ func (rs *ResourceSource) listFunction(itemContext string) reflect.Value {
 		interfaceFunctionArgs = append(interfaceFunctionArgs, reflect.ValueOf(contextDetails.Namespace))
 	}
 
-	return rs.interfaceFunction.Call(interfaceFunctionArgs)[0]
+	return rs.interfaceFunction.Call(interfaceFunctionArgs)[0], nil
 }
 
 // Backends is the main loader function for this backend package. It will be

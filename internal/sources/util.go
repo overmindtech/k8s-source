@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/dylanratcliffe/sdp-go"
@@ -16,16 +17,28 @@ type ContextDetails struct {
 	Namespace   string
 }
 
+// ClusterNamespaceRegex matches the cluster name and namespace from a string
+// that is in the format {clusterName}.{namespace}
+//
+// This is possible due to the fact namespaces have a limited set of characters so we can use a regex to find the last instance of a namespace-compliant string after a trailing
+var ClusterNamespaceRegex = regexp.MustCompile(`(?P<clusterName>.+:.+?)(\.(?P<namespace>[a-z0-9]([-a-z0-9]*[a-z0-9])?))?$`)
+
 // ParseContext Parses the custer and context name out of a given SDP context
 // given that the naming convention is {clusterName}.{namespace}
-func ParseContext(itemContext string) ContextDetails {
-	// Namespaces cannot contain a dot
-	lastInd := strings.LastIndex(itemContext, ".")
+func ParseContext(itemContext string) (ContextDetails, error) {
+	matches := ClusterNamespaceRegex.FindStringSubmatch(itemContext)
+
+	if len(matches) != 5 {
+		return ContextDetails{
+			ClusterName: itemContext,
+			Namespace:   "",
+		}, nil
+	}
 
 	return ContextDetails{
-		ClusterName: itemContext[:lastInd],
-		Namespace:   itemContext[lastInd+1:],
-	}
+		ClusterName: matches[ClusterNamespaceRegex.SubexpIndex("clusterName")],
+		Namespace:   matches[ClusterNamespaceRegex.SubexpIndex("namespace")],
+	}, nil
 }
 
 // Selector represents a set of key value pairs that we are going to use as a

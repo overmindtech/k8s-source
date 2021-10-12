@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"net"
 	"net/url"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/dylanratcliffe/discovery"
@@ -38,17 +39,6 @@ This can be configured using a yaml file and the --config flag, or by
 using appropriately named environment variables, for example "nats-name-prefix"
 can be set using an environment variable named "NATS_NAME_PREFIX"
 `,
-	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-		// Bind flags that haven't been set to the values from viper of we have them
-		cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
-			// Bind the flag to viper only if it has a non-empty default
-			if f.DefValue != "" || f.Changed {
-				viper.BindPFlag(f.Name, f)
-			}
-		})
-
-		return nil
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		natsServers := viper.GetStringSlice("nats-servers")
 		natsNamePrefix := viper.GetString("nats-name-prefix")
@@ -107,8 +97,6 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 		// Now that we have a connection to the kubernetes cluster we need to go
 		// about generating some sources.
 		var k8sURL *url.URL
-		var k8sHost string
-		var k8sPort string
 		var nss sources.NamespaceStorage
 		var sourceList []discovery.Source
 
@@ -122,25 +110,17 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 			os.Exit(1)
 		}
 
-		// Calculate the cluster name
-		k8sHost, k8sPort, err = net.SplitHostPort(k8sURL.Host)
-
-		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err,
-			}).Errorf("Could not detect port from host: %v", k8sURL.Host)
-
-			os.Exit(1)
+		// If there is no port then set one
+		if k8sURL.Port() == "" {
+			switch k8sURL.Scheme {
+			case "http":
+				k8sURL.Host = k8sURL.Host + ":80"
+			case "https":
+				k8sURL.Host = k8sURL.Host + ":443"
+			}
 		}
 
-		if k8sPort == "" || k8sPort == "443" {
-			// If a port isn't specific or it's a standard port then just return
-			// the hostname
-			sources.ClusterName = k8sHost
-		} else {
-			// If it is running on a custom port then return host:port
-			sources.ClusterName = k8sHost + ":" + k8sPort
-		}
+		sources.ClusterName = k8sURL.Host
 
 		// Get list of namspaces
 		nss = sources.NamespaceStorage{
@@ -171,6 +151,48 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 		}
 
 		e.AddSources(sourceList...)
+
+		err = e.Connect()
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Could not connect to NATS")
+
+			os.Exit(1)
+		}
+
+		err = e.Start()
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Could not start engine")
+
+			os.Exit(1)
+		}
+
+		sigs := make(chan os.Signal, 1)
+
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+		<-sigs
+
+		log.Info("Stopping engine")
+
+		err = e.Stop()
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Could not stop engine")
+
+			os.Exit(1)
+		}
+
+		log.Info("Stopped")
+
+		os.Exit(0)
 	},
 }
 
@@ -212,6 +234,14 @@ func init() {
 		} else {
 			log.SetLevel(log.InfoLevel)
 		}
+
+		// Bind flags that haven't been set to the values from viper of we have them
+		cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
+			// Bind the flag to viper only if it has a non-empty default
+			if f.DefValue != "" || f.Changed {
+				viper.BindPFlag(f.Name, f)
+			}
+		})
 	}
 }
 
