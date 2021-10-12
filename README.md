@@ -36,4 +36,8 @@ Other fields can also be set of advanced querying is required, these fields must
 
 ### Testing
 
-The tests for this package rely on having a Kubernetes cluster to interact with. This is handled using [kind](https://github.com/kubernetes-sigs/kind) when the tests are started. This means that the tests will seem to take a long time, please be patient.
+The tests for this package rely on having a Kubernetes cluster to interact with. This is handled using [kind](https://github.com/kubernetes-sigs/kind) when the tests are started. Please make sure that you have the required software installed:
+
+* [kind](https://github.com/kubernetes-sigs/kind)
+* [kubectl](https://kubernetes.io/docs/tasks/tools/)
+* [Docker](https://docs.docker.com/get-docker/)
