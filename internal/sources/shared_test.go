@@ -2,6 +2,7 @@ package sources
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -10,12 +11,23 @@ import (
 	"path/filepath"
 	"testing"
 
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/kind/pkg/apis/config/v1alpha4"
 	"sigs.k8s.io/kind/pkg/cluster"
 )
+
+const TestNamespace = "k8s-source-testing"
+
+const TestNamespaceYAML = `
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-source-testing
+`
 
 type TestCluster struct {
 	Name       string
@@ -25,33 +37,14 @@ type TestCluster struct {
 	T          *testing.T
 }
 
-func (t *TestCluster) Start() error {
-	kubeconfigFile, err := os.CreateTemp("", "*-kubeconfig")
-
-	if err != nil {
-		return err
-	}
-
-	t.Name = "k8s-source-tests"
-	t.Kubeconfig = kubeconfigFile.Name()
-
-	t.provider = cluster.NewProvider()
-	err = t.provider.Create(t.Name, cluster.CreateWithV1Alpha4Config(&v1alpha4.Cluster{}))
-
-	if err != nil {
-		return err
-	}
-
-	err = t.provider.ExportKubeConfig(t.Name, t.Kubeconfig)
-
-	if err != nil {
-		return err
-	}
+func (t *TestCluster) ConnectExisting(name string) error {
+	kubeconfig := homedir.HomeDir() + "/.kube/config"
 
 	var rc *rest.Config
+	var err error
 
 	// Load kubernetes config
-	rc, err = clientcmd.BuildConfigFromFlags("", t.Kubeconfig)
+	rc, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 
 	if err != nil {
 		return err
@@ -66,7 +59,57 @@ func (t *TestCluster) Start() error {
 		return err
 	}
 
+	// Validate that we can connect to the cluster
+	_, err = clientSet.CoreV1().Namespaces().List(context.Background(), v1.ListOptions{})
+
+	if err != nil {
+		return err
+	}
+
+	t.Name = name
+	t.Kubeconfig = kubeconfig
 	t.ClientSet = clientSet
+
+	return nil
+}
+
+func (t *TestCluster) Start() error {
+	clusterName := "k8s-source-tests"
+
+	log.Println("🔍 Trying to connect to existing cluster")
+	err := t.ConnectExisting(clusterName)
+
+	if err != nil {
+		// If there is an error then create out own cluster
+		log.Println("🤞 Creating Kubernetes cluster using Kind")
+
+		t.provider = cluster.NewProvider()
+		err = t.provider.Create(clusterName, cluster.CreateWithV1Alpha4Config(&v1alpha4.Cluster{}))
+
+		if err != nil {
+			return err
+		}
+
+		// Connect to the cluster we just created
+		err = t.ConnectExisting(clusterName)
+
+		if err != nil {
+			return err
+		}
+
+		err = t.provider.ExportKubeConfig(t.Name, t.Kubeconfig)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	log.Printf("🐚 Ensuring test namespace %v exists\n", TestNamespace)
+	err = t.Apply(TestNamespaceYAML)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -121,11 +164,13 @@ func (t *TestCluster) kubectl(method string, yaml string) error {
 }
 
 func (t *TestCluster) Stop() error {
-	err := t.provider.Delete(t.Name, t.Kubeconfig)
+	if t.provider != nil {
+		log.Println("🏁 Destroying cluster")
 
-	os.Remove(t.Kubeconfig)
+		return t.provider.Delete(t.Name, t.Kubeconfig)
+	}
 
-	return err
+	return nil
 }
 
 var CurrentCluster TestCluster
@@ -133,7 +178,6 @@ var CurrentCluster TestCluster
 func TestMain(m *testing.M) {
 	CurrentCluster = TestCluster{}
 
-	log.Println("🤞 Creating Kubernetes cluster using Kind")
 	err := CurrentCluster.Start()
 
 	if err != nil {
@@ -152,7 +196,6 @@ func TestMain(m *testing.M) {
 	log.Println("✅ Running tests")
 	code := m.Run()
 
-	log.Println("🏁 Destroying cluster")
 	err = CurrentCluster.Stop()
 
 	if err != nil {

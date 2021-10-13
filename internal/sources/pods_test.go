@@ -12,6 +12,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: hello
+  namespace: k8s-source-testing
 spec:
   template:
     # This is the pod template
@@ -45,7 +46,7 @@ func TestPodSource(t *testing.T) {
 		t.Error(err)
 	}
 
-	itemContext := "testcluster:443.default"
+	itemContext := "testcluster:443.k8s-source-testing"
 
 	var getName string
 
