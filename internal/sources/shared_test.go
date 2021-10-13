@@ -6,9 +6,13 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/kind/pkg/apis/config/v1alpha4"
 	"sigs.k8s.io/kind/pkg/cluster"
 )
@@ -16,6 +20,7 @@ import (
 type TestCluster struct {
 	Name       string
 	Kubeconfig string
+	ClientSet  *kubernetes.Clientset
 	provider   *cluster.Provider
 	T          *testing.T
 }
@@ -43,6 +48,26 @@ func (t *TestCluster) Start() error {
 		return err
 	}
 
+	var rc *rest.Config
+
+	// Load kubernetes config
+	rc, err = clientcmd.BuildConfigFromFlags("", t.Kubeconfig)
+
+	if err != nil {
+		return err
+	}
+
+	var clientSet *kubernetes.Clientset
+
+	// Create clientset
+	clientSet, err = kubernetes.NewForConfig(rc)
+
+	if err != nil {
+		return err
+	}
+
+	t.ClientSet = clientSet
+
 	return nil
 }
 
@@ -62,6 +87,7 @@ func (t *TestCluster) ApplyAcceptanceConfig() (string, string, error) {
 	cmd := exec.Command("kubectl", "apply", "-f", config.Name())
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+	cmd.Dir = filepath.Dir(config.Name())
 
 	// Set KUBECONFIG location
 	cmd.Env = append(cmd.Env, fmt.Sprintf("KUBECONFIG=%v", t.Kubeconfig))

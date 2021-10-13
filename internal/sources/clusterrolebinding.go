@@ -12,7 +12,7 @@ import (
 
 // ClusterRoleBindingSource returns a ResourceSource for ClusterRoleBindingClaims for a given
 // client
-func ClusterRoleBindingSource(cs *kubernetes.Clientset) ResourceSource {
+func ClusterRoleBindingSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "clusterrolebinding",
 		MapGet:     MapClusterRoleBindingGet,
@@ -20,11 +20,11 @@ func ClusterRoleBindingSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: false,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.RbacV1beta1().ClusterRoleBindings,
 	)
 
-	return source
+	return source, err
 }
 
 // MapClusterRoleBindingList maps an interface that is underneath a

@@ -39,7 +39,7 @@ type NonNamespacedSourceFunction func(cs *kubernetes.Clientset) ResourceSource
 // SourceFunction is a function that accepts a kubernetes client and returns a
 // ResourceSource for a given type. This also satisfies the discovery.Source
 // interface
-type SourceFunction func(cs *kubernetes.Clientset) ResourceSource
+type SourceFunction func(cs *kubernetes.Clientset) (ResourceSource, error)
 
 // SourceFunctions is the list of functions to load
 var SourceFunctions = []SourceFunction{
@@ -139,29 +139,25 @@ func (rs *ResourceSource) LoadFunction(interfaceFunction interface{}) error {
 		return errors.New("interfaceFunction return value should be an interface")
 	}
 
-	getFunctionValue := interfaceFunctionValue.MethodByName("Get")
-	listFunctionValue := interfaceFunctionValue.MethodByName("List")
-	zeroValue := reflect.Value{}
+	// This is the value that is going ot be returned when the interface
+	// function is called. We need to check that this has the methods that we
+	// expect and is therefore going to work when we try to interact with it
+	returnInterface := interfaceFunctionType.Out(0)
 
-	if getFunctionValue == zeroValue {
+	getMethod, getFound := returnInterface.MethodByName("Get")
+
+	if !getFound {
 		return errors.New("interfaceFunction does not have a 'Get' method")
 	}
 
-	if listFunctionValue == zeroValue {
+	listMethod, listFound := returnInterface.MethodByName("List")
+
+	if !listFound {
 		return errors.New("interfaceFunction does not have a 'List' method")
 	}
 
-	getFunctionType := getFunctionValue.Type()
-	listFunctionType := listFunctionValue.Type()
-
-	// Validate that they are functions
-	if getFunctionValue.Kind() != reflect.Func {
-		return errors.New("getFunction is not a Func")
-	}
-
-	if listFunctionValue.Kind() != reflect.Func {
-		return errors.New("listFunction is not a Func")
-	}
+	getFunctionType := getMethod.Type
+	listFunctionType := listMethod.Type
 
 	if getFunctionType.NumIn() != 3 {
 		return errors.New("getFunction must accept 3 arguments")
@@ -399,7 +395,10 @@ func (rs *ResourceSource) Weight() int {
 	return 100
 }
 
-func (rs *ResourceSource) getFunction(itemContext string) (reflect.Value, error) {
+// interactionInterface Calls the interface function to return an interface that
+// will allow us to call Get and List functions which will in turn actually
+// execute API queries against K8s
+func (rs *ResourceSource) interactionInterface(itemContext string) (reflect.Value, error) {
 	contextDetails, err := ParseContext(itemContext)
 
 	if err != nil {
@@ -413,22 +412,46 @@ func (rs *ResourceSource) getFunction(itemContext string) (reflect.Value, error)
 		interfaceFunctionArgs = append(interfaceFunctionArgs, reflect.ValueOf(contextDetails.Namespace))
 	}
 
-	return rs.interfaceFunction.Call(interfaceFunctionArgs)[0], nil
+	// Call the interface function in order to return a list function for the
+	// given namespace (or not, if the source isn't namespaced)
+	results := rs.interfaceFunction.Call(interfaceFunctionArgs)
+
+	// Validate the results before sending them back
+	if len(results) != 1 {
+		return reflect.Value{}, errors.New("could not load list function, loading returned too many results")
+	}
+
+	return results[0], nil
+}
+
+func (rs *ResourceSource) getFunction(itemContext string) (reflect.Value, error) {
+	var getMethod reflect.Value
+	var iFace reflect.Value
+	var err error
+
+	iFace, err = rs.interactionInterface(itemContext)
+
+	if err != nil {
+		return reflect.Value{}, err
+	}
+
+	getMethod = iFace.MethodByName("Get")
+
+	return getMethod, nil
 }
 
 func (rs *ResourceSource) listFunction(itemContext string) (reflect.Value, error) {
-	contextDetails, err := ParseContext(itemContext)
+	var listMethod reflect.Value
+	var iFace reflect.Value
+	var err error
+
+	iFace, err = rs.interactionInterface(itemContext)
 
 	if err != nil {
 		return reflect.Value{}, err
 	}
 
-	interfaceFunctionArgs := make([]reflect.Value, 0)
+	listMethod = iFace.MethodByName("List")
 
-	if rs.Namespaced {
-		// If the interface function is namespaced we need to pass in the namespace that we want to query
-		interfaceFunctionArgs = append(interfaceFunctionArgs, reflect.ValueOf(contextDetails.Namespace))
-	}
-
-	return rs.interfaceFunction.Call(interfaceFunctionArgs)[0], nil
+	return listMethod, nil
 }

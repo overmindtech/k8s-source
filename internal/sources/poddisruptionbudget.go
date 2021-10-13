@@ -10,7 +10,7 @@ import (
 
 // PodDisruptionBudgetSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func PodDisruptionBudgetSource(cs *kubernetes.Clientset) ResourceSource {
+func PodDisruptionBudgetSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "poddisruptionbudget",
 		MapGet:     MapPodDisruptionBudgetGet,
@@ -18,11 +18,11 @@ func PodDisruptionBudgetSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.PolicyV1beta1().PodDisruptionBudgets,
 	)
 
-	return source
+	return source, err
 }
 
 // MapPodDisruptionBudgetList maps an interface that is underneath a

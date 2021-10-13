@@ -11,7 +11,7 @@ import (
 
 // JobSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func JobSource(cs *kubernetes.Clientset) ResourceSource {
+func JobSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "job",
 		MapGet:     MapJobGet,
@@ -19,11 +19,11 @@ func JobSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.BatchV1().Jobs,
 	)
 
-	return source
+	return source, err
 }
 
 // MapJobList maps an interface that is underneath a

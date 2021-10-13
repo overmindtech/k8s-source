@@ -11,7 +11,7 @@ import (
 
 // ClusterRoleSource returns a ResourceSource for ClusterRoleClaims for a given
 // client
-func ClusterRoleSource(cs *kubernetes.Clientset) ResourceSource {
+func ClusterRoleSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "clusterrole",
 		MapGet:     MapClusterRoleGet,
@@ -19,11 +19,11 @@ func ClusterRoleSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: false,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.RbacV1beta1().ClusterRoles,
 	)
 
-	return source
+	return source, err
 }
 
 // MapClusterRoleList maps an interface that is underneath a

@@ -130,7 +130,17 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 
 		// Load all sources
 		for _, srcFunction := range sources.SourceFunctions {
-			src := srcFunction(clientSet)
+			src, err := srcFunction(clientSet)
+
+			if err != nil {
+				log.WithFields(log.Fields{
+					"error":      err,
+					"sourceName": src.Name(),
+				}).Error("Failed loading source")
+
+				continue
+			}
+
 			src.NSS = &nss
 
 			sourceList = append(sourceList, &src)
