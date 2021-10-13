@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -22,6 +23,11 @@ type NamespaceStorage struct {
 
 // Namespaces returns the list of namespaces, updating if required
 func (ns *NamespaceStorage) Namespaces() ([]string, error) {
+	if ns == nil {
+		// Protect against getting called on a nil pointer
+		return []string{}, errors.New("namespaces called on nil NamespaceStorage object")
+	}
+
 	ns.namespacesMutex.RLock()
 
 	// Check that the cache is up to date
