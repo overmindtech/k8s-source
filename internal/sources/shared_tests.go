@@ -52,6 +52,10 @@ func BasicGetFindSearchTests(t *testing.T, query string, source ResourceSource) 
 	})
 
 	t.Run("Testing basic Get()", func(t *testing.T) {
+		if getName == "" {
+			t.Skip("Nothing found from Search(), skipping")
+		}
+
 		item, err := source.Get(itemContext, getName)
 
 		if err != nil {
@@ -66,6 +70,10 @@ func BasicGetFindSearchTests(t *testing.T, query string, source ResourceSource) 
 	})
 
 	t.Run("Testing basic Find()", func(t *testing.T) {
+		if getName == "" {
+			t.Skip("Nothing found from Search(), skipping")
+		}
+
 		items, err := source.Find(itemContext)
 
 		if err != nil {
@@ -104,6 +112,10 @@ func TestValidateItem(t *testing.T, i *sdp.Item) {
 
 	if i.GetUniqueAttribute() == "" {
 		t.Errorf("Item %v has an empty UniqueAttribute", i.GloballyUniqueName())
+	}
+
+	if i.GetContext() == "" {
+		t.Errorf("Item %v has an empty Context", i.GetContext())
 	}
 
 	attrMap := i.GetAttributes().AttrStruct.AsMap()

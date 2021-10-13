@@ -231,6 +231,13 @@ func mapK8sObject(typ string, object metaV1.Object) (*sdp.Item, error) {
 	}
 	attributes = GetK8sMeta(object)
 
+	// Assign the context
+	if ns, ok := attributes["namespace"]; ok {
+		item.Context = fmt.Sprintf("%v.%v", ClusterName, ns)
+	} else {
+		item.Context = ClusterName
+	}
+
 	// Get the reflected details of the object
 	v = reflect.Indirect(reflect.ValueOf(object))
 	t = v.Type()
