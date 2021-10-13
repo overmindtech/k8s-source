@@ -7,7 +7,6 @@ require (
 	github.com/dylanratcliffe/discovery v0.1.5
 	github.com/dylanratcliffe/sdp-go v0.1.0
 	github.com/dylanratcliffe/sdpcache v0.1.1 // indirect
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
