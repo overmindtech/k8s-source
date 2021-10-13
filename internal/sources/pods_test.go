@@ -54,7 +54,7 @@ func TestPodSource(t *testing.T) {
 		var err error
 
 		// Give it some time for the pod to come up
-		for i := 0; i < 5; i++ {
+		for i := 0; i < 30; i++ {
 			items, err = source.Search(itemContext, `{"labelSelector": "job-name=hello"}`)
 
 			if len(items) > 0 {
