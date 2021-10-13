@@ -74,6 +74,8 @@ func TestPodSource(t *testing.T) {
 
 		item := items[0]
 
+		TestValidateItem(t, item)
+
 		// Populate this so that the get test can work
 		getName = item.UniqueAttributeValue()
 	})
@@ -89,6 +91,8 @@ func TestPodSource(t *testing.T) {
 		if x := item.UniqueAttributeValue(); x != getName {
 			t.Errorf("expected pod name hello, got %v", x)
 		}
+
+		TestValidateItem(t, item)
 	})
 
 	t.Run("Testing Find()", func(t *testing.T) {
@@ -102,6 +106,8 @@ func TestPodSource(t *testing.T) {
 
 		// Make sure the item from the get was there
 		for _, item := range items {
+			TestValidateItem(t, item)
+
 			if item.UniqueAttributeValue() == getName {
 				found = true
 				break
