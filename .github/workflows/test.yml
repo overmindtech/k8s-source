@@ -1,4 +1,4 @@
-name: Basic Compile
+name: Acceptance Tests
 on: push
 jobs:
   build:
