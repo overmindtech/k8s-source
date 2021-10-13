@@ -2,12 +2,12 @@ package sources
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"k8s.io/client-go/kubernetes"
@@ -71,7 +71,21 @@ func (t *TestCluster) Start() error {
 	return nil
 }
 
-func (t *TestCluster) ApplyAcceptanceConfig() (string, string, error) {
+func (t *TestCluster) ApplyBaselineConfig() error {
+	return t.Apply(ClusterBaseline)
+}
+
+// Apply Runs of `kubectl apply -f` for a given string of YAML
+func (t *TestCluster) Apply(yaml string) error {
+	return t.kubectl("apply", yaml)
+}
+
+// Delete Runs of `kubectl delete -f` for a given string of YAML
+func (t *TestCluster) Delete(yaml string) error {
+	return t.kubectl("delete", yaml)
+}
+
+func (t *TestCluster) kubectl(method string, yaml string) error {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
@@ -79,12 +93,12 @@ func (t *TestCluster) ApplyAcceptanceConfig() (string, string, error) {
 	config, err := os.CreateTemp("", "*-conf.yaml")
 
 	if err != nil {
-		return "", "", err
+		return err
 	}
 
-	config.WriteString(ClusterApply)
+	config.WriteString(yaml)
 
-	cmd := exec.Command("kubectl", "apply", "-f", config.Name())
+	cmd := exec.Command("kubectl", method, "-f", config.Name())
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	cmd.Dir = filepath.Dir(config.Name())
@@ -95,7 +109,15 @@ func (t *TestCluster) ApplyAcceptanceConfig() (string, string, error) {
 	// Run the command
 	err = cmd.Run()
 
-	return stdout.String(), stderr.String(), err
+	if err != nil {
+		return err
+	}
+
+	if e := stderr.String(); e != "" {
+		return errors.New(e)
+	}
+
+	return nil
 }
 
 func (t *TestCluster) Stop() error {
@@ -119,20 +141,12 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	var stdout string
-	var stderr string
+	// log.Println("🎁 Creating resources in cluster for testing")
+	// err = CurrentCluster.ApplyBaselineConfig()
 
-	log.Println("🎁 Creating resources in cluster for testing")
-	stdout, stderr, err = CurrentCluster.ApplyAcceptanceConfig()
-
-	if err != nil || stderr != "" {
+	if err != nil {
 		log.Fatal(err)
-		log.Fatal(stderr)
 		os.Exit(1)
-	}
-
-	for _, line := range strings.Split(stdout, "\n") {
-		log.Println(line)
 	}
 
 	log.Println("✅ Running tests")
@@ -149,7 +163,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-const ClusterApply string = `
+const ClusterBaseline string = `
 apiVersion: v1
 kind: PersistentVolume
 metadata:
