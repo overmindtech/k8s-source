@@ -11,7 +11,7 @@ import (
 
 // StorageClassSource returns a ResourceSource for StorageClassClaims for a given
 // client
-func StorageClassSource(cs *kubernetes.Clientset) ResourceSource {
+func StorageClassSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "storageclass",
 		MapGet:     MapStorageClassGet,
@@ -19,11 +19,11 @@ func StorageClassSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: false,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.StorageV1().StorageClasses,
 	)
 
-	return source
+	return source, err
 }
 
 // MapStorageClassList maps an interface that is underneath a

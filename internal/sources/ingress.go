@@ -11,7 +11,7 @@ import (
 
 // IngressSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func IngressSource(cs *kubernetes.Clientset) ResourceSource {
+func IngressSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "ingress",
 		MapGet:     MapIngressGet,
@@ -19,11 +19,11 @@ func IngressSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.NetworkingV1().Ingresses,
 	)
 
-	return source
+	return source, err
 }
 
 // MapIngressList maps an interface that is underneath a

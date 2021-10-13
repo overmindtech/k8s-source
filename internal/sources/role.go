@@ -11,7 +11,7 @@ import (
 
 // RoleSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func RoleSource(cs *kubernetes.Clientset) ResourceSource {
+func RoleSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "role",
 		MapGet:     MapRoleGet,
@@ -19,11 +19,11 @@ func RoleSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.RbacV1().Roles,
 	)
 
-	return source
+	return source, err
 }
 
 // MapRoleList maps an interface that is underneath a

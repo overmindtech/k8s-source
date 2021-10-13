@@ -10,7 +10,7 @@ import (
 
 // ResourceQuotaSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func ResourceQuotaSource(cs *kubernetes.Clientset) ResourceSource {
+func ResourceQuotaSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "resourcequota",
 		MapGet:     MapResourceQuotaGet,
@@ -18,11 +18,11 @@ func ResourceQuotaSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.CoreV1().ResourceQuotas,
 	)
 
-	return source
+	return source, err
 }
 
 // MapResourceQuotaList maps an interface that is underneath a

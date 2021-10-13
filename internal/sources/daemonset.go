@@ -11,7 +11,7 @@ import (
 
 // DaemonSetSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func DaemonSetSource(cs *kubernetes.Clientset) ResourceSource {
+func DaemonSetSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "daemonset",
 		MapGet:     MapDaemonSetGet,
@@ -19,11 +19,11 @@ func DaemonSetSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.AppsV1().DaemonSets,
 	)
 
-	return source
+	return source, err
 }
 
 // MapDaemonSetList maps an interface that is underneath a

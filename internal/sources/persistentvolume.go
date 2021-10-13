@@ -11,7 +11,7 @@ import (
 
 // PersistentVolumeSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client
-func PersistentVolumeSource(cs *kubernetes.Clientset) ResourceSource {
+func PersistentVolumeSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "persistentvolume",
 		MapGet:     MapPersistentVolumeGet,
@@ -19,11 +19,11 @@ func PersistentVolumeSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: false,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.CoreV1().PersistentVolumes,
 	)
 
-	return source
+	return source, err
 }
 
 // MapPersistentVolumeList maps an interface that is underneath a

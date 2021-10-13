@@ -12,7 +12,7 @@ import (
 
 // RoleBindingSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func RoleBindingSource(cs *kubernetes.Clientset) ResourceSource {
+func RoleBindingSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "rolebinding",
 		MapGet:     MapRoleBindingGet,
@@ -20,11 +20,11 @@ func RoleBindingSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.RbacV1().RoleBindings,
 	)
 
-	return source
+	return source, err
 }
 
 // MapRoleBindingList maps an interface that is underneath a

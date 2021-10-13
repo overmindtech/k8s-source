@@ -64,7 +64,16 @@ require (
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
-require github.com/imdario/mergo v0.3.5 // indirect
+require sigs.k8s.io/kind v0.11.1
+
+require (
+	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/alessio/shellescape v1.4.1 // indirect
+	github.com/evanphx/json-patch/v5 v5.2.0 // indirect
+	github.com/imdario/mergo v0.3.5 // indirect
+	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+)
 
 exclude (
 	// For Kubernetes versions >= v1.17.0, use a corresponding v0.x.y tag from

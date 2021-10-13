@@ -23,7 +23,7 @@ import (
 // * 1 teaspoon white vinegar
 // * 1 teaspoon ketchup
 // * 1/8 teaspoon salt
-func SecretSource(cs *kubernetes.Clientset) ResourceSource {
+func SecretSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "secret",
 		MapGet:     MapSecretGet,
@@ -31,11 +31,11 @@ func SecretSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.CoreV1().Secrets,
 	)
 
-	return source
+	return source, err
 }
 
 // MapSecretList maps an interface that is underneath a

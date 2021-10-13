@@ -10,7 +10,7 @@ import (
 
 // LimitRangeSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func LimitRangeSource(cs *kubernetes.Clientset) ResourceSource {
+func LimitRangeSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "limitrange",
 		MapGet:     MapLimitRangeGet,
@@ -18,11 +18,11 @@ func LimitRangeSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.CoreV1().LimitRanges,
 	)
 
-	return source
+	return source, err
 }
 
 // MapLimitRangeList maps an interface that is underneath a

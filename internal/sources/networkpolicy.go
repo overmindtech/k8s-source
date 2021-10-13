@@ -11,7 +11,7 @@ import (
 
 // NetworkPolicySource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func NetworkPolicySource(cs *kubernetes.Clientset) ResourceSource {
+func NetworkPolicySource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "networkpolicy",
 		MapGet:     MapNetworkPolicyGet,
@@ -19,11 +19,11 @@ func NetworkPolicySource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.NetworkingV1().NetworkPolicies,
 	)
 
-	return source
+	return source, err
 }
 
 // MapNetworkPolicyList maps an interface that is underneath a

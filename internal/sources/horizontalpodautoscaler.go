@@ -12,7 +12,7 @@ import (
 
 // HorizontalPodAutoscalerSource returns a ResourceSource for PersistentVolumeClaims for a given
 // client and namespace
-func HorizontalPodAutoscalerSource(cs *kubernetes.Clientset) ResourceSource {
+func HorizontalPodAutoscalerSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "horizontalpodautoscaler",
 		MapGet:     MapHorizontalPodAutoscalerGet,
@@ -20,11 +20,11 @@ func HorizontalPodAutoscalerSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.AutoscalingV1().HorizontalPodAutoscalers,
 	)
 
-	return source
+	return source, err
 }
 
 // MapHorizontalPodAutoscalerList maps an interface that is underneath a

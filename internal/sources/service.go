@@ -10,7 +10,7 @@ import (
 )
 
 // ServiceSource returns a ResourceSource for Pods for a given client and namespace
-func ServiceSource(cs *kubernetes.Clientset) ResourceSource {
+func ServiceSource(cs *kubernetes.Clientset) (ResourceSource, error) {
 	source := ResourceSource{
 		ItemType:   "service",
 		MapGet:     MapServiceGet,
@@ -18,11 +18,11 @@ func ServiceSource(cs *kubernetes.Clientset) ResourceSource {
 		Namespaced: true,
 	}
 
-	source.LoadFunction(
+	err := source.LoadFunction(
 		cs.CoreV1().Services,
 	)
 
-	return source
+	return source, err
 }
 
 // MapServiceList Maps the interface output of our list function to a list of
