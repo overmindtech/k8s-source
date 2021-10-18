@@ -46,7 +46,7 @@ spec:
       apiVersion: v1
       clusters:
       - cluster:
-          certificate-authority: /Users/dylanratcliffe/.minikube/ca.crt
+          certificate-authority: /etc/srcman/config/ca.crt
           extensions:
           - extension:
               last-update: Wed, 13 Oct 2021 17:02:23 BST
@@ -123,6 +123,37 @@ spec:
       MPQo15kCRga4Ss+ZNty6Vf+noRRV5D73Cgi2/mTf6cvlFIQbmjxe+5V2Km7ibSY8
       Tn9U/FCBNTKoiCN/9cfjzKQBB6ieKyyy0xwKniwRVA0skf6raVC5
       -----END RSA PRIVATE KEY-----
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIDBjCCAe6gAwIBAgIBATANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwptaW5p
+      a3ViZUNBMB4XDTIwMDkxODEzNDU1N1oXDTMwMDkxNzEzNDU1N1owFTETMBEGA1UE
+      AxMKbWluaWt1YmVDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL28
+      bM8jWz2iR6XC6RI+SHJoZZ1yaA/iP9V1c8RsfeQDGMBtoHixEhK+VM7bG3LKi5k3
+      wXua177/+p+6vu2JrOXBd2GetDv+7NxR6UoNziejnnvWGtEUx2RYYFNhcN6Wh7rd
+      LNQu7h2lo8TPsLZPn7C5goMaJ5iUcA0nIQjZhOo7RQjGEl1BdsWorhjSSh0esIfu
+      zUH4YDzO1s8WvjWQiPzyW77yAM5SwjrrmAPB0m2sS7jaSiEeANIlWCG8jlWYKv3+
+      R2B16/3vUl8F03nmdsoVvfwyF1HoyVZZp1pCeYu4U/VPYygZOUa6WxCROEv+R7Yu
+      4D8Es6W5cws62BAV4vsCAwEAAaNhMF8wDgYDVR0PAQH/BAQDAgKkMB0GA1UdJQQW
+      MBQGCCsGAQUFBwMCBggrBgEFBQcDATAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQW
+      BBSpCTbPiww8DoqAO8BageGGkYgKtzANBgkqhkiG9w0BAQsFAAOCAQEAR2w4HP1q
+      x0M+4gAkkT4w8eD4qyU7SUVaKiXN8lAW3G9DODEynqQKXUbOGjvdFrX5gVbHeqn9
+      9u2tSoxEg0s7yA80gwMYcIsHto3ICEGtys18YgJ/dJMbyAV5mcX2B5ge9mdjddBk
+      sIVap+CXdZ5dv3OG9z8HYGFNcBsZX7Ef6UEQka6vX8qYoi4EXPe4jN3qPEJm34Jt
+      PCXDGM+CwEEulJJ/MxUiY+UhgqQZyoI7LeTSwFF5K/gzBg6nJ9azCZHLSIYDixX/
+      +irPLfBSalNM51ZxtY5oH7+m6cATMCAU9bOblDVOlK0HcDl2OP6soNU6+SU4u5kS
+      G9lupxvmia+eug==
+      -----END CERTIFICATE-----
+```
+
+### Health Check
+
+The source hosts a health check on `:8080/healthz` which will return an error if NATS is not connected. An example Kubernetes readiness probe is:
+
+```yaml
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
 ```
 
 ## Search

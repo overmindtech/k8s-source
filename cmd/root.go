@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -160,6 +161,35 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 		}
 
 		e.AddSources(sourceList...)
+
+		// Start HTTP server for status
+		healthCheckPort := 8080
+		healthCheckPath := "/healthz"
+
+		http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
+			if e.IsNATSConnected() {
+				fmt.Fprint(rw, "ok")
+			} else {
+				http.Error(rw, "NATS not connected", http.StatusInternalServerError)
+			}
+		})
+
+		log.WithFields(log.Fields{
+			"port": healthCheckPort,
+			"path": healthCheckPath,
+		}).Debug("Starting healthcheck server")
+
+		go func() {
+			log.Fatal(http.ListenAndServe(":8080", nil))
+		}()
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Could not start HTTP server for /healthz health checks")
+
+			os.Exit(1)
+		}
 
 		err = e.Connect()
 
