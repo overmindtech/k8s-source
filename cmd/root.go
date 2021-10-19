@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -261,7 +262,7 @@ func init() {
 	rootCmd.PersistentFlags().String("nats-jwt-file", "", "Path to the file containing the user JWT")
 	rootCmd.PersistentFlags().String("nats-nkey-file", "", "Path to the file containing the NKey seed")
 	rootCmd.PersistentFlags().String("kubeconfig", "/etc/srcman/config/kubeconfig", "Path to the kubeconfig file containing cluster details")
-	rootCmd.PersistentFlags().Int("max-parallel", 12, "Max number of requests to run in parallel")
+	rootCmd.PersistentFlags().Int("max-parallel", (runtime.NumCPU() * 2), "Max number of requests to run in parallel")
 
 	// Bind these to viper
 	viper.BindPFlags(rootCmd.PersistentFlags())
