@@ -10,6 +10,6 @@ jobs:
       - name: purge packages
         uses: dylanratcliffe/delete-untagged-containers@main
         with:
-          package_name: srcman
+          package_name: k8s-source
           user: dylanratcliffe
           token: ${{ secrets.CR_PAT }}
