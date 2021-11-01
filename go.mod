@@ -6,7 +6,6 @@ go 1.17
 require (
 	github.com/dylanratcliffe/discovery v0.1.5
 	github.com/dylanratcliffe/sdp-go v0.1.0
-	github.com/dylanratcliffe/sdpcache v0.1.1 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
@@ -14,11 +13,16 @@ require (
 	k8s.io/api v0.22.1
 	k8s.io/apimachinery v0.22.1
 	k8s.io/client-go v0.22.1
+	sigs.k8s.io/kind v0.11.1
 )
 
 // Transitive dependencies
 require (
+	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dylanratcliffe/sdpcache v0.1.1 // indirect
+	github.com/evanphx/json-patch/v5 v5.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-logr/logr v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -27,10 +31,12 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/imdario/mergo v0.3.5 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/klauspost/compress v1.13.4 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
+	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/minio/highwayhash v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -40,6 +46,7 @@ require (
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -61,17 +68,7 @@ require (
 	k8s.io/utils v0.0.0-20210820185131-d34e5cb4466e // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
-)
 
-require sigs.k8s.io/kind v0.11.1
-
-require (
-	github.com/BurntSushi/toml v0.3.1 // indirect
-	github.com/alessio/shellescape v1.4.1 // indirect
-	github.com/evanphx/json-patch/v5 v5.2.0 // indirect
-	github.com/imdario/mergo v0.3.5 // indirect
-	github.com/mattn/go-isatty v0.0.12 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 )
 
 exclude (
