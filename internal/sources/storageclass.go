@@ -5,7 +5,7 @@ import (
 
 	storageV1 "k8s.io/api/storage/v1"
 
-	"github.com/dylanratcliffe/sdp-go"
+	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
 

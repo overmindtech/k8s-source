@@ -6,7 +6,7 @@ import (
 
 	rbacV1beta1 "k8s.io/api/rbac/v1beta1"
 
-	"github.com/dylanratcliffe/sdp-go"
+	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
 

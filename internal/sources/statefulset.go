@@ -6,7 +6,7 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/dylanratcliffe/sdp-go"
+	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
 

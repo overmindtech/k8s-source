@@ -5,7 +5,7 @@ import (
 
 	batchV1beta1 "k8s.io/api/batch/v1beta1"
 
-	"github.com/dylanratcliffe/sdp-go"
+	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
 

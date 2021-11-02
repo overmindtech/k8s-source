@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: purge packages
-        uses: dylanratcliffe/delete-untagged-containers@main
+        uses: overmindtech/delete-untagged-containers@main
         with:
           package_name: k8s-source
-          user: dylanratcliffe
+          user: overmindtech
           token: ${{ secrets.CR_PAT }}

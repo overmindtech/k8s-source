@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dylanratcliffe/sdp-go"
+	"github.com/overmindtech/sdp-go"
 )
 
 // BasicGetFindSearchTests Executes a series of basic tests against a kubernetes

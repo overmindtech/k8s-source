@@ -27,7 +27,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ghcr.io/dylanratcliffe/k8s-source
+          images: ghcr.io/overmindtech/k8s-source
           tags: |
             type=ref,event=branch
             type=ref,event=pr

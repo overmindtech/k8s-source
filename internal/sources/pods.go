@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dylanratcliffe/sdp-go"
+	"github.com/overmindtech/sdp-go"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )

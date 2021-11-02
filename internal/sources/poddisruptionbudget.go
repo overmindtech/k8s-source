@@ -3,7 +3,7 @@ package sources
 import (
 	"fmt"
 
-	"github.com/dylanratcliffe/sdp-go"
+	"github.com/overmindtech/sdp-go"
 	policyV1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/client-go/kubernetes"
 )

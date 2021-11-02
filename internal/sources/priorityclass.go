@@ -5,7 +5,7 @@ import (
 
 	coreV1 "k8s.io/api/scheduling/v1"
 
-	"github.com/dylanratcliffe/sdp-go"
+	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
 

@@ -1,6 +1,6 @@
 # Kubernetes Source
 
-This primary source is designed to be used with [srcman](https://github.com/dylanratcliffe/srcman). It connects directly to your Kubernetes clusters using the k8s API and then responds to [SDP](https://github.com/dylanratcliffe/sdp) requests over a NATS network. Usually this will be run as a container and managed by [srcman](https://github.com/dylanratcliffe/srcman).
+This primary source is designed to be used with [srcman](https://github.com/overmindtech/srcman). It connects directly to your Kubernetes clusters using the k8s API and then responds to [SDP](https://github.com/overmindtech/sdp) requests over a NATS network. Usually this will be run as a container and managed by [srcman](https://github.com/overmindtech/srcman).
 
 ## Config
 
@@ -36,7 +36,7 @@ kind: Source
 metadata:
   name: source-sample
 spec:
-  image: ghcr.io/dylanratcliffe/k8s-source:main
+  image: ghcr.io/overmindtech/k8s-source:main
   replicas: 2
   manager: manager-sample
   config:

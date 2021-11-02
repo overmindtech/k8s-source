@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dylanratcliffe/discovery"
-	"github.com/dylanratcliffe/k8s-source/internal/sources"
+	"github.com/overmindtech/discovery"
+	"github.com/overmindtech/k8s-source/internal/sources"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"k8s.io/client-go/kubernetes"
@@ -30,7 +30,7 @@ var rootCmd = &cobra.Command{
 	Use:   "k8s-source",
 	Short: "Remote primary source for kubernetes",
 	Long: `This is designed to be run as part of srcman
-(https://github.com/dylanratcliffe/srcman)
+(https://github.com/overmindtech/srcman)
 
 It responds to requests for items relating to kubernetes clusters.
 Each namespace is a separate context, as are non-namespaced resources

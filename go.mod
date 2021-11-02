@@ -1,11 +1,11 @@
-module github.com/dylanratcliffe/k8s-source
+module github.com/overmindtech/k8s-source
 
 go 1.17
 
 // Direct dependencies of my codebase
 require (
-	github.com/dylanratcliffe/discovery v0.2.0
-	github.com/dylanratcliffe/sdp-go v0.1.0
+	github.com/overmindtech/discovery v0.2.1
+	github.com/overmindtech/sdp-go v0.1.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
@@ -21,7 +21,6 @@ require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dylanratcliffe/sdpcache v0.1.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-logr/logr v1.1.0 // indirect
@@ -45,6 +44,7 @@ require (
 	github.com/nats-io/nats.go v1.13.0 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
+	github.com/overmindtech/sdpcache v0.1.2 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
