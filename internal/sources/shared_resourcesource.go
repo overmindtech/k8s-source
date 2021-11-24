@@ -207,8 +207,7 @@ func (rs *ResourceSource) LoadFunction(interfaceFunction interface{}) error {
 // must return an item whose UniqueAttribute value exactly matches the supplied
 // parameter. If the item cannot be found it should return an ItemNotFoundError
 // (Required)
-func (rs *ResourceSource) Get(itemContext string, name string) (*sdp.Item, error) {
-	var ctx context.Context
+func (rs *ResourceSource) Get(ctx context.Context, itemContext string, name string) (*sdp.Item, error) {
 	var ctxValue reflect.Value
 	var opts metaV1.GetOptions
 	var optsValue reflect.Value
@@ -218,8 +217,6 @@ func (rs *ResourceSource) Get(itemContext string, name string) (*sdp.Item, error
 	var function reflect.Value
 	var err error
 
-	// TODO: Add API timeout
-	ctx = context.Background()
 	opts = metaV1.GetOptions{}
 
 	// TODO: Logging
@@ -256,8 +253,7 @@ func (rs *ResourceSource) Get(itemContext string, name string) (*sdp.Item, error
 // Find finds all items that the backend possibly can. It maybe be possible that
 // this might not be an exhaustive list though in the case of kubernetes it is
 // unlikely
-func (rs *ResourceSource) Find(itemContext string) ([]*sdp.Item, error) {
-	var ctx context.Context
+func (rs *ResourceSource) Find(ctx context.Context, itemContext string) ([]*sdp.Item, error) {
 	var ctxValue reflect.Value
 	var opts metaV1.ListOptions
 	var optsValue reflect.Value
@@ -266,8 +262,6 @@ func (rs *ResourceSource) Find(itemContext string) ([]*sdp.Item, error) {
 	var returns []reflect.Value
 	var err error
 
-	// TODO: Add API timeout
-	ctx = context.Background()
 	opts = metaV1.ListOptions{}
 
 	// TODO: Logging
@@ -309,8 +303,7 @@ func (rs *ResourceSource) Find(itemContext string) ([]*sdp.Item, error) {
 // *Note:* Additional changes will be made to the ListOptions object after
 // deserialization such as limiting the scope to items of the same type as the
 // current ResourceSource, and drooping any options such as "Watch"
-func (rs *ResourceSource) Search(itemContext string, query string) ([]*sdp.Item, error) {
-	var ctx context.Context
+func (rs *ResourceSource) Search(ctx context.Context, itemContext string, query string) ([]*sdp.Item, error) {
 	var ctxValue reflect.Value
 	var opts metaV1.ListOptions
 	var optsValue reflect.Value
@@ -319,8 +312,6 @@ func (rs *ResourceSource) Search(itemContext string, query string) ([]*sdp.Item,
 	var function reflect.Value
 	var err error
 
-	// TODO: Add API timeout
-	ctx = context.Background()
 	opts, err = QueryToListOptions(query)
 
 	if err != nil {
