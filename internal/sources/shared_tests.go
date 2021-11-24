@@ -2,6 +2,7 @@
 package sources
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -26,7 +27,7 @@ func BasicGetFindSearchTests(t *testing.T, query string, source ResourceSource) 
 
 		// Give it some time for the pod to come up
 		for i := 0; i < 30; i++ {
-			items, err = source.Search(itemContext, query)
+			items, err = source.Search(context.Background(), itemContext, query)
 
 			if len(items) > 0 {
 				break
@@ -56,7 +57,7 @@ func BasicGetFindSearchTests(t *testing.T, query string, source ResourceSource) 
 			t.Skip("Nothing found from Search(), skipping")
 		}
 
-		item, err := source.Get(itemContext, getName)
+		item, err := source.Get(context.Background(), itemContext, getName)
 
 		if err != nil {
 			t.Error(err)
@@ -74,7 +75,7 @@ func BasicGetFindSearchTests(t *testing.T, query string, source ResourceSource) 
 			t.Skip("Nothing found from Search(), skipping")
 		}
 
-		items, err := source.Find(itemContext)
+		items, err := source.Find(context.Background(), itemContext)
 
 		if err != nil {
 			t.Fatal(err)
