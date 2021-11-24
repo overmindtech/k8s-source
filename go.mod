@@ -33,14 +33,14 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.13.4 // indirect
+	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	github.com/minio/highwayhash v1.0.1 // indirect
+	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/nats-io/jwt/v2 v2.0.3 // indirect
+	github.com/nats-io/jwt/v2 v2.2.0 // indirect
 	github.com/nats-io/nats.go v1.13.1-0.20211018182449-f2416a8b1483 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
@@ -70,8 +70,6 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 
 )
-
-require github.com/google/uuid v1.3.0 // indirect
 
 exclude (
 	// For Kubernetes versions >= v1.17.0, use a corresponding v0.x.y tag from
