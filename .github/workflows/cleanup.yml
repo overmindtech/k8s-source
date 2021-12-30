@@ -12,4 +12,4 @@ jobs:
         with:
           package_name: k8s-source
           user: overmindtech
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CR_PAT }}
