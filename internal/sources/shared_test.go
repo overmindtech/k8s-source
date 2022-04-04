@@ -97,7 +97,7 @@ func (t *TestCluster) Start() error {
 			return err
 		}
 
-		err = t.provider.ExportKubeConfig(t.Name, t.Kubeconfig)
+		err = t.provider.ExportKubeConfig(t.Name, t.Kubeconfig, false)
 
 		if err != nil {
 			return err
