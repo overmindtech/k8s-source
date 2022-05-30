@@ -140,10 +140,6 @@ func GetK8sMeta(s metaV1.Object) map[string]interface{} {
 		a["ownerReferences"] = s.GetOwnerReferences()
 	}
 
-	if v := reflect.ValueOf(s.GetClusterName()); !v.IsZero() {
-		a["clusterName"] = s.GetClusterName()
-	}
-
 	// Note that we are deliberately ignoring ManagedFields here since it's a
 	// lot of data and I'm not sure if its value
 
