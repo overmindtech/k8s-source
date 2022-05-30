@@ -6,8 +6,8 @@ go 1.17
 require (
 	github.com/nats-io/jwt/v2 v2.2.1-0.20220330180145-442af02fd36a
 	github.com/nats-io/nkeys v0.3.0
-	github.com/overmindtech/discovery v0.12.6
-	github.com/overmindtech/multiconn v0.3.1
+	github.com/overmindtech/discovery v0.12.7
+	github.com/overmindtech/multiconn v0.3.2
 	github.com/overmindtech/sdp-go v0.9.2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
