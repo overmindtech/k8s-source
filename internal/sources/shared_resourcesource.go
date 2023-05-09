@@ -21,7 +21,7 @@ var apiTimeoutDefault = (10 * time.Second)
 var apiTimeoutSet = false
 var apiTimeout time.Duration
 
-// ClusterName stores the name of the cluster, this is also used as the context
+// ClusterName stores the name of the cluster, this is also used as the scope
 // for non-namespaced items. This designed to be user by namespaced items to
 // create linked item requests on non-namespaced items
 var ClusterName string
@@ -114,11 +114,12 @@ type ResourceSource struct {
 // function should retrun an interface which has Get() and List() methods
 //
 // A Get should be:
-//   func(ctx context.Context, name string, opts metaV1.GetOptions)
+//
+//	func(ctx context.Context, name string, opts metaV1.GetOptions)
 //
 // A List should be:
-//   List(ctx context.Context, opts metaV1.ListOptions)
 //
+//	List(ctx context.Context, opts metaV1.ListOptions)
 func (rs *ResourceSource) LoadFunction(interfaceFunction interface{}) error {
 	// Reflect to values
 	interfaceFunctionValue := reflect.ValueOf(interfaceFunction)
@@ -163,7 +164,7 @@ func (rs *ResourceSource) LoadFunction(interfaceFunction interface{}) error {
 		return errors.New("getFunction must accept 3 arguments")
 	}
 
-	// Check that paramaters are as expected
+	// Check that parameters are as expected
 	if getFunctionType.In(0).Kind() != reflect.Interface {
 		return errors.New("getFunction first argument must be a context.Context")
 	}
@@ -207,7 +208,7 @@ func (rs *ResourceSource) LoadFunction(interfaceFunction interface{}) error {
 // must return an item whose UniqueAttribute value exactly matches the supplied
 // parameter. If the item cannot be found it should return an ItemNotFoundError
 // (Required)
-func (rs *ResourceSource) Get(ctx context.Context, itemContext string, name string) (*sdp.Item, error) {
+func (rs *ResourceSource) Get(ctx context.Context, itemScope string, name string) (*sdp.Item, error) {
 	var ctxValue reflect.Value
 	var opts metaV1.GetOptions
 	var optsValue reflect.Value
@@ -231,7 +232,7 @@ func (rs *ResourceSource) Get(ctx context.Context, itemContext string, name stri
 	}
 
 	// Call the function
-	function, err = rs.getFunction(itemContext)
+	function, err = rs.getFunction(itemScope)
 
 	if err != nil {
 		return nil, err
@@ -250,10 +251,10 @@ func (rs *ResourceSource) Get(ctx context.Context, itemContext string, name stri
 	return rs.MapGet(returns[0].Interface())
 }
 
-// Find finds all items that the backend possibly can. It maybe be possible that
+// List finds all items that the backend possibly can. It maybe be possible that
 // this might not be an exhaustive list though in the case of kubernetes it is
 // unlikely
-func (rs *ResourceSource) Find(ctx context.Context, itemContext string) ([]*sdp.Item, error) {
+func (rs *ResourceSource) List(ctx context.Context, itemScope string) ([]*sdp.Item, error) {
 	var ctxValue reflect.Value
 	var opts metaV1.ListOptions
 	var optsValue reflect.Value
@@ -273,12 +274,12 @@ func (rs *ResourceSource) Find(ctx context.Context, itemContext string) ([]*sdp.
 		optsValue,
 	}
 
-	// TODO: The below relies on being able to parse out the context from the
-	// query. However it's entirely possible that the context could be '*', so
+	// TODO: The below relies on being able to parse out the scope from the
+	// query. However it's entirely possible that the scope could be '*', so
 	// we need to be able to handle that
 
 	// Call the function
-	function, err = rs.listFunction(itemContext)
+	function, err = rs.listFunction(itemScope)
 
 	if err != nil {
 		return nil, err
@@ -303,7 +304,7 @@ func (rs *ResourceSource) Find(ctx context.Context, itemContext string) ([]*sdp.
 // *Note:* Additional changes will be made to the ListOptions object after
 // deserialization such as limiting the scope to items of the same type as the
 // current ResourceSource, and drooping any options such as "Watch"
-func (rs *ResourceSource) Search(ctx context.Context, itemContext string, query string) ([]*sdp.Item, error) {
+func (rs *ResourceSource) Search(ctx context.Context, itemScope string, query string) ([]*sdp.Item, error) {
 	var ctxValue reflect.Value
 	var opts metaV1.ListOptions
 	var optsValue reflect.Value
@@ -318,7 +319,7 @@ func (rs *ResourceSource) Search(ctx context.Context, itemContext string, query 
 		log.WithFields(log.Fields{
 			"query":      query,
 			"type":       rs.ItemType,
-			"context":    itemContext,
+			"scope":      itemScope,
 			"parseError": err.Error(),
 		}).Error("error while parsing query")
 
@@ -335,7 +336,7 @@ func (rs *ResourceSource) Search(ctx context.Context, itemContext string, query 
 	}
 
 	// Call the function
-	function, err = rs.listFunction(itemContext)
+	function, err = rs.listFunction(itemScope)
 
 	if err != nil {
 		return nil, err
@@ -361,10 +362,10 @@ func (rs *ResourceSource) Name() string {
 	return fmt.Sprintf("k8s-%v", rs.ItemType)
 }
 
-// Context Returns the list of contexts that this source is capable of findinf
+// Scopes Returns the list of scops that this source is capable of finding
 // items for. This is usually the name of the cluster, plus any namespaces in
 // the format {clusterName}.{namespace}
-func (rs *ResourceSource) Contexts() []string {
+func (rs *ResourceSource) Scopes() []string {
 	contexts := make([]string, 0)
 
 	if rs.Namespaced {
@@ -389,8 +390,8 @@ func (rs *ResourceSource) Weight() int {
 // interactionInterface Calls the interface function to return an interface that
 // will allow us to call Get and List functions which will in turn actually
 // execute API queries against K8s
-func (rs *ResourceSource) interactionInterface(itemContext string) (reflect.Value, error) {
-	contextDetails, err := ParseContext(itemContext)
+func (rs *ResourceSource) interactionInterface(itemScope string) (reflect.Value, error) {
+	contextDetails, err := ParseScope(itemScope)
 
 	if err != nil {
 		return reflect.Value{}, err
@@ -415,12 +416,12 @@ func (rs *ResourceSource) interactionInterface(itemContext string) (reflect.Valu
 	return results[0], nil
 }
 
-func (rs *ResourceSource) getFunction(itemContext string) (reflect.Value, error) {
+func (rs *ResourceSource) getFunction(itemScope string) (reflect.Value, error) {
 	var getMethod reflect.Value
 	var iFace reflect.Value
 	var err error
 
-	iFace, err = rs.interactionInterface(itemContext)
+	iFace, err = rs.interactionInterface(itemScope)
 
 	if err != nil {
 		return reflect.Value{}, err
@@ -431,12 +432,12 @@ func (rs *ResourceSource) getFunction(itemContext string) (reflect.Value, error)
 	return getMethod, nil
 }
 
-func (rs *ResourceSource) listFunction(itemContext string) (reflect.Value, error) {
+func (rs *ResourceSource) listFunction(itemScope string) (reflect.Value, error) {
 	var listMethod reflect.Value
 	var iFace reflect.Value
 	var err error
 
-	iFace, err = rs.interactionInterface(itemContext)
+	iFace, err = rs.interactionInterface(itemScope)
 
 	if err != nil {
 		return reflect.Value{}, err

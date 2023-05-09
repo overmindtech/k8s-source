@@ -71,11 +71,11 @@ func MapEndpointSliceGet(i interface{}) (*sdp.Item, error) {
 
 	for _, endpoint := range object.Endpoints {
 		if tr := endpoint.TargetRef; tr != nil {
-			item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-				Context: item.Context,
-				Method:  sdp.RequestMethod_GET,
-				Query:   tr.Name,
-				Type:    strings.ToLower(tr.Kind),
+			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+				Scope:  item.Scope,
+				Method: sdp.QueryMethod_GET,
+				Query:  tr.Name,
+				Type:   strings.ToLower(tr.Kind),
 			})
 		}
 	}

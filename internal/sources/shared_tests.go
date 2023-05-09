@@ -9,15 +9,15 @@ import (
 	"github.com/overmindtech/sdp-go"
 )
 
-// BasicGetFindSearchTests Executes a series of basic tests against a kubernetes
+// BasicGetListSearchTests Executes a series of basic tests against a kubernetes
 // source. These tests include:
 //
-// * Searching with a given query for items
-// * Grabbing the name of one of the found items and making sure that we can
-//   Get() it
-// * Running a Find() and ensuring that there is > 0 results
-func BasicGetFindSearchTests(t *testing.T, query string, source ResourceSource) {
-	itemContext := "testcluster:443.k8s-source-testing"
+//   - Searching with a given query for items
+//   - Grabbing the name of one of the found items and making sure that we can
+//     Get() it
+//   - Running a List() and ensuring that there is > 0 results
+func BasicGetListSearchTests(t *testing.T, query string, source ResourceSource) {
+	itemScope := "testcluster:443.k8s-source-testing"
 
 	var getName string
 
@@ -27,7 +27,7 @@ func BasicGetFindSearchTests(t *testing.T, query string, source ResourceSource) 
 
 		// Give it some time for the pod to come up
 		for i := 0; i < 30; i++ {
-			items, err = source.Search(context.Background(), itemContext, query)
+			items, err = source.Search(context.Background(), itemScope, query)
 
 			if len(items) > 0 {
 				break
@@ -57,7 +57,7 @@ func BasicGetFindSearchTests(t *testing.T, query string, source ResourceSource) 
 			t.Skip("Nothing found from Search(), skipping")
 		}
 
-		item, err := source.Get(context.Background(), itemContext, getName)
+		item, err := source.Get(context.Background(), itemScope, getName)
 
 		if err != nil {
 			t.Error(err)
@@ -70,12 +70,12 @@ func BasicGetFindSearchTests(t *testing.T, query string, source ResourceSource) 
 		TestValidateItem(t, item)
 	})
 
-	t.Run("Testing basic Find()", func(t *testing.T) {
+	t.Run("Testing basic List()", func(t *testing.T) {
 		if getName == "" {
 			t.Skip("Nothing found from Search(), skipping")
 		}
 
-		items, err := source.Find(context.Background(), itemContext)
+		items, err := source.List(context.Background(), itemScope)
 
 		if err != nil {
 			t.Fatal(err)
@@ -94,7 +94,7 @@ func BasicGetFindSearchTests(t *testing.T, query string, source ResourceSource) 
 		}
 
 		if !found {
-			t.Fatalf("Find() did not return pod %v", getName)
+			t.Fatalf("List() did not return pod %v", getName)
 		}
 	})
 }
@@ -115,8 +115,8 @@ func TestValidateItem(t *testing.T, i *sdp.Item) {
 		t.Errorf("Item %v has an empty UniqueAttribute", i.GloballyUniqueName())
 	}
 
-	if i.GetContext() == "" {
-		t.Errorf("Item %v has an empty Context", i.GetContext())
+	if i.GetScope() == "" {
+		t.Errorf("Item %v has an empty Scope", i.GetScope())
 	}
 
 	attrMap := i.GetAttributes().AttrStruct.AsMap()
@@ -146,19 +146,19 @@ func TestValidateItem(t *testing.T, i *sdp.Item) {
 			t.Errorf("LinkedItem %v of item %v has empty UniqueAttributeValue", index, i.GloballyUniqueName())
 		}
 
-		// We don't need to check for an empty context here since if it's empty
-		// it will just inherit the context of the parent
+		// We don't need to check for an empty scope here since if it's empty
+		// it will just inherit the scope of the parent
 	}
 
-	for index, linkedItemRequest := range i.GetLinkedItemRequests() {
-		if linkedItemRequest.GetType() == "" {
-			t.Errorf("LinkedItemRequest %v of item %v has empty type", index, i.GloballyUniqueName())
+	for index, linkedQuery := range i.GetLinkedItemQueries() {
+		if linkedQuery.GetType() == "" {
+			t.Errorf("LinkedQuery %v of item %v has empty type", index, i.GloballyUniqueName())
 
 		}
 
-		if linkedItemRequest.GetMethod() != sdp.RequestMethod_FIND {
-			if linkedItemRequest.GetQuery() == "" {
-				t.Errorf("LinkedItemRequest %v of item %v has empty query. This is not allowed unless the method is FIND", index, i.GloballyUniqueName())
+		if linkedQuery.GetMethod() != sdp.QueryMethod_LIST {
+			if linkedQuery.GetQuery() == "" {
+				t.Errorf("LinkedQuery %v of item %v has empty query. This is not allowed unless the method is LIST", index, i.GloballyUniqueName())
 			}
 		}
 	}

@@ -68,20 +68,20 @@ func MapServiceAccountGet(i interface{}) (*sdp.Item, error) {
 	}
 
 	for _, secret := range object.Secrets {
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: item.Context,
-			Method:  sdp.RequestMethod_GET,
-			Query:   secret.Name,
-			Type:    "secret",
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  item.Scope,
+			Method: sdp.QueryMethod_GET,
+			Query:  secret.Name,
+			Type:   "secret",
 		})
 	}
 
 	for _, ipSecret := range object.ImagePullSecrets {
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: item.Context,
-			Method:  sdp.RequestMethod_GET,
-			Query:   ipSecret.Name,
-			Type:    "secret",
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  item.Scope,
+			Method: sdp.QueryMethod_GET,
+			Query:  ipSecret.Name,
+			Type:   "secret",
 		})
 	}
 

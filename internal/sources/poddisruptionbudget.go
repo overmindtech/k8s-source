@@ -68,11 +68,11 @@ func MapPodDisruptionBudgetGet(i interface{}) (*sdp.Item, error) {
 	}
 
 	if selector := object.Spec.Selector; selector != nil {
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: item.Context,
-			Method:  sdp.RequestMethod_SEARCH,
-			Query:   LabelSelectorToQuery(selector),
-			Type:    "pod",
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  item.Scope,
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  LabelSelectorToQuery(selector),
+			Type:   "pod",
 		})
 	}
 

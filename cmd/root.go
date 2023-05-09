@@ -14,9 +14,9 @@ import (
 
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nkeys"
+	"github.com/overmindtech/connect"
 	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/k8s-source/internal/sources"
-	"github.com/overmindtech/multiconn"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"k8s.io/client-go/kubernetes"
@@ -37,10 +37,10 @@ var rootCmd = &cobra.Command{
 (https://github.com/overmindtech/srcman)
 
 It responds to requests for items relating to kubernetes clusters.
-Each namespace is a separate context, as are non-namespaced resources
+Each namespace is a separate scope, as are non-namespaced resources
 within each cluster.
 
-This can be configured using a yaml file and the --config flag, or by 
+This can be configured using a yaml file and the --config flag, or by
 using appropriately named environment variables, for example "nats-name-prefix"
 can be set using an environment variable named "NATS_NAME_PREFIX"
 `,
@@ -62,7 +62,7 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 		}
 
 		var natsNKeySeedLog string
-		var tokenClient multiconn.TokenClient
+		var tokenClient connect.TokenClient
 
 		if natsNKeySeed != "" {
 			natsNKeySeedLog = "[REDACTED]"
@@ -71,6 +71,7 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 		log.WithFields(log.Fields{
 			"nats-servers":     natsServers,
 			"nats-name-prefix": natsNamePrefix,
+			"max-parallel":     maxParallel,
 			"nats-jwt":         natsJWT,
 			"nats-nkey-seed":   natsNKeySeedLog,
 			"kubeconfig":       kubeconfig,
@@ -170,23 +171,26 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 			}
 		}
 
-		e := discovery.Engine{
-			Name: "kubernetes-source",
-			NATSOptions: &multiconn.NATSConnectionOptions{
-				CommonOptions: multiconn.CommonOptions{
-					NumRetries: -1,
-					RetryDelay: 5 * time.Second,
-				},
-				Servers:           natsServers,
-				ConnectionName:    fmt.Sprintf("%v.%v", natsNamePrefix, hostname),
-				ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
-				MaxReconnects:     -1,
-				ReconnectWait:     1 * time.Second,
-				ReconnectJitter:   1 * time.Second,
-				TokenClient:       tokenClient,
-			},
-			MaxParallelExecutions: maxParallel,
+		e, err := discovery.NewEngine()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err.Error(),
+			}).Fatal("Error initializing Engine")
 		}
+		e.Name = "source-template"
+		e.NATSOptions = &connect.NATSOptions{
+			NumRetries:        -1,
+			RetryDelay:        5 * time.Second,
+			Servers:           natsServers,
+			ConnectionName:    fmt.Sprintf("%v.%v", natsNamePrefix, hostname),
+			ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
+			MaxReconnects:     999,                // We are in a container so wait forever
+			ReconnectWait:     2 * time.Second,
+			ReconnectJitter:   2 * time.Second,
+			TokenClient:       tokenClient,
+		}
+		e.NATSQueueName = "source-template" // This should be the same as your engine name
+		e.MaxParallelExecutions = maxParallel
 
 		e.AddSources(sourceList...)
 
@@ -277,8 +281,10 @@ func init() {
 	rootCmd.PersistentFlags().String("nats-name-prefix", "", "A name label prefix. Sources should append a dot and their hostname .{hostname} to this, then set this is the NATS connection name which will be sent to the server on CONNECT to identify the client")
 	rootCmd.PersistentFlags().String("nats-jwt", "", "The JWT token that should be used to authenticate to NATS, provided in raw format e.g. eyJ0eXAiOiJKV1Q...")
 	rootCmd.PersistentFlags().String("nats-nkey-seed", "", "The NKey seed which corresponds to the NATS JWT e.g. SUAFK6QUC...")
-	rootCmd.PersistentFlags().String("kubeconfig", "/etc/srcman/config/kubeconfig", "Path to the kubeconfig file containing cluster details")
 	rootCmd.PersistentFlags().Int("max-parallel", (runtime.NumCPU() * 2), "Max number of requests to run in parallel")
+
+	// source-specific flags
+	rootCmd.PersistentFlags().String("kubeconfig", "/etc/srcman/config/kubeconfig", "Path to the kubeconfig file containing cluster details")
 
 	// Bind these to viper
 	viper.BindPFlags(rootCmd.PersistentFlags())
@@ -290,6 +296,8 @@ func init() {
 		} else {
 			log.SetLevel(log.InfoLevel)
 		}
+
+		log.AddHook(TerminationLogHook{})
 
 		// Bind flags that haven't been set to the values from viper of we have them
 		cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
@@ -318,7 +326,7 @@ func initConfig() {
 
 // createTokenClient Creates a basic token client that will authenticate to NATS
 // using the given values
-func createTokenClient(natsJWT string, natsNKeySeed string) (multiconn.TokenClient, error) {
+func createTokenClient(natsJWT string, natsNKeySeed string) (connect.TokenClient, error) {
 	var kp nkeys.KeyPair
 	var err error
 
@@ -338,5 +346,32 @@ func createTokenClient(natsJWT string, natsNKeySeed string) (multiconn.TokenClie
 		return nil, fmt.Errorf("could not parse nats-nkey-seed: %v", err)
 	}
 
-	return multiconn.NewBasicTokenClient(natsJWT, kp), nil
+	return connect.NewBasicTokenClient(natsJWT, kp), nil
+}
+
+// TerminationLogHook A hook that logs fatal errors to the termination log
+type TerminationLogHook struct{}
+
+func (t TerminationLogHook) Levels() []log.Level {
+	return []log.Level{log.FatalLevel}
+}
+
+func (t TerminationLogHook) Fire(e *log.Entry) error {
+	tLog, err := os.OpenFile("/dev/termination-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	if err != nil {
+		return err
+	}
+
+	var message string
+
+	message = e.Message
+
+	for k, v := range e.Data {
+		message = fmt.Sprintf("%v %v=%v", message, k, v)
+	}
+
+	_, err = tLog.WriteString(message)
+
+	return err
 }

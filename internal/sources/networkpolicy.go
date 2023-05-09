@@ -68,11 +68,11 @@ func MapNetworkPolicyGet(i interface{}) (*sdp.Item, error) {
 		return &sdp.Item{}, err
 	}
 
-	item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-		Context: item.Context,
-		Method:  sdp.RequestMethod_GET,
-		Query:   LabelSelectorToQuery(&object.Spec.PodSelector),
-		Type:    "pod",
+	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+		Scope:  item.Scope,
+		Method: sdp.QueryMethod_GET,
+		Query:  LabelSelectorToQuery(&object.Spec.PodSelector),
+		Type:   "pod",
 	})
 
 	var peers []networkingV1.NetworkPolicyPeer
@@ -93,11 +93,11 @@ func MapNetworkPolicyGet(i interface{}) (*sdp.Item, error) {
 			// matchLabels:
 			//   project: something
 
-			item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-				Context: item.Context,
-				Method:  sdp.RequestMethod_GET,
-				Query:   LabelSelectorToQuery(ps),
-				Type:    "pod",
+			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+				Scope:  item.Scope,
+				Method: sdp.QueryMethod_GET,
+				Query:  LabelSelectorToQuery(ps),
+				Type:   "pod",
 			})
 		}
 	}

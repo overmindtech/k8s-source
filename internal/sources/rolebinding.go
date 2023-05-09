@@ -70,38 +70,38 @@ func MapRoleBindingGet(i interface{}) (*sdp.Item, error) {
 	}
 
 	// Link the referenced role
-	var context string
+	var scope string
 
 	switch object.RoleRef.Name {
 	case "Role":
 		// If this binding is linked to a role then it's in the same namespace
-		context = item.Context
+		scope = item.Scope
 	case "ClusterRole":
-		// If thi sis linked to a ClusterRole (which is not namespaced) we need
-		// to make sure that we are querying the root context i.e. the
-		// non-namespaced context
-		context = ClusterName
+		// If this is linked to a ClusterRole (which is not namespaced) we need
+		// to make sure that we are querying the root scope i.e. the
+		// non-namespaced scope
+		scope = ClusterName
 	}
 
-	item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-		Context: context,
-		Method:  sdp.RequestMethod_GET,
-		Query:   object.RoleRef.Name,
-		Type:    strings.ToLower(object.RoleRef.Kind),
+	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+		Scope:  scope,
+		Method: sdp.QueryMethod_GET,
+		Query:  object.RoleRef.Name,
+		Type:   strings.ToLower(object.RoleRef.Kind),
 	})
 
 	for _, subject := range object.Subjects {
 		if subject.Namespace == "" {
-			context = ClusterName
+			scope = ClusterName
 		} else {
-			context = ClusterName + "." + subject.Namespace
+			scope = ClusterName + "." + subject.Namespace
 		}
 
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: context,
-			Method:  sdp.RequestMethod_GET,
-			Query:   subject.Name,
-			Type:    strings.ToLower(subject.Kind),
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  scope,
+			Method: sdp.QueryMethod_GET,
+			Query:  subject.Name,
+			Type:   strings.ToLower(subject.Kind),
 		})
 	}
 

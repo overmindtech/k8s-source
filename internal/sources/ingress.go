@@ -73,11 +73,11 @@ func MapIngressGet(i interface{}) (*sdp.Item, error) {
 		if http := rule.HTTP; http != nil {
 			for _, path := range http.Paths {
 				if service := path.Backend.Service; service != nil {
-					item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-						Context: item.Context,
-						Method:  sdp.RequestMethod_GET,
-						Query:   service.Name,
-						Type:    "service",
+					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+						Scope:  item.Scope,
+						Method: sdp.QueryMethod_GET,
+						Query:  service.Name,
+						Type:   "service",
 					})
 				}
 			}
@@ -87,11 +87,11 @@ func MapIngressGet(i interface{}) (*sdp.Item, error) {
 	// Link default if it exists
 	if db := object.Spec.DefaultBackend; db != nil {
 		if service := db.Service; service != nil {
-			item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-				Context: item.Context,
-				Method:  sdp.RequestMethod_GET,
-				Query:   service.Name,
-				Type:    "service",
+			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+				Scope:  item.Scope,
+				Method: sdp.QueryMethod_GET,
+				Query:  service.Name,
+				Type:   "service",
 			})
 		}
 	}

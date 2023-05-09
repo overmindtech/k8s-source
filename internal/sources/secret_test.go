@@ -37,5 +37,5 @@ func TestSecretSource(t *testing.T) {
 		t.Error(err)
 	}
 
-	BasicGetFindSearchTests(t, `{"fieldSelector": "metadata.name=secret-basic-auth"}`, source)
+	BasicGetListSearchTests(t, `{"fieldSelector": "metadata.name=secret-basic-auth"}`, source)
 }

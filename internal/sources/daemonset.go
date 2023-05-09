@@ -69,13 +69,13 @@ func MapDaemonSetGet(i interface{}) (*sdp.Item, error) {
 	}
 
 	if object.Spec.Selector != nil {
-		item.LinkedItemRequests = []*sdp.ItemRequest{
+		item.LinkedItemQueries = []*sdp.Query{
 			// Services are linked to pods via their selector
 			{
-				Context: item.Context,
-				Method:  sdp.RequestMethod_SEARCH,
-				Query:   LabelSelectorToQuery(object.Spec.Selector),
-				Type:    "pod",
+				Scope:  item.Scope,
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  LabelSelectorToQuery(object.Spec.Selector),
+				Type:   "pod",
 			},
 		}
 	}

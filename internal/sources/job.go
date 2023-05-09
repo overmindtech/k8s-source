@@ -69,12 +69,12 @@ func MapJobGet(i interface{}) (*sdp.Item, error) {
 	}
 
 	if object.Spec.Selector != nil {
-		item.LinkedItemRequests = []*sdp.ItemRequest{
+		item.LinkedItemQueries = []*sdp.Query{
 			{
-				Context: item.Context,
-				Method:  sdp.RequestMethod_SEARCH,
-				Query:   LabelSelectorToQuery(object.Spec.Selector),
-				Type:    "pod",
+				Scope:  item.Scope,
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  LabelSelectorToQuery(object.Spec.Selector),
+				Type:   "pod",
 			},
 		}
 	}
@@ -82,12 +82,12 @@ func MapJobGet(i interface{}) (*sdp.Item, error) {
 	// Check owner references to see if it was created by a cronjob
 	for _, o := range object.ObjectMeta.OwnerReferences {
 		if o.Kind == "CronJob" {
-			item.LinkedItemRequests = []*sdp.ItemRequest{
+			item.LinkedItemQueries = []*sdp.Query{
 				{
-					Context: item.Context,
-					Method:  sdp.RequestMethod_GET,
-					Query:   o.Name,
-					Type:    "cronjob",
+					Scope:  item.Scope,
+					Method: sdp.QueryMethod_GET,
+					Query:  o.Name,
+					Type:   "cronjob",
 				},
 			}
 		}

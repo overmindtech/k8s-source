@@ -66,20 +66,20 @@ func MapServiceGet(i interface{}) (*sdp.Item, error) {
 		return &sdp.Item{}, err
 	}
 
-	item.LinkedItemRequests = []*sdp.ItemRequest{
+	item.LinkedItemQueries = []*sdp.Query{
 		{
-			Context: item.Context,
-			Method:  sdp.RequestMethod_GET,
-			Query:   fmt.Sprint(item.UniqueAttributeValue()),
-			Type:    "endpoint",
+			Scope:  item.Scope,
+			Method: sdp.QueryMethod_GET,
+			Query:  fmt.Sprint(item.UniqueAttributeValue()),
+			Type:   "endpoint",
 		},
 	}
 
 	if sel := s.Spec.Selector; sel != nil {
 		// Services are linked to pods via their selector
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: item.Context,
-			Method:  sdp.RequestMethod_SEARCH,
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  item.Scope,
+			Method: sdp.QueryMethod_SEARCH,
 			Query: LabelSelectorToQuery(&metaV1.LabelSelector{
 				MatchLabels: sel,
 			}),

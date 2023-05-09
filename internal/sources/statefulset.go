@@ -69,22 +69,22 @@ func MapStatefulSetGet(i interface{}) (*sdp.Item, error) {
 		return &sdp.Item{}, err
 	}
 
-	item.LinkedItemRequests = make([]*sdp.ItemRequest, 0)
+	item.LinkedItemQueries = make([]*sdp.Query, 0)
 
 	if object.Spec.Selector != nil {
 		// Stateful sets are linked to pods via their selector
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: item.Context,
-			Method:  sdp.RequestMethod_SEARCH,
-			Query:   LabelSelectorToQuery(object.Spec.Selector),
-			Type:    "pod",
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  item.Scope,
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  LabelSelectorToQuery(object.Spec.Selector),
+			Type:   "pod",
 		})
 	}
 
 	if object.Spec.ServiceName != "" {
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: item.Context,
-			Method:  sdp.RequestMethod_SEARCH,
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  item.Scope,
+			Method: sdp.QueryMethod_SEARCH,
 			Query: ListOptionsToQuery(&metaV1.ListOptions{
 				FieldSelector: Selector{
 					"metadata.name":      object.Spec.ServiceName,

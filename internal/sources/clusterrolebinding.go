@@ -69,27 +69,26 @@ func MapClusterRoleBindingGet(i interface{}) (*sdp.Item, error) {
 		return &sdp.Item{}, err
 	}
 
-	var context string
-
-	item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-		Context: ClusterName,
-		Method:  sdp.RequestMethod_GET,
-		Query:   object.RoleRef.Name,
-		Type:    strings.ToLower(object.RoleRef.Kind),
+	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+		Scope:  ClusterName,
+		Method: sdp.QueryMethod_GET,
+		Query:  object.RoleRef.Name,
+		Type:   strings.ToLower(object.RoleRef.Kind),
 	})
 
 	for _, subject := range object.Subjects {
+		var scope string
 		if subject.Namespace == "" {
-			context = ClusterName
+			scope = ClusterName
 		} else {
-			context = ClusterName + "." + subject.Namespace
+			scope = ClusterName + "." + subject.Namespace
 		}
 
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: context,
-			Method:  sdp.RequestMethod_GET,
-			Query:   subject.Name,
-			Type:    strings.ToLower(subject.Kind),
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  scope,
+			Method: sdp.QueryMethod_GET,
+			Query:  subject.Name,
+			Type:   strings.ToLower(subject.Kind),
 		})
 	}
 

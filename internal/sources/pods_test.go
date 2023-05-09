@@ -43,5 +43,5 @@ func TestPodSource(t *testing.T) {
 		t.Error(err)
 	}
 
-	BasicGetFindSearchTests(t, `{"labelSelector": "job-name=hello"}`, source)
+	BasicGetListSearchTests(t, `{"labelSelector": "job-name=hello"}`, source)
 }

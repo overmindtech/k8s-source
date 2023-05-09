@@ -53,7 +53,7 @@ func TestParseContext(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result, err := ParseContext(test.Input)
+		result, err := ParseScope(test.Input)
 
 		if err != nil {
 			t.Error(err)
