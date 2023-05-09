@@ -37,5 +37,5 @@ func TestRoleSource(t *testing.T) {
 		t.Error(err)
 	}
 
-	BasicGetFindSearchTests(t, `{"fieldSelector": "metadata.name=pod-reader"}`, source)
+	BasicGetListSearchTests(t, `{"fieldSelector": "metadata.name=pod-reader"}`, source)
 }

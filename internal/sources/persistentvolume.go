@@ -69,26 +69,26 @@ func MapPersistentVolumeGet(i interface{}) (*sdp.Item, error) {
 	}
 
 	if claim := object.Spec.ClaimRef; claim != nil {
-		context := strings.Join([]string{ClusterName, claim.Namespace}, ".")
+		scope := strings.Join([]string{ClusterName, claim.Namespace}, ".")
 
 		// Link to all items in the PersistentVolume
-		item.LinkedItemRequests = []*sdp.ItemRequest{
-			// Search all types within the PersistentVolume's context
+		item.LinkedItemQueries = []*sdp.Query{
+			// Search all types within the PersistentVolume's scope
 			{
-				Context: context,
-				Method:  sdp.RequestMethod_GET,
-				Type:    strings.ToLower(claim.Kind),
-				Query:   claim.Name,
+				Scope:  scope,
+				Method: sdp.QueryMethod_GET,
+				Type:   strings.ToLower(claim.Kind),
+				Query:  claim.Name,
 			},
 		}
 	}
 
 	// Link to the storage class
-	item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-		Context: ClusterName,
-		Method:  sdp.RequestMethod_GET,
-		Query:   object.Spec.StorageClassName,
-		Type:    "storageclass",
+	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+		Scope:  ClusterName,
+		Method: sdp.QueryMethod_GET,
+		Query:  object.Spec.StorageClassName,
+		Type:   "storageclass",
 	})
 
 	return item, nil

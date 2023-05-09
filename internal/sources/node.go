@@ -79,13 +79,13 @@ func (rs *ResourceSource) MapNodeGet(i interface{}) (*sdp.Item, error) {
 	namespaces, _ := rs.NSS.Namespaces()
 
 	for _, namespace := range namespaces {
-		context := strings.Join([]string{ClusterName, namespace}, ".")
+		scope := strings.Join([]string{ClusterName, namespace}, ".")
 
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: context,
-			Method:  sdp.RequestMethod_SEARCH,
-			Type:    "pod",
-			Query:   ListOptionsToQuery(&hostQuery),
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  scope,
+			Method: sdp.QueryMethod_SEARCH,
+			Type:   "pod",
+			Query:  ListOptionsToQuery(&hostQuery),
 		})
 	}
 

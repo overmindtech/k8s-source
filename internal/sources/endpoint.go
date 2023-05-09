@@ -71,13 +71,13 @@ func MapEndpointGet(i interface{}) (*sdp.Item, error) {
 	for _, subset := range object.Subsets {
 		for _, address := range subset.Addresses {
 			if address.TargetRef != nil {
-				item.LinkedItemRequests = append(item.LinkedItemRequests, ObjectReferenceToLIR(address.TargetRef, ClusterName))
+				item.LinkedItemQueries = append(item.LinkedItemQueries, ObjectReferenceToLIR(address.TargetRef, ClusterName))
 			}
 		}
 
 		for _, notReadAddress := range subset.NotReadyAddresses {
 			if notReadAddress.TargetRef != nil {
-				item.LinkedItemRequests = append(item.LinkedItemRequests, ObjectReferenceToLIR(notReadAddress.TargetRef, ClusterName))
+				item.LinkedItemQueries = append(item.LinkedItemQueries, ObjectReferenceToLIR(notReadAddress.TargetRef, ClusterName))
 			}
 		}
 	}

@@ -68,15 +68,15 @@ func MapNamespaceGet(i interface{}) (*sdp.Item, error) {
 		return &sdp.Item{}, err
 	}
 
-	context := strings.Join([]string{ClusterName, object.Name}, ".")
+	scope := strings.Join([]string{ClusterName, object.Name}, ".")
 
 	// Link to all items in the namespace
-	item.LinkedItemRequests = []*sdp.ItemRequest{
-		// Search all types within the namespace's context
+	item.LinkedItemQueries = []*sdp.Query{
+		// Search all types within the namespace's scope
 		{
-			Context: context,
-			Method:  sdp.RequestMethod_FIND,
-			Type:    "*",
+			Scope:  scope,
+			Method: sdp.QueryMethod_LIST,
+			Type:   "*",
 		},
 	}
 

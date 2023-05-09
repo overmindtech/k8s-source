@@ -12,7 +12,7 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type ContextDetails struct {
+type ScopeDetails struct {
 	ClusterName string
 	Namespace   string
 }
@@ -23,19 +23,19 @@ type ContextDetails struct {
 // This is possible due to the fact namespaces have a limited set of characters so we can use a regex to find the last instance of a namespace-compliant string after a trailing
 var ClusterNamespaceRegex = regexp.MustCompile(`(?P<clusterName>.+:.+?)(\.(?P<namespace>[a-z0-9]([-a-z0-9]*[a-z0-9])?))?$`)
 
-// ParseContext Parses the custer and context name out of a given SDP context
+// ParseScope Parses the custer and scope name out of a given SDP scope
 // given that the naming convention is {clusterName}.{namespace}
-func ParseContext(itemContext string) (ContextDetails, error) {
-	matches := ClusterNamespaceRegex.FindStringSubmatch(itemContext)
+func ParseScope(itemScope string) (ScopeDetails, error) {
+	matches := ClusterNamespaceRegex.FindStringSubmatch(itemScope)
 
 	if len(matches) != 5 {
-		return ContextDetails{
-			ClusterName: itemContext,
+		return ScopeDetails{
+			ClusterName: itemScope,
 			Namespace:   "",
 		}, nil
 	}
 
-	return ContextDetails{
+	return ScopeDetails{
 		ClusterName: matches[ClusterNamespaceRegex.SubexpIndex("clusterName")],
 		Namespace:   matches[ClusterNamespaceRegex.SubexpIndex("namespace")],
 	}, nil
@@ -187,27 +187,27 @@ func QueryToListOptions(query string) (metaV1.ListOptions, error) {
 }
 
 // ObjectReferenceToLIR Converts a K8s ObjectReference to a linked item request.
-// Note that you must provide the parent context (the name of the cluster) since
+// Note that you must provide the parent scope (the name of the cluster) since
 // the reference could be an object in a different namespace and therefore
-// context. If the parent context is empty, the context will be assumed to be
+// scope. If the parent scope is empty, the scope will be assumed to be
 // the same as the current object
-func ObjectReferenceToLIR(ref *coreV1.ObjectReference, parentContext string) *sdp.ItemRequest {
+func ObjectReferenceToLIR(ref *coreV1.ObjectReference, parentScope string) *sdp.Query {
 	if ref == nil {
 		return nil
 	}
 
-	var context string
+	var scope string
 
-	// If we have a namespace then calculate the full context name
-	if ref.Namespace != "" && parentContext != "" {
-		context = fmt.Sprintf("%v.%v", parentContext, ref.Namespace)
+	// If we have a namespace then calculate the full scope name
+	if ref.Namespace != "" && parentScope != "" {
+		scope = fmt.Sprintf("%v.%v", parentScope, ref.Namespace)
 	}
 
-	return &sdp.ItemRequest{
-		Type:    strings.ToLower(ref.Kind), // Lowercase as per convention
-		Method:  sdp.RequestMethod_GET,     // Object references are to a specific object
-		Query:   ref.Name,
-		Context: context,
+	return &sdp.Query{
+		Type:   strings.ToLower(ref.Kind), // Lowercase as per convention
+		Method: sdp.QueryMethod_GET,       // Object references are to a specific object
+		Query:  ref.Name,
+		Scope:  scope,
 	}
 }
 
@@ -227,11 +227,11 @@ func mapK8sObject(typ string, object metaV1.Object) (*sdp.Item, error) {
 	}
 	attributes = GetK8sMeta(object)
 
-	// Assign the context
+	// Assign the scope
 	if ns, ok := attributes["namespace"]; ok {
-		item.Context = fmt.Sprintf("%v.%v", ClusterName, ns)
+		item.Scope = fmt.Sprintf("%v.%v", ClusterName, ns)
 	} else {
-		item.Context = ClusterName
+		item.Scope = ClusterName
 	}
 
 	// Get the reflected details of the object
@@ -276,7 +276,7 @@ func mapK8sObject(typ string, object metaV1.Object) (*sdp.Item, error) {
 	}
 
 	item.Attributes, err = sdp.ToAttributes(attributes)
-	item.LinkedItemRequests = []*sdp.ItemRequest{}
+	item.LinkedItemQueries = []*sdp.Query{}
 
 	return item, err
 }

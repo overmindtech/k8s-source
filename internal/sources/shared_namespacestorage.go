@@ -10,7 +10,7 @@ import (
 
 // NamespaceStorage is an object that is used for storing the list of
 // namespaces. Many of the non-namespaced resources will need to know what thee
-// list of namespaces is in order for them to create LinkedItemRequests. This
+// list of namespaces is in order for them to create LinkedItemQueries. This
 // object stores them to ensure that we don't unnecessarily spam the API
 type NamespaceStorage struct {
 	CS            *kubernetes.Clientset

@@ -69,13 +69,13 @@ func MapHorizontalPodAutoscalerGet(i interface{}) (*sdp.Item, error) {
 		return &sdp.Item{}, err
 	}
 
-	item.LinkedItemRequests = []*sdp.ItemRequest{
+	item.LinkedItemQueries = []*sdp.Query{
 		// Services are linked to pods via their selector
 		{
-			Context: item.Context,
-			Method:  sdp.RequestMethod_GET,
-			Query:   object.Spec.ScaleTargetRef.Name,
-			Type:    strings.ToLower(object.Spec.ScaleTargetRef.Kind),
+			Scope:  item.Scope,
+			Method: sdp.QueryMethod_GET,
+			Query:  object.Spec.ScaleTargetRef.Name,
+			Type:   strings.ToLower(object.Spec.ScaleTargetRef.Kind),
 		},
 	}
 

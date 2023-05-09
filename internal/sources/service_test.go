@@ -64,5 +64,5 @@ func TestServiceSource(t *testing.T) {
 		t.Error(err)
 	}
 
-	BasicGetFindSearchTests(t, `{"fieldSelector": "metadata.name=nginx-service"}`, source)
+	BasicGetListSearchTests(t, `{"fieldSelector": "metadata.name=nginx-service"}`, source)
 }

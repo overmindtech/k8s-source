@@ -69,21 +69,21 @@ func MapPodGet(i interface{}) (*sdp.Item, error) {
 
 	// Link service accounts
 	if pod.Spec.ServiceAccountName != "" {
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: item.Context,
-			Method:  sdp.RequestMethod_GET,
-			Query:   pod.Spec.ServiceAccountName,
-			Type:    "serviceaccount",
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  item.Scope,
+			Method: sdp.QueryMethod_GET,
+			Query:  pod.Spec.ServiceAccountName,
+			Type:   "serviceaccount",
 		})
 	}
 
 	// Link to the controller if relevant
 	for _, ref := range pod.GetOwnerReferences() {
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: item.Context,
-			Type:    strings.ToLower(ref.Kind),
-			Method:  sdp.RequestMethod_GET,
-			Query:   ref.Name,
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  item.Scope,
+			Type:   strings.ToLower(ref.Kind),
+			Method: sdp.QueryMethod_GET,
+			Query:  ref.Name,
 		})
 	}
 
@@ -91,31 +91,31 @@ func MapPodGet(i interface{}) (*sdp.Item, error) {
 	for _, vol := range pod.Spec.Volumes {
 		// Link PVCs
 		if vol.PersistentVolumeClaim != nil {
-			item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-				Context: item.Context,
-				Method:  sdp.RequestMethod_GET,
-				Query:   vol.PersistentVolumeClaim.ClaimName,
-				Type:    PVCType,
+			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+				Scope:  item.Scope,
+				Method: sdp.QueryMethod_GET,
+				Query:  vol.PersistentVolumeClaim.ClaimName,
+				Type:   PVCType,
 			})
 		}
 
 		// Link secrets
 		if vol.Secret != nil {
-			item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-				Context: item.Context,
-				Method:  sdp.RequestMethod_GET,
-				Query:   vol.Secret.SecretName,
-				Type:    "secret",
+			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+				Scope:  item.Scope,
+				Method: sdp.QueryMethod_GET,
+				Query:  vol.Secret.SecretName,
+				Type:   "secret",
 			})
 		}
 
 		// Link config map volumes
 		if vol.ConfigMap != nil {
-			item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-				Context: item.Context,
-				Method:  sdp.RequestMethod_GET,
-				Query:   vol.ConfigMap.Name,
-				Type:    "configMap",
+			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+				Scope:  item.Scope,
+				Method: sdp.QueryMethod_GET,
+				Query:  vol.ConfigMap.Name,
+				Type:   "configMap",
 			})
 		}
 	}
@@ -127,20 +127,20 @@ func MapPodGet(i interface{}) (*sdp.Item, error) {
 			if env.ValueFrom != nil {
 				if env.ValueFrom.SecretKeyRef != nil {
 					// Add linked item from spec.containers[].env[].valueFrom.secretKeyRef
-					item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-						Context: item.Context,
-						Method:  sdp.RequestMethod_GET,
-						Query:   env.ValueFrom.SecretKeyRef.Name,
-						Type:    "secret",
+					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+						Scope:  item.Scope,
+						Method: sdp.QueryMethod_GET,
+						Query:  env.ValueFrom.SecretKeyRef.Name,
+						Type:   "secret",
 					})
 				}
 
 				if env.ValueFrom.ConfigMapKeyRef != nil {
-					item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-						Context: item.Context,
-						Method:  sdp.RequestMethod_GET,
-						Query:   env.ValueFrom.ConfigMapKeyRef.Name,
-						Type:    "configMap",
+					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+						Scope:  item.Scope,
+						Method: sdp.QueryMethod_GET,
+						Query:  env.ValueFrom.ConfigMapKeyRef.Name,
+						Type:   "configMap",
 					})
 				}
 			}
@@ -149,22 +149,22 @@ func MapPodGet(i interface{}) (*sdp.Item, error) {
 		for _, envFrom := range container.EnvFrom {
 			if envFrom.SecretRef != nil {
 				// Add linked item from spec.containers[].EnvFrom[].secretKeyRef
-				item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-					Context: item.Context,
-					Method:  sdp.RequestMethod_GET,
-					Query:   envFrom.SecretRef.Name,
-					Type:    "secret",
+				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+					Scope:  item.Scope,
+					Method: sdp.QueryMethod_GET,
+					Query:  envFrom.SecretRef.Name,
+					Type:   "secret",
 				})
 			}
 		}
 	}
 
 	if pod.Spec.PriorityClassName != "" {
-		item.LinkedItemRequests = append(item.LinkedItemRequests, &sdp.ItemRequest{
-			Context: ClusterName,
-			Method:  sdp.RequestMethod_GET,
-			Query:   pod.Spec.PriorityClassName,
-			Type:    "priorityclassname",
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Scope:  ClusterName,
+			Method: sdp.QueryMethod_GET,
+			Query:  pod.Spec.PriorityClassName,
+			Type:   "priorityclassname",
 		})
 	}
 
