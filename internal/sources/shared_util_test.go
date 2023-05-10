@@ -2,7 +2,7 @@ package sources
 
 import "testing"
 
-func TestParseContext(t *testing.T) {
+func TestParseScope(t *testing.T) {
 	type ParseTest struct {
 		Input       string
 		ClusterName string
@@ -53,11 +53,7 @@ func TestParseContext(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result, err := ParseScope(test.Input)
-
-		if err != nil {
-			t.Error(err)
-		}
+		result := ParseScope(test.Input)
 
 		if test.ClusterName != result.ClusterName {
 			t.Errorf("ClusterName did not match, expected %v, got %v", test.ClusterName, result.ClusterName)

@@ -391,12 +391,7 @@ func (rs *ResourceSource) Weight() int {
 // will allow us to call Get and List functions which will in turn actually
 // execute API queries against K8s
 func (rs *ResourceSource) interactionInterface(itemScope string) (reflect.Value, error) {
-	contextDetails, err := ParseScope(itemScope)
-
-	if err != nil {
-		return reflect.Value{}, err
-	}
-
+	contextDetails := ParseScope(itemScope)
 	interfaceFunctionArgs := make([]reflect.Value, 0)
 
 	if rs.Namespaced {
