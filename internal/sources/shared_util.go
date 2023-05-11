@@ -28,7 +28,9 @@ func (sd ScopeDetails) String() string {
 // ClusterNamespaceRegex matches the cluster name and namespace from a string
 // that is in the format {clusterName}.{namespace}
 //
-// This is possible due to the fact namespaces have a limited set of characters so we can use a regex to find the last instance of a namespace-compliant string after a trailing
+// This is possible due to the fact namespaces have a limited set of characters
+// so we can use a regex to find the last instance of a namespace-compliant
+// string after a trailing
 var ClusterNamespaceRegex = regexp.MustCompile(`(?P<clusterName>.+:.+?)(\.(?P<namespace>[a-z0-9]([-a-z0-9]*[a-z0-9])?))?$`)
 
 // ParseScope Parses the custer and scope name out of a given SDP scope

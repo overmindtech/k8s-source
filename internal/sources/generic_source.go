@@ -2,9 +2,11 @@ package sources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/overmindtech/sdp-go"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -118,7 +120,15 @@ func (k *KubeTypeSource[Resource, ResourceList]) Get(ctx context.Context, scope 
 	resource, err := i.Get(ctx, query, metav1.GetOptions{})
 
 	if err != nil {
-		// TODO: Handle not found
+		statusErr := new(k8serr.StatusError)
+
+		if errors.As(err, &statusErr) && statusErr.ErrStatus.Code == 404 {
+			return nil, &sdp.QueryError{
+				ErrorType:   sdp.QueryError_NOTFOUND,
+				ErrorString: statusErr.ErrStatus.Message,
+			}
+		}
+
 		return nil, err
 	}
 

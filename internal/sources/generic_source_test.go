@@ -2,6 +2,7 @@ package sources
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -208,4 +209,49 @@ func TestSourceGet(t *testing.T) {
 			t.Errorf("expected error, got none")
 		}
 	})
+}
+
+func TestRealGet(t *testing.T) {
+	source := KubeTypeSource[*v1.Pod, *v1.PodList]{
+		TypeName:    "pod",
+		Namespaces:  []string{"default"},
+		ClusterName: "minikube",
+		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Pod, *v1.PodList] {
+			return CurrentCluster.ClientSet.CoreV1().Pods(namespace)
+		},
+		ListExtractor: func(p *v1.PodList) ([]*v1.Pod, error) {
+			pods := make([]*v1.Pod, len(p.Items))
+
+			for i := range p.Items {
+				pods[i] = &p.Items[i]
+			}
+
+			return pods, nil
+		},
+		LinkedItemQueryExtractor: func(p *v1.Pod) ([]*sdp.Query, error) {
+			return []*sdp.Query{}, nil
+		},
+	}
+
+	err := source.Validate()
+
+	if err != nil {
+		t.Fatalf("source validation failed: %s", err)
+	}
+
+	_, err = source.Get(context.Background(), "minikube:8080.default", "not-real-pod")
+
+	if err == nil {
+		t.Error("expected error, got none")
+	}
+
+	sdpErr := new(sdp.QueryError)
+
+	if errors.As(err, &sdpErr) {
+		if sdpErr.ErrorType != sdp.QueryError_NOTFOUND {
+			t.Errorf("expected not found error, got %s", sdpErr.ErrorType)
+		}
+	} else {
+		t.Errorf("expected sdp.QueryError, got %s", err)
+	}
 }
