@@ -87,7 +87,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) Type() string {
 }
 
 func (k *KubeTypeSource[Resource, ResourceList]) Name() string {
-	return "TODO"
+	return fmt.Sprintf("k8s-%v", k.TypeName)
 }
 
 func (k *KubeTypeSource[Resource, ResourceList]) Scopes() []string {
@@ -141,8 +141,14 @@ func (k *KubeTypeSource[Resource, ResourceList]) Get(ctx context.Context, scope 
 }
 
 func (k *KubeTypeSource[Resource, ResourceList]) List(ctx context.Context, scope string) ([]*sdp.Item, error) {
+	return k.listWithOptions(ctx, scope, metav1.ListOptions{})
+}
+
+// listWithOptions Runs the inbuilt list method with the given options
+func (k *KubeTypeSource[Resource, ResourceList]) listWithOptions(ctx context.Context, scope string, opts metav1.ListOptions) ([]*sdp.Item, error) {
 	i := k.itemInterface(scope)
-	list, err := i.List(ctx, metav1.ListOptions{})
+
+	list, err := i.List(ctx, opts)
 
 	if err != nil {
 		return nil, err
@@ -154,10 +160,21 @@ func (k *KubeTypeSource[Resource, ResourceList]) List(ctx context.Context, scope
 		return nil, err
 	}
 
-	items := make([]*sdp.Item, 0)
+	items, err := k.resourcesToItems(resourceList)
 
-	for _, resource := range resourceList {
-		item, err := mapK8sObject(k.TypeName, resource)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+// resourcesToItems Converts a slice of resources to a slice of items
+func (k *KubeTypeSource[Resource, ResourceList]) resourcesToItems(resourceList []Resource) ([]*sdp.Item, error) {
+	items := make([]*sdp.Item, len(resourceList))
+
+	for i := range resourceList {
+		item, err := mapK8sObject(k.TypeName, resourceList[i])
 
 		if err != nil {
 			return nil, err
@@ -165,7 +182,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) List(ctx context.Context, scope
 
 		if k.LinkedItemQueryExtractor != nil {
 			// Add linked items
-			item.LinkedItemQueries, err = k.LinkedItemQueryExtractor(resource)
+			item.LinkedItemQueries, err = k.LinkedItemQueryExtractor(resourceList[i])
 
 			if err != nil {
 				return nil, err
@@ -179,7 +196,13 @@ func (k *KubeTypeSource[Resource, ResourceList]) List(ctx context.Context, scope
 }
 
 func (k *KubeTypeSource[Resource, ResourceList]) Search(ctx context.Context, scope string, query string) ([]*sdp.Item, error) {
-	return nil, nil
+	opts, err := QueryToListOptions(query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return k.listWithOptions(ctx, scope, opts)
 }
 
 // itemInterface Returns the correct interface depending on whether the source
