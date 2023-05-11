@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/overmindtech/sdp-go"
@@ -25,30 +24,39 @@ func (sd ScopeDetails) String() string {
 	return fmt.Sprintf("%v.%v", sd.ClusterName, sd.Namespace)
 }
 
-// ClusterNamespaceRegex matches the cluster name and namespace from a string
-// that is in the format {clusterName}.{namespace}
-//
-// This is possible due to the fact namespaces have a limited set of characters
-// so we can use a regex to find the last instance of a namespace-compliant
-// string after a trailing
-var ClusterNamespaceRegex = regexp.MustCompile(`(?P<clusterName>.+:.+?)(\.(?P<namespace>[a-z0-9]([-a-z0-9]*[a-z0-9])?))?$`)
+// ParseScope Parses the custer and scope name out of a given SDP scope given
+// that the naming convention is {clusterName}.{namespace}. Since all sources
+// know whether they are namespaced or not, we can just pass that in to make
+// parsing easier
+func ParseScope(itemScope string, namespaced bool) (ScopeDetails, error) {
+	sections := strings.Split(itemScope, ".")
 
-// ParseScope Parses the custer and scope name out of a given SDP scope
-// given that the naming convention is {clusterName}.{namespace}
-func ParseScope(itemScope string) ScopeDetails {
-	matches := ClusterNamespaceRegex.FindStringSubmatch(itemScope)
+	var namespace string
+	var clusterEnd int
+	var clusterName string
 
-	if len(matches) != 5 {
-		return ScopeDetails{
-			ClusterName: itemScope,
-			Namespace:   "",
+	if namespaced {
+		if len(sections) < 2 {
+			return ScopeDetails{}, fmt.Errorf("scope %v does not contain a namespace in the format: {clusterName}.{namespace}", itemScope)
 		}
+
+		namespace = sections[len(sections)-1]
+		clusterEnd = len(sections) - 1
+	} else {
+		namespace = ""
+		clusterEnd = len(sections)
+	}
+
+	clusterName = strings.Join(sections[:clusterEnd], ".")
+
+	if clusterName == "" {
+		return ScopeDetails{}, fmt.Errorf("cluster name was blank for scope %v", itemScope)
 	}
 
 	return ScopeDetails{
-		ClusterName: matches[ClusterNamespaceRegex.SubexpIndex("clusterName")],
-		Namespace:   matches[ClusterNamespaceRegex.SubexpIndex("namespace")],
-	}
+		ClusterName: clusterName,
+		Namespace:   namespace,
+	}, nil
 }
 
 // Selector represents a set of key value pairs that we are going to use as a

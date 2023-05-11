@@ -121,7 +121,15 @@ func (k *KubeTypeSource[Resource, ResourceList]) Scopes() []string {
 }
 
 func (k *KubeTypeSource[Resource, ResourceList]) Get(ctx context.Context, scope string, query string) (*sdp.Item, error) {
-	i := k.itemInterface(scope)
+	i, err := k.itemInterface(scope)
+
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	resource, err := i.Get(ctx, query, metav1.GetOptions{})
 
 	if err != nil {
@@ -161,7 +169,14 @@ func (k *KubeTypeSource[Resource, ResourceList]) List(ctx context.Context, scope
 
 // listWithOptions Runs the inbuilt list method with the given options
 func (k *KubeTypeSource[Resource, ResourceList]) listWithOptions(ctx context.Context, scope string, opts metav1.ListOptions) ([]*sdp.Item, error) {
-	i := k.itemInterface(scope)
+	i, err := k.itemInterface(scope)
+
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
 
 	list, err := i.List(ctx, opts)
 
@@ -222,15 +237,19 @@ func (k *KubeTypeSource[Resource, ResourceList]) Search(ctx context.Context, sco
 
 // itemInterface Returns the correct interface depending on whether the source
 // is namespaced or not
-func (k *KubeTypeSource[Resource, ResourceList]) itemInterface(scope string) ItemInterface[Resource, ResourceList] {
+func (k *KubeTypeSource[Resource, ResourceList]) itemInterface(scope string) (ItemInterface[Resource, ResourceList], error) {
 	// If this is a namespaced resource, then parse the scope to get the
 	// namespace
 	if k.namespaced() {
-		details := ParseScope(scope)
+		details, err := ParseScope(scope, k.namespaced())
 
-		return k.NamespacedInterfaceBuilder(details.Namespace)
+		if err != nil {
+			return nil, err
+		}
+
+		return k.NamespacedInterfaceBuilder(details.Namespace), nil
 	} else {
-		return k.ClusterInterfaceBuilder()
+		return k.ClusterInterfaceBuilder(), nil
 	}
 }
 

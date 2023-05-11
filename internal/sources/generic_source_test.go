@@ -499,7 +499,7 @@ func (s SourceTests) Execute(t *testing.T) {
 
 	t.Run(s.Source.Name(), func(t *testing.T) {
 		if s.GetQuery != "" {
-			t.Run(fmt.Sprintf("GET: %v", s.GetQuery), func(t *testing.T) {
+			t.Run(fmt.Sprintf("GET:%v", s.GetQuery), func(t *testing.T) {
 				item, err := s.Source.Get(context.Background(), s.GetScope, s.GetQuery)
 
 				if err != nil {

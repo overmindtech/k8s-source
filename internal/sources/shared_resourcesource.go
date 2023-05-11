@@ -47,7 +47,6 @@ var SourceFunctions = []SourceFunction{
 	ServiceSource,
 	PVCSource,
 	SecretSource,
-	ConfigMapSource,
 	EndpointSource,
 	ServiceAccountSource,
 	LimitRangeSource,
@@ -69,7 +68,6 @@ var SourceFunctions = []SourceFunction{
 	NamespaceSource,
 	NodeSource,
 	PersistentVolumeSource,
-	ClusterRoleSource,
 	StorageClassSource,
 	PriorityClassSource,
 }
@@ -390,7 +388,7 @@ func (rs *ResourceSource) Weight() int {
 // will allow us to call Get and List functions which will in turn actually
 // execute API queries against K8s
 func (rs *ResourceSource) interactionInterface(itemScope string) (reflect.Value, error) {
-	contextDetails := ParseScope(itemScope)
+	contextDetails, _ := ParseScope(itemScope, rs.Namespaced)
 	interfaceFunctionArgs := make([]reflect.Value, 0)
 
 	if rs.Namespaced {

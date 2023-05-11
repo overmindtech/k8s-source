@@ -1,71 +1,30 @@
 package sources
 
 import (
-	"fmt"
-
 	"github.com/overmindtech/sdp-go"
-	coreV1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-// ConfigMapSource returns a ResourceSource for PersistentVolumeClaims for a given
-// client and namespace
-func ConfigMapSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	source := ResourceSource{
-		ItemType:   "configMap",
-		MapGet:     MapConfigMapGet,
-		MapList:    MapConfigMapList,
-		Namespaced: true,
+func NewConfigMapSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.ConfigMap, *v1.ConfigMapList] {
+	return KubeTypeSource[*v1.ConfigMap, *v1.ConfigMapList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "ConfigMap",
+		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ConfigMap, *v1.ConfigMapList] {
+			return cs.CoreV1().ConfigMaps(namespace)
+		},
+		ListExtractor: func(list *v1.ConfigMapList) ([]*v1.ConfigMap, error) {
+			bindings := make([]*v1.ConfigMap, len(list.Items))
+
+			for i, crb := range list.Items {
+				bindings[i] = &crb
+			}
+
+			return bindings, nil
+		},
+		LinkedItemQueryExtractor: func(resource *v1.ConfigMap, scope string) ([]*sdp.Query, error) {
+			return []*sdp.Query{}, nil
+		},
 	}
-
-	err := source.LoadFunction(
-		cs.CoreV1().ConfigMaps,
-	)
-
-	return source, err
-}
-
-// MapConfigMapList maps an interface that is underneath a
-// *coreV1.ConfigMapList to a list of Items
-func MapConfigMapList(i interface{}) ([]*sdp.Item, error) {
-	var objectList *coreV1.ConfigMapList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
-
-	// Expect this to be a objectList
-	if objectList, ok = i.(*coreV1.ConfigMapList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *coreV1.ConfigMapList", i)
-	}
-
-	for _, object := range objectList.Items {
-		if item, err = MapConfigMapGet(&object); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
-		}
-	}
-
-	return items, nil
-}
-
-// MapConfigMapGet maps an interface that is underneath a *coreV1.ConfigMap to an item. If
-// the interface isn't actually a *coreV1.ConfigMap this will fail
-func MapConfigMapGet(i interface{}) (*sdp.Item, error) {
-	var object *coreV1.ConfigMap
-	var ok bool
-
-	// Expect this to be a *coreV1.ConfigMap
-	if object, ok = i.(*coreV1.ConfigMap); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *coreV1.ConfigMap", i)
-	}
-
-	item, err := mapK8sObject("configMap", object)
-
-	if err != nil {
-		return &sdp.Item{}, err
-	}
-
-	return item, nil
 }
