@@ -3,10 +3,12 @@ package sources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -431,5 +433,107 @@ func TestSearch(t *testing.T) {
 		if err == nil {
 			t.Errorf("expected error, got none")
 		}
+	})
+}
+
+type QueryTest struct {
+	ExpectedType   string
+	ExpectedMethod sdp.QueryMethod
+	ExpectedQuery  string
+	ExpectedScope  string
+}
+
+type QueryTests []QueryTest
+
+func (i QueryTests) Execute(t *testing.T, item *sdp.Item) {
+	for _, test := range i {
+		var found bool
+
+		for _, lir := range item.LinkedItemQueries {
+			if lirMatches(test, lir) {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			t.Errorf("could not find linked item request in %v requests.\nType: %v\nQuery: %v\nScope: %v", len(item.LinkedItemQueries), test.ExpectedType, test.ExpectedQuery, test.ExpectedScope)
+		}
+	}
+}
+
+func lirMatches(test QueryTest, req *sdp.Query) bool {
+	return (test.ExpectedMethod == req.Method &&
+		test.ExpectedQuery == req.Query &&
+		test.ExpectedScope == req.Scope &&
+		test.ExpectedType == req.Type)
+}
+
+type SourceTests struct {
+	// The source under test
+	Source discovery.Source
+
+	// The get query to test
+	GetQuery      string
+	GetScope      string
+	GetQueryTests QueryTests
+
+	// YAML to apply before testing, it will be removed after
+	SetupYAML string
+}
+
+func (s SourceTests) Execute(t *testing.T) {
+	t.Parallel()
+
+	if s.SetupYAML != "" {
+		err := CurrentCluster.Apply(s.SetupYAML)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Cleanup(func() {
+			CurrentCluster.Delete(s.SetupYAML)
+		})
+	}
+
+	t.Run(s.Source.Name(), func(t *testing.T) {
+		if s.GetQuery != "" {
+			t.Run(fmt.Sprintf("GET: %v", s.GetQuery), func(t *testing.T) {
+				item, err := s.Source.Get(context.Background(), s.GetScope, s.GetQuery)
+
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if item == nil {
+					t.Errorf("expected item, got none")
+				}
+
+				if err = item.Validate(); err != nil {
+					t.Error(err)
+				}
+
+				s.GetQueryTests.Execute(t, item)
+			})
+		}
+
+		t.Run("LIST", func(t *testing.T) {
+			items, err := s.Source.List(context.Background(), s.GetScope)
+
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if len(items) == 0 {
+				t.Errorf("expected items, got none")
+			}
+
+			for _, item := range items {
+				if err = item.Validate(); err != nil {
+					t.Error(err)
+				}
+			}
+		})
 	})
 }

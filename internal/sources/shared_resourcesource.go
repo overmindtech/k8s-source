@@ -70,7 +70,6 @@ var SourceFunctions = []SourceFunction{
 	NodeSource,
 	PersistentVolumeSource,
 	ClusterRoleSource,
-	ClusterRoleBindingSource,
 	StorageClassSource,
 	PriorityClassSource,
 }

@@ -1,96 +1,59 @@
 package sources
 
 import (
-	"fmt"
-	"strings"
-
-	rbacV1beta1 "k8s.io/api/rbac/v1beta1"
+	v1 "k8s.io/api/rbac/v1"
 
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
 
-// ClusterRoleBindingSource returns a ResourceSource for ClusterRoleBindingClaims for a given
-// client
-func ClusterRoleBindingSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	source := ResourceSource{
-		ItemType:   "clusterrolebinding",
-		MapGet:     MapClusterRoleBindingGet,
-		MapList:    MapClusterRoleBindingList,
-		Namespaced: false,
-	}
+func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) ([]*sdp.Query, error) {
+	queries := make([]*sdp.Query, 0)
 
-	err := source.LoadFunction(
-		cs.RbacV1beta1().ClusterRoleBindings,
-	)
-
-	return source, err
-}
-
-// MapClusterRoleBindingList maps an interface that is underneath a
-// *rbacV1Beta1.ClusterRoleBindingList to a list of Items
-func MapClusterRoleBindingList(i interface{}) ([]*sdp.Item, error) {
-	var objectList *rbacV1beta1.ClusterRoleBindingList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
-
-	// Expect this to be a objectList
-	if objectList, ok = i.(*rbacV1beta1.ClusterRoleBindingList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *rbacV1Beta1.ClusterRoleBindingList", i)
-	}
-
-	for _, object := range objectList.Items {
-		if item, err = MapClusterRoleBindingGet(&object); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
-		}
-	}
-
-	return items, nil
-}
-
-// MapClusterRoleBindingGet maps an interface that is underneath a *rbacV1Beta1.ClusterRoleBinding to an item. If
-// the interface isn't actually a *rbacV1Beta1.ClusterRoleBinding this will fail
-func MapClusterRoleBindingGet(i interface{}) (*sdp.Item, error) {
-	var object *rbacV1beta1.ClusterRoleBinding
-	var ok bool
-
-	// Expect this to be a *rbacV1Beta1.ClusterRoleBinding
-	if object, ok = i.(*rbacV1beta1.ClusterRoleBinding); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *rbacV1Beta1.ClusterRolebinding", i)
-	}
-
-	item, err := mapK8sObject("clusterrolebinding", object)
-
-	if err != nil {
-		return &sdp.Item{}, err
-	}
-
-	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-		Scope:  ClusterName,
+	queries = append(queries, &sdp.Query{
+		Scope:  scope,
 		Method: sdp.QueryMethod_GET,
-		Query:  object.RoleRef.Name,
-		Type:   strings.ToLower(object.RoleRef.Kind),
+		Query:  resource.RoleRef.Name,
+		Type:   resource.RoleRef.Kind,
 	})
 
-	for _, subject := range object.Subjects {
-		var scope string
-		if subject.Namespace == "" {
-			scope = ClusterName
-		} else {
-			scope = ClusterName + "." + subject.Namespace
+	for _, subject := range resource.Subjects {
+		sd := ScopeDetails{
+			ClusterName: scope, // Since this is a cluster role binding, the scope is the cluster name
 		}
 
-		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-			Scope:  scope,
+		if subject.Namespace != "" {
+			sd.Namespace = subject.Namespace
+		}
+
+		queries = append(queries, &sdp.Query{
+			Scope:  sd.String(),
 			Method: sdp.QueryMethod_GET,
 			Query:  subject.Name,
-			Type:   strings.ToLower(subject.Kind),
+			Type:   subject.Kind,
 		})
 	}
 
-	return item, nil
+	return queries, nil
+}
+
+func NewClusterRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList] {
+	return KubeTypeSource[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "ClusterRoleBinding",
+		ClusterInterfaceBuilder: func() ItemInterface[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList] {
+			return cs.RbacV1().ClusterRoleBindings()
+		},
+		ListExtractor: func(list *v1.ClusterRoleBindingList) ([]*v1.ClusterRoleBinding, error) {
+			bindings := make([]*v1.ClusterRoleBinding, len(list.Items))
+
+			for i, crb := range list.Items {
+				bindings[i] = &crb
+			}
+
+			return bindings, nil
+		},
+		LinkedItemQueryExtractor: clusterRoleBindingExtractor,
+	}
 }

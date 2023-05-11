@@ -93,6 +93,10 @@ func (k *KubeTypeSource[Resource, ResourceList]) Name() string {
 	return fmt.Sprintf("k8s-%v", k.TypeName)
 }
 
+func (k *KubeTypeSource[Resource, ResourceList]) Weight() int {
+	return 10
+}
+
 func (k *KubeTypeSource[Resource, ResourceList]) Scopes() []string {
 	namespaces := make([]string, 0)
 
@@ -133,7 +137,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) Get(ctx context.Context, scope 
 		return nil, err
 	}
 
-	item, err := mapK8sObject(k.TypeName, resource)
+	item, err := resourceToObject(resource, k.ClusterName)
 
 	if err != nil {
 		return nil, err
@@ -187,7 +191,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourcesToItems(resourceList [
 	var err error
 
 	for i := range resourceList {
-		items[i], err = mapK8sObject(k.TypeName, resourceList[i])
+		items[i], err = resourceToObject(resourceList[i], k.ClusterName)
 
 		if err != nil {
 			return nil, err
@@ -228,4 +232,60 @@ func (k *KubeTypeSource[Resource, ResourceList]) itemInterface(scope string) Ite
 	} else {
 		return k.ClusterInterfaceBuilder()
 	}
+}
+
+var ignoredMetadataFields = []string{
+	"managedFields",
+	"binaryData",
+	"immutable",
+	"stringData",
+}
+
+func ignored(key string) bool {
+	for _, ignoredKey := range ignoredMetadataFields {
+		if key == ignoredKey {
+			return true
+		}
+	}
+
+	return false
+}
+
+// resourceToObject Converts a resource to an item
+func resourceToObject(resource metav1.Object, cluster string) (*sdp.Item, error) {
+	sd := ScopeDetails{
+		ClusterName: cluster,
+		Namespace:   resource.GetNamespace(),
+	}
+
+	attributes, err := sdp.ToAttributesViaJson(resource)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Promote the metadata to the top level
+	if metadata, err := attributes.Get("metadata"); err == nil {
+		// Cast to a type we can iterate over
+		if metadataMap, ok := metadata.(map[string]interface{}); ok {
+			for key, value := range metadataMap {
+				// Check that the key isn't in the ignored list
+				if !ignored(key) {
+					attributes.Set(key, value)
+				}
+			}
+		}
+
+		// Remove the metadata attribute
+		attributes.AttrStruct.Fields["metadata"] = nil
+	}
+
+	item := &sdp.Item{
+		Type:            resource.GetName(),
+		UniqueAttribute: "name",
+		Scope:           sd.String(),
+		Attributes:      attributes,
+	}
+
+	return item, nil
 }
