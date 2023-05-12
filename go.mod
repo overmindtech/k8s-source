@@ -16,7 +16,7 @@ require (
 	k8s.io/api v0.27.1
 	k8s.io/apimachinery v0.27.1
 	k8s.io/client-go v0.27.1
-	sigs.k8s.io/kind v0.14.0
+	sigs.k8s.io/kind v0.18.0
 )
 
 // Transitive dependencies
@@ -93,6 +93,8 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+require github.com/google/safetext v0.0.0-20220905092116-b49f7bc46da2 // indirect
 
 exclude (
 	// For Kubernetes versions >= v1.17.0, use a corresponding v0.x.y tag from
