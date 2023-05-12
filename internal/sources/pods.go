@@ -95,7 +95,7 @@ func MapPodGet(i interface{}) (*sdp.Item, error) {
 				Scope:  item.Scope,
 				Method: sdp.QueryMethod_GET,
 				Query:  vol.PersistentVolumeClaim.ClaimName,
-				Type:   PVCType,
+				Type:   "PersistentVolumeClaim",
 			})
 		}
 

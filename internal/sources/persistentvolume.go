@@ -1,95 +1,63 @@
 package sources
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/overmindtech/sdp-go"
-	coreV1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-// PersistentVolumeSource returns a ResourceSource for PersistentVolumeClaims for a given
-// client
-func PersistentVolumeSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	source := ResourceSource{
-		ItemType:   "persistentvolume",
-		MapGet:     MapPersistentVolumeGet,
-		MapList:    MapPersistentVolumeList,
-		Namespaced: false,
-	}
+func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*sdp.Query, error) {
+	queries := make([]*sdp.Query, 0)
 
-	err := source.LoadFunction(
-		cs.CoreV1().PersistentVolumes,
-	)
-
-	return source, err
-}
-
-// MapPersistentVolumeList maps an interface that is underneath a
-// *coreV1.PersistentVolumeList to a list of Items
-func MapPersistentVolumeList(i interface{}) ([]*sdp.Item, error) {
-	var objectList *coreV1.PersistentVolumeList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
-
-	// Expect this to be a objectList
-	if objectList, ok = i.(*coreV1.PersistentVolumeList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *coreV1.PersistentVolumeList", i)
-	}
-
-	for _, object := range objectList.Items {
-		if item, err = MapPersistentVolumeGet(&object); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
-		}
-	}
-
-	return items, nil
-}
-
-// MapPersistentVolumeGet maps an interface that is underneath a *coreV1.PersistentVolume to an item. If
-// the interface isn't actually a *coreV1.PersistentVolume this will fail
-func MapPersistentVolumeGet(i interface{}) (*sdp.Item, error) {
-	var object *coreV1.PersistentVolume
-	var ok bool
-
-	// Expect this to be a *coreV1.PersistentVolume
-	if object, ok = i.(*coreV1.PersistentVolume); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *coreV1.PersistentVolume", i)
-	}
-
-	item, err := mapK8sObject("persistentvolume", object)
+	sd, err := ParseScope(scope, false)
 
 	if err != nil {
-		return &sdp.Item{}, err
+		return nil, err
 	}
 
-	if claim := object.Spec.ClaimRef; claim != nil {
-		scope := strings.Join([]string{ClusterName, claim.Namespace}, ".")
-
-		// Link to all items in the PersistentVolume
-		item.LinkedItemQueries = []*sdp.Query{
-			// Search all types within the PersistentVolume's scope
-			{
-				Scope:  scope,
-				Method: sdp.QueryMethod_GET,
-				Type:   strings.ToLower(claim.Kind),
-				Query:  claim.Name,
-			},
-		}
+	if resource.Spec.PersistentVolumeSource.AWSElasticBlockStore != nil {
+		// Link to EBS volume
+		queries = append(queries, &sdp.Query{
+			Type:   "ec2-volume",
+			Method: sdp.QueryMethod_GET,
+			Query:  resource.Spec.PersistentVolumeSource.AWSElasticBlockStore.VolumeID,
+			Scope:  "*",
+		})
 	}
 
-	// Link to the storage class
-	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-		Scope:  ClusterName,
-		Method: sdp.QueryMethod_GET,
-		Query:  object.Spec.StorageClassName,
-		Type:   "storageclass",
-	})
+	if resource.Spec.ClaimRef != nil {
+		queries = append(queries, ObjectReferenceToQuery(resource.Spec.ClaimRef, sd))
+	}
 
-	return item, nil
+	if resource.Spec.StorageClassName != "" {
+		queries = append(queries, &sdp.Query{
+			Type:   "StorageClass",
+			Method: sdp.QueryMethod_GET,
+			Query:  resource.Spec.StorageClassName,
+			Scope:  sd.ClusterName,
+		})
+	}
+
+	return queries, nil
+}
+
+func NewPersistentVolumeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.PersistentVolume, *v1.PersistentVolumeList] {
+	return KubeTypeSource[*v1.PersistentVolume, *v1.PersistentVolumeList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "PersistentVolume",
+		ClusterInterfaceBuilder: func() ItemInterface[*v1.PersistentVolume, *v1.PersistentVolumeList] {
+			return cs.CoreV1().PersistentVolumes()
+		},
+		ListExtractor: func(list *v1.PersistentVolumeList) ([]*v1.PersistentVolume, error) {
+			extracted := make([]*v1.PersistentVolume, len(list.Items))
+
+			for i := range list.Items {
+				extracted[i] = &list.Items[i]
+			}
+
+			return extracted, nil
+		},
+		LinkedItemQueryExtractor: PersistentVolumeExtractor,
+	}
 }

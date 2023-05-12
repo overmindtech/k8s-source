@@ -1,93 +1,27 @@
 package sources
 
 import (
-	"fmt"
-	"strings"
-
-	"github.com/overmindtech/sdp-go"
-	coreV1 "k8s.io/api/core/v1"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
 
-// NodeSource returns a ResourceSource for PersistentVolumeClaims for a given
-// client
-func NodeSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	source := ResourceSource{
-		ItemType:   "node",
-		Namespaced: false,
+func NewNodeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Node, *v1.NodeList] {
+	return KubeTypeSource[*v1.Node, *v1.NodeList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "Node",
+		ClusterInterfaceBuilder: func() ItemInterface[*v1.Node, *v1.NodeList] {
+			return cs.CoreV1().Nodes()
+		},
+		ListExtractor: func(list *v1.NodeList) ([]*v1.Node, error) {
+			extracted := make([]*v1.Node, len(list.Items))
+
+			for i := range list.Items {
+				extracted[i] = &list.Items[i]
+			}
+
+			return extracted, nil
+		},
 	}
-
-	source.MapGet = source.MapNodeGet
-	source.MapList = source.MapNodeList
-
-	err := source.LoadFunction(
-		cs.CoreV1().Nodes,
-	)
-
-	return source, err
-}
-
-// MapNodeList maps an interface that is underneath a
-// *coreV1.NodeList to a list of Items
-func (rs *ResourceSource) MapNodeList(i interface{}) ([]*sdp.Item, error) {
-	var objectList *coreV1.NodeList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
-
-	// Expect this to be a objectList
-	if objectList, ok = i.(*coreV1.NodeList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *coreV1.NodeList", i)
-	}
-
-	for _, object := range objectList.Items {
-		if item, err = rs.MapNodeGet(&object); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
-		}
-	}
-
-	return items, nil
-}
-
-// MapNodeGet maps an interface that is underneath a *coreV1.Node to an item. If
-// the interface isn't actually a *coreV1.Node this will fail
-func (rs *ResourceSource) MapNodeGet(i interface{}) (*sdp.Item, error) {
-	var object *coreV1.Node
-	var ok bool
-
-	// Expect this to be a *coreV1.Node
-	if object, ok = i.(*coreV1.Node); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *coreV1.Node", i)
-	}
-
-	item, err := mapK8sObject("node", object)
-
-	if err != nil {
-		return &sdp.Item{}, err
-	}
-
-	// Query based onf fields not labels
-	hostQuery := metaV1.ListOptions{
-		FieldSelector: fmt.Sprintf("spec.nodeName=%v", object.Name),
-	}
-
-	namespaces, _ := rs.NSS.Namespaces()
-
-	for _, namespace := range namespaces {
-		scope := strings.Join([]string{ClusterName, namespace}, ".")
-
-		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-			Scope:  scope,
-			Method: sdp.QueryMethod_SEARCH,
-			Type:   "pod",
-			Query:  ListOptionsToQuery(&hostQuery),
-		})
-	}
-
-	return item, nil
 }
