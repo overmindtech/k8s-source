@@ -1,100 +1,97 @@
 package sources
 
 import (
-	"fmt"
-
-	networkingV1 "k8s.io/api/networking/v1"
+	v1 "k8s.io/api/networking/v1"
 
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
 
-// IngressSource returns a ResourceSource for PersistentVolumeClaims for a given
-// client and namespace
-func IngressSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	source := ResourceSource{
-		ItemType:   "ingress",
-		MapGet:     MapIngressGet,
-		MapList:    MapIngressList,
-		Namespaced: true,
+func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.Query, error) {
+	queries := make([]*sdp.Query, 0)
+
+	if resource.Spec.IngressClassName != nil {
+		queries = append(queries, &sdp.Query{
+			Type:   "IngressClass",
+			Method: sdp.QueryMethod_GET,
+			Query:  *resource.Spec.IngressClassName,
+			Scope:  scope,
+		})
 	}
 
-	err := source.LoadFunction(
-		cs.NetworkingV1().Ingresses,
-	)
+	if resource.Spec.DefaultBackend != nil {
+		if resource.Spec.DefaultBackend.Service != nil {
+			queries = append(queries, &sdp.Query{
+				Type:   "Service",
+				Method: sdp.QueryMethod_GET,
+				Query:  resource.Spec.DefaultBackend.Service.Name,
+				Scope:  scope,
+			})
+		}
 
-	return source, err
-}
-
-// MapIngressList maps an interface that is underneath a
-// *networkingV1.IngressList to a list of Items
-func MapIngressList(i interface{}) ([]*sdp.Item, error) {
-	var objectList *networkingV1.IngressList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
-
-	// Expect this to be a objectList
-	if objectList, ok = i.(*networkingV1.IngressList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *networkingV1.IngressList", i)
-	}
-
-	for _, object := range objectList.Items {
-		if item, err = MapIngressGet(&object); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
+		if linkRes := resource.Spec.DefaultBackend.Resource; linkRes != nil {
+			queries = append(queries, &sdp.Query{
+				Type:   linkRes.Kind,
+				Method: sdp.QueryMethod_GET,
+				Query:  linkRes.Name,
+				Scope:  scope,
+			})
 		}
 	}
 
-	return items, nil
-}
+	for _, rule := range resource.Spec.Rules {
+		if rule.Host != "" {
+			queries = append(queries, &sdp.Query{
+				Type:   "dns",
+				Method: sdp.QueryMethod_GET,
+				Query:  rule.Host,
+				Scope:  "global",
+			})
+		}
 
-// MapIngressGet maps an interface that is underneath a *networkingV1.Ingress to an item. If
-// the interface isn't actually a *networkingV1.Ingress this will fail
-func MapIngressGet(i interface{}) (*sdp.Item, error) {
-	var object *networkingV1.Ingress
-	var ok bool
-
-	// Expect this to be a *networkingV1.Ingress
-	if object, ok = i.(*networkingV1.Ingress); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *networkingV1.Ingress", i)
-	}
-
-	item, err := mapK8sObject("ingress", object)
-
-	if err != nil {
-		return &sdp.Item{}, err
-	}
-
-	// Link services from each path
-	for _, rule := range object.Spec.Rules {
-		if http := rule.HTTP; http != nil {
-			for _, path := range http.Paths {
-				if service := path.Backend.Service; service != nil {
-					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-						Scope:  item.Scope,
+		if rule.HTTP != nil {
+			for _, path := range rule.HTTP.Paths {
+				if path.Backend.Service != nil {
+					queries = append(queries, &sdp.Query{
+						Type:   "Service",
 						Method: sdp.QueryMethod_GET,
-						Query:  service.Name,
-						Type:   "service",
+						Query:  path.Backend.Service.Name,
+						Scope:  scope,
+					})
+				}
+
+				if path.Backend.Resource != nil {
+					queries = append(queries, &sdp.Query{
+						Type:   path.Backend.Resource.Kind,
+						Method: sdp.QueryMethod_GET,
+						Query:  path.Backend.Resource.Name,
+						Scope:  scope,
 					})
 				}
 			}
 		}
 	}
 
-	// Link default if it exists
-	if db := object.Spec.DefaultBackend; db != nil {
-		if service := db.Service; service != nil {
-			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-				Scope:  item.Scope,
-				Method: sdp.QueryMethod_GET,
-				Query:  service.Name,
-				Type:   "service",
-			})
-		}
-	}
+	return queries, nil
+}
 
-	return item, nil
+func NewIngressSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Ingress, *v1.IngressList] {
+	return KubeTypeSource[*v1.Ingress, *v1.IngressList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "Ingress",
+		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Ingress, *v1.IngressList] {
+			return cs.NetworkingV1().Ingresses(namespace)
+		},
+		ListExtractor: func(list *v1.IngressList) ([]*v1.Ingress, error) {
+			extracted := make([]*v1.Ingress, len(list.Items))
+
+			for i := range list.Items {
+				extracted[i] = &list.Items[i]
+			}
+
+			return extracted, nil
+		},
+		LinkedItemQueryExtractor: ingressExtractor,
+	}
 }
