@@ -31,13 +31,13 @@ func NewJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string)
 			return cs.BatchV1().Jobs(namespace)
 		},
 		ListExtractor: func(list *v1.JobList) ([]*v1.Job, error) {
-			bindings := make([]*v1.Job, len(list.Items))
+			extracted := make([]*v1.Job, len(list.Items))
 
 			for i := range list.Items {
-				bindings[i] = &list.Items[i]
+				extracted[i] = &list.Items[i]
 			}
 
-			return bindings, nil
+			return extracted, nil
 		},
 		LinkedItemQueryExtractor: jobExtractor,
 	}

@@ -1,84 +1,85 @@
 package sources
 
 import (
-	"fmt"
-	"strings"
-
-	discoveryV1beta1 "k8s.io/api/discovery/v1beta1"
+	v1 "k8s.io/api/discovery/v1"
 
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
 
-// EndpointSliceSource returns a ResourceSource for PersistentVolumeClaims for a given
-// client and namespace
-func EndpointSliceSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	source := ResourceSource{
-		ItemType:   "endpointslice",
-		MapGet:     MapEndpointSliceGet,
-		MapList:    MapEndpointSliceList,
-		Namespaced: true,
-	}
+func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Query, error) {
+	queries := make([]*sdp.Query, 0)
 
-	err := source.LoadFunction(
-		cs.DiscoveryV1beta1().EndpointSlices,
-	)
-
-	return source, err
-}
-
-// MapEndpointSliceList maps an interface that is underneath a
-// *discoveryV1beta1.EndpointSliceList to a list of Items
-func MapEndpointSliceList(i interface{}) ([]*sdp.Item, error) {
-	var objectList *discoveryV1beta1.EndpointSliceList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
-
-	// Expect this to be a objectList
-	if objectList, ok = i.(*discoveryV1beta1.EndpointSliceList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *discoveryV1beta1.EndpointSliceList", i)
-	}
-
-	for _, object := range objectList.Items {
-		if item, err = MapEndpointSliceGet(&object); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
-		}
-	}
-
-	return items, nil
-}
-
-// MapEndpointSliceGet maps an interface that is underneath a *discoveryV1beta1.EndpointSlice to an item. If
-// the interface isn't actually a *discoveryV1beta1.EndpointSlice this will fail
-func MapEndpointSliceGet(i interface{}) (*sdp.Item, error) {
-	var object *discoveryV1beta1.EndpointSlice
-	var ok bool
-
-	// Expect this to be a *discoveryV1beta1.EndpointSlice
-	if object, ok = i.(*discoveryV1beta1.EndpointSlice); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *discoveryV1beta1.EndpointSlice", i)
-	}
-
-	item, err := mapK8sObject("endpointslice", object)
+	sd, err := ParseScope(scope, true)
 
 	if err != nil {
-		return &sdp.Item{}, err
+		return nil, err
 	}
 
-	for _, endpoint := range object.Endpoints {
-		if tr := endpoint.TargetRef; tr != nil {
-			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-				Scope:  item.Scope,
+	for _, endpoint := range resource.Endpoints {
+		if endpoint.Hostname != nil {
+			queries = append(queries, &sdp.Query{
+				Type:   "dns",
 				Method: sdp.QueryMethod_GET,
-				Query:  tr.Name,
-				Type:   strings.ToLower(tr.Kind),
+				Query:  *endpoint.Hostname,
+				Scope:  "global",
 			})
+		}
+
+		if endpoint.NodeName != nil {
+			queries = append(queries, &sdp.Query{
+				Type:   "Node",
+				Method: sdp.QueryMethod_GET,
+				Query:  *endpoint.NodeName,
+				Scope:  sd.ClusterName,
+			})
+		}
+
+		if endpoint.TargetRef != nil {
+			newQuery := ObjectReferenceToQuery(endpoint.TargetRef, sd)
+			queries = append(queries, newQuery)
+		}
+
+		for _, address := range endpoint.Addresses {
+			switch resource.AddressType {
+			case v1.AddressTypeIPv4, v1.AddressTypeIPv6:
+				queries = append(queries, &sdp.Query{
+					Type:   "ip",
+					Method: sdp.QueryMethod_GET,
+					Query:  address,
+					Scope:  "global",
+				})
+			case v1.AddressTypeFQDN:
+				queries = append(queries, &sdp.Query{
+					Type:   "dns",
+					Method: sdp.QueryMethod_GET,
+					Query:  address,
+					Scope:  "global",
+				})
+			}
 		}
 	}
 
-	return item, nil
+	return queries, nil
+}
+
+func NewEndpointSliceSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.EndpointSlice, *v1.EndpointSliceList] {
+	return KubeTypeSource[*v1.EndpointSlice, *v1.EndpointSliceList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "EndpointSlice",
+		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.EndpointSlice, *v1.EndpointSliceList] {
+			return cs.DiscoveryV1().EndpointSlices(namespace)
+		},
+		ListExtractor: func(list *v1.EndpointSliceList) ([]*v1.EndpointSlice, error) {
+			extracted := make([]*v1.EndpointSlice, len(list.Items))
+
+			for i := range list.Items {
+				extracted[i] = &list.Items[i]
+			}
+
+			return extracted, nil
+		},
+		LinkedItemQueryExtractor: endpointSliceExtractor,
+	}
 }

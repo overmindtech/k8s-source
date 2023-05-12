@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/overmindtech/sdp-go"
+	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -319,4 +320,24 @@ func resourceToItem(resource metav1.Object, cluster string) (*sdp.Item, error) {
 	}
 
 	return item, nil
+}
+
+// ObjectReferenceToQuery Converts a K8s ObjectReference to a linked item
+// request. Note that you must provide the parent scope since the reference
+// could be an object in a different namespace, if it is we need to re-use the
+// cluster name from the parent scope
+func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetails) *sdp.Query {
+	if ref == nil {
+		return nil
+	}
+
+	// Update the namespace, but keep the cluster the same
+	parentScope.Namespace = ref.Namespace
+
+	return &sdp.Query{
+		Type:   ref.Kind,
+		Method: sdp.QueryMethod_GET, // Object references are to a specific object
+		Query:  ref.Name,
+		Scope:  parentScope.String(),
+	}
 }

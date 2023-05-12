@@ -491,6 +491,10 @@ type SourceTests struct {
 	GetScope      string
 	GetQueryTests QueryTests
 
+	// If this is set,. the get query is determined by running a list, then
+	// finding the first item that matches this regexp
+	GetQueryRegexp *regexp.Regexp
+
 	// YAML to apply before testing, it will be removed after
 	SetupYAML string
 }
@@ -511,9 +515,28 @@ func (s SourceTests) Execute(t *testing.T) {
 	}
 
 	t.Run(s.Source.Name(), func(t *testing.T) {
-		if s.GetQuery != "" {
-			t.Run(fmt.Sprintf("GET:%v", s.GetQuery), func(t *testing.T) {
-				item, err := s.Source.Get(context.Background(), s.GetScope, s.GetQuery)
+		var getQuery string
+
+		if s.GetQueryRegexp != nil {
+			items, err := s.Source.List(context.Background(), s.GetScope)
+
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for _, item := range items {
+				if s.GetQueryRegexp.MatchString(item.UniqueAttributeValue()) {
+					getQuery = item.UniqueAttributeValue()
+					break
+				}
+			}
+		} else {
+			getQuery = s.GetQuery
+		}
+
+		if getQuery != "" {
+			t.Run(fmt.Sprintf("GET:%v", getQuery), func(t *testing.T) {
+				item, err := s.Source.Get(context.Background(), s.GetScope, getQuery)
 
 				if err != nil {
 					t.Fatal(err)
@@ -574,4 +597,39 @@ func WaitFor(timeout time.Duration, run func() bool) error {
 
 		time.Sleep(250 * time.Millisecond)
 	}
+}
+
+func TestObjectReferenceToQuery(t *testing.T) {
+	t.Run("with a valid object reference", func(t *testing.T) {
+		ref := &v1.ObjectReference{
+			Kind:      "Pod",
+			Namespace: "default",
+			Name:      "foo",
+		}
+
+		query := ObjectReferenceToQuery(ref, ScopeDetails{
+			ClusterName: "test-cluster",
+			Namespace:   "default",
+		})
+
+		if query.Type != "Pod" {
+			t.Errorf("expected type Pod, got %s", query.Type)
+		}
+
+		if query.Query != "foo" {
+			t.Errorf("expected query to be foo, got %s", query.Query)
+		}
+
+		if query.Scope != "test-cluster.default" {
+			t.Errorf("expected scope to be test-cluster.default, got %s", query.Scope)
+		}
+	})
+
+	t.Run("with a nil object reference", func(t *testing.T) {
+		query := ObjectReferenceToQuery(nil, ScopeDetails{})
+
+		if query != nil {
+			t.Errorf("expected nil query, got %v", query)
+		}
+	})
 }
