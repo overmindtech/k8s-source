@@ -18,8 +18,8 @@ func NewClusterRoleSource(cs *kubernetes.Clientset, cluster string, namespaces [
 		ListExtractor: func(list *v1.ClusterRoleList) ([]*v1.ClusterRole, error) {
 			bindings := make([]*v1.ClusterRole, len(list.Items))
 
-			for i, cr := range list.Items {
-				bindings[i] = &cr
+			for i := range list.Items {
+				bindings[i] = &list.Items[i]
 			}
 
 			return bindings, nil

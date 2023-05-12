@@ -153,7 +153,7 @@ func (t *TestCluster) kubectl(method string, yaml string) error {
 	err = cmd.Run()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("%w\nstdout: %v\nstderr: %v", err, stdout.String(), stderr.String())
 	}
 
 	if e := stderr.String(); e != "" {

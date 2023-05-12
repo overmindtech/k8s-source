@@ -1,97 +1,44 @@
 package sources
 
 import (
-	"fmt"
-
-	batchV1 "k8s.io/api/batch/v1"
+	v1 "k8s.io/api/batch/v1"
 
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
 
-// JobSource returns a ResourceSource for PersistentVolumeClaims for a given
-// client and namespace
-func JobSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	source := ResourceSource{
-		ItemType:   "job",
-		MapGet:     MapJobGet,
-		MapList:    MapJobList,
-		Namespaced: true,
+func jobExtractor(resource *v1.Job, scope string) ([]*sdp.Query, error) {
+	queries := make([]*sdp.Query, 0)
+
+	if resource.Spec.Selector != nil {
+		queries = append(queries, &sdp.Query{
+			Scope:  scope,
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  LabelSelectorToQuery(resource.Spec.Selector),
+			Type:   "Pod",
+		})
 	}
 
-	err := source.LoadFunction(
-		cs.BatchV1().Jobs,
-	)
-
-	return source, err
+	return queries, nil
 }
 
-// MapJobList maps an interface that is underneath a
-// *batchV1.JobList to a list of Items
-func MapJobList(i interface{}) ([]*sdp.Item, error) {
-	var objectList *batchV1.JobList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
+func NewJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Job, *v1.JobList] {
+	return KubeTypeSource[*v1.Job, *v1.JobList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "Job",
+		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Job, *v1.JobList] {
+			return cs.BatchV1().Jobs(namespace)
+		},
+		ListExtractor: func(list *v1.JobList) ([]*v1.Job, error) {
+			bindings := make([]*v1.Job, len(list.Items))
 
-	// Expect this to be a objectList
-	if objectList, ok = i.(*batchV1.JobList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *batchV1.JobList", i)
-	}
-
-	for _, object := range objectList.Items {
-		if item, err = MapJobGet(&object); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
-		}
-	}
-
-	return items, nil
-}
-
-// MapJobGet maps an interface that is underneath a *batchV1.Job to an item. If
-// the interface isn't actually a *batchV1.Job this will fail
-func MapJobGet(i interface{}) (*sdp.Item, error) {
-	var object *batchV1.Job
-	var ok bool
-
-	// Expect this to be a *batchV1.Job
-	if object, ok = i.(*batchV1.Job); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *batchV1.Job", i)
-	}
-
-	item, err := mapK8sObject("job", object)
-
-	if err != nil {
-		return &sdp.Item{}, err
-	}
-
-	if object.Spec.Selector != nil {
-		item.LinkedItemQueries = []*sdp.Query{
-			{
-				Scope:  item.Scope,
-				Method: sdp.QueryMethod_SEARCH,
-				Query:  LabelSelectorToQuery(object.Spec.Selector),
-				Type:   "pod",
-			},
-		}
-	}
-
-	// Check owner references to see if it was created by a cronjob
-	for _, o := range object.ObjectMeta.OwnerReferences {
-		if o.Kind == "CronJob" {
-			item.LinkedItemQueries = []*sdp.Query{
-				{
-					Scope:  item.Scope,
-					Method: sdp.QueryMethod_GET,
-					Query:  o.Name,
-					Type:   "cronjob",
-				},
+			for i := range list.Items {
+				bindings[i] = &list.Items[i]
 			}
-		}
-	}
 
-	return item, nil
+			return bindings, nil
+		},
+		LinkedItemQueryExtractor: jobExtractor,
+	}
 }

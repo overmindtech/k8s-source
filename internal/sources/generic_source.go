@@ -145,7 +145,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) Get(ctx context.Context, scope 
 		return nil, err
 	}
 
-	item, err := resourceToObject(resource, k.ClusterName)
+	item, err := resourceToItem(resource, k.ClusterName)
 
 	if err != nil {
 		return nil, err
@@ -206,7 +206,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourcesToItems(resourceList [
 	var err error
 
 	for i := range resourceList {
-		items[i], err = resourceToObject(resourceList[i], k.ClusterName)
+		items[i], err = resourceToItem(resourceList[i], k.ClusterName)
 
 		if err != nil {
 			return nil, err
@@ -214,11 +214,13 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourcesToItems(resourceList [
 
 		if k.LinkedItemQueryExtractor != nil {
 			// Add linked items
-			items[i].LinkedItemQueries, err = k.LinkedItemQueryExtractor(resourceList[i], scope)
+			newQueries, err := k.LinkedItemQueryExtractor(resourceList[i], scope)
 
 			if err != nil {
 				return nil, err
 			}
+
+			items[i].LinkedItemQueries = append(items[i].LinkedItemQueries, newQueries...)
 		}
 	}
 
@@ -270,8 +272,8 @@ func ignored(key string) bool {
 	return false
 }
 
-// resourceToObject Converts a resource to an item
-func resourceToObject(resource metav1.Object, cluster string) (*sdp.Item, error) {
+// resourceToItem Converts a resource to an item
+func resourceToItem(resource metav1.Object, cluster string) (*sdp.Item, error) {
 	sd := ScopeDetails{
 		ClusterName: cluster,
 		Namespace:   resource.GetNamespace(),
@@ -304,6 +306,16 @@ func resourceToObject(resource metav1.Object, cluster string) (*sdp.Item, error)
 		UniqueAttribute: "name",
 		Scope:           sd.String(),
 		Attributes:      attributes,
+	}
+
+	// Automatically create links to owner references
+	for _, ref := range resource.GetOwnerReferences() {
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+			Type:   ref.Kind,
+			Method: sdp.QueryMethod_GET,
+			Query:  ref.Name,
+			Scope:  sd.String(),
+		})
 	}
 
 	return item, nil

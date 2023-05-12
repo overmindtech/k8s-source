@@ -17,8 +17,8 @@ func NewConfigMapSource(cs *kubernetes.Clientset, cluster string, namespaces []s
 		ListExtractor: func(list *v1.ConfigMapList) ([]*v1.ConfigMap, error) {
 			bindings := make([]*v1.ConfigMap, len(list.Items))
 
-			for i, crb := range list.Items {
-				bindings[i] = &crb
+			for i := range list.Items {
+				bindings[i] = &list.Items[i]
 			}
 
 			return bindings, nil

@@ -57,8 +57,6 @@ var SourceFunctions = []SourceFunction{
 	DeploymentSource,
 	HorizontalPodAutoscalerSource,
 	StatefulSetSource,
-	JobSource,
-	CronJobSource,
 	IngressSource,
 	NetworkPolicySource,
 	PodDisruptionBudgetSource,

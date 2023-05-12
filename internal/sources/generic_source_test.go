@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -441,6 +442,10 @@ type QueryTest struct {
 	ExpectedMethod sdp.QueryMethod
 	ExpectedQuery  string
 	ExpectedScope  string
+
+	// Expect the query to match a regex, this takes precedence over
+	// ExpectedQuery
+	ExpectedQueryMatches *regexp.Regexp
 }
 
 type QueryTests []QueryTest
@@ -463,10 +468,18 @@ func (i QueryTests) Execute(t *testing.T, item *sdp.Item) {
 }
 
 func lirMatches(test QueryTest, req *sdp.Query) bool {
-	return (test.ExpectedMethod == req.Method &&
-		test.ExpectedQuery == req.Query &&
-		test.ExpectedScope == req.Scope &&
-		test.ExpectedType == req.Type)
+	methodOK := test.ExpectedMethod == req.Method
+	scopeOK := test.ExpectedScope == req.Scope
+	typeOK := test.ExpectedType == req.Type
+	var queryOK bool
+
+	if test.ExpectedQueryMatches != nil {
+		queryOK = test.ExpectedQueryMatches.MatchString(req.Query)
+	} else {
+		queryOK = test.ExpectedQuery == req.Query
+	}
+
+	return methodOK && scopeOK && typeOK && queryOK
 }
 
 type SourceTests struct {
@@ -529,11 +542,36 @@ func (s SourceTests) Execute(t *testing.T) {
 				t.Errorf("expected items, got none")
 			}
 
+			itemMap := make(map[string]*sdp.Item)
+
 			for _, item := range items {
+				itemMap[item.UniqueAttributeValue()] = item
+
 				if err = item.Validate(); err != nil {
 					t.Error(err)
 				}
 			}
+
+			if len(itemMap) != len(items) {
+				t.Errorf("expected %v unique items, got %v", len(items), len(itemMap))
+			}
 		})
 	})
+}
+
+// WaitFor waits for a condition to be true, or returns an error if the timeout
+func WaitFor(timeout time.Duration, run func() bool) error {
+	start := time.Now()
+
+	for {
+		if run() {
+			return nil
+		}
+
+		if time.Since(start) > timeout {
+			return fmt.Errorf("timeout exceeded")
+		}
+
+		time.Sleep(250 * time.Millisecond)
+	}
 }
