@@ -46,6 +46,13 @@ type KubeTypeSource[Resource metav1.Object, ResourceList any] struct {
 	// resource and scope
 	LinkedItemQueryExtractor func(resource Resource, scope string) ([]*sdp.Query, error)
 
+	// A function that extracts health from the resource, this is optional
+	HealthExtractor func(resource Resource) *sdp.Health
+
+	// A function that redacts sensitive data from the resource, this is
+	// optional
+	Redact func(resource Resource) Resource
+
 	// The type of items that this source should return. This should be the
 	// "Kind" of the kubernetes resources, e.g. "Pod", "Node", "ServiceAccount"
 	TypeName string
@@ -146,19 +153,10 @@ func (k *KubeTypeSource[Resource, ResourceList]) Get(ctx context.Context, scope 
 		return nil, err
 	}
 
-	item, err := resourceToItem(resource, k.ClusterName)
+	item, err := k.resourceToItem(resource)
 
 	if err != nil {
 		return nil, err
-	}
-
-	if k.LinkedItemQueryExtractor != nil {
-		// Add linked items
-		item.LinkedItemQueries, err = k.LinkedItemQueryExtractor(resource, scope)
-
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return item, nil
@@ -195,34 +193,6 @@ func (k *KubeTypeSource[Resource, ResourceList]) listWithOptions(ctx context.Con
 
 	if err != nil {
 		return nil, err
-	}
-
-	return items, nil
-}
-
-// resourcesToItems Converts a slice of resources to a slice of items
-func (k *KubeTypeSource[Resource, ResourceList]) resourcesToItems(resourceList []Resource, scope string) ([]*sdp.Item, error) {
-	items := make([]*sdp.Item, len(resourceList))
-
-	var err error
-
-	for i := range resourceList {
-		items[i], err = resourceToItem(resourceList[i], k.ClusterName)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if k.LinkedItemQueryExtractor != nil {
-			// Add linked items
-			newQueries, err := k.LinkedItemQueryExtractor(resourceList[i], scope)
-
-			if err != nil {
-				return nil, err
-			}
-
-			items[i].LinkedItemQueries = append(items[i].LinkedItemQueries, newQueries...)
-		}
 	}
 
 	return items, nil
@@ -273,11 +243,34 @@ func ignored(key string) bool {
 	return false
 }
 
+// resourcesToItems Converts a slice of resources to a slice of items
+func (k *KubeTypeSource[Resource, ResourceList]) resourcesToItems(resourceList []Resource, scope string) ([]*sdp.Item, error) {
+	items := make([]*sdp.Item, len(resourceList))
+
+	var err error
+
+	for i := range resourceList {
+		items[i], err = k.resourceToItem(resourceList[i])
+
+		if err != nil {
+			return nil, err
+		}
+
+	}
+
+	return items, nil
+}
+
 // resourceToItem Converts a resource to an item
-func resourceToItem(resource metav1.Object, cluster string) (*sdp.Item, error) {
+func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resource) (*sdp.Item, error) {
 	sd := ScopeDetails{
-		ClusterName: cluster,
+		ClusterName: k.ClusterName,
 		Namespace:   resource.GetNamespace(),
+	}
+
+	// Redact sensitive data if required
+	if k.Redact != nil {
+		resource = k.Redact(resource)
 	}
 
 	attributes, err := sdp.ToAttributesViaJson(resource)
@@ -317,6 +310,21 @@ func resourceToItem(resource metav1.Object, cluster string) (*sdp.Item, error) {
 			Query:  ref.Name,
 			Scope:  sd.String(),
 		})
+	}
+
+	if k.LinkedItemQueryExtractor != nil {
+		// Add linked items
+		newQueries, err := k.LinkedItemQueryExtractor(resource, sd.String())
+
+		if err != nil {
+			return nil, err
+		}
+
+		item.LinkedItemQueries = append(item.LinkedItemQueries, newQueries...)
+	}
+
+	if k.HealthExtractor != nil {
+		item.Health = k.HealthExtractor(resource)
 	}
 
 	return item, nil

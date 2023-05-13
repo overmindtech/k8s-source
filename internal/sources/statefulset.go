@@ -1,99 +1,69 @@
 package sources
 
 import (
-	"fmt"
-
-	appsV1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
 
-// StatefulSetSource returns a ResourceSource for PersistentVolumeClaims for a given
-// client and namespace
-func StatefulSetSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	source := ResourceSource{
-		ItemType:   "statefulset",
-		MapGet:     MapStatefulSetGet,
-		MapList:    MapStatefulSetList,
-		Namespaced: true,
-	}
+func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Query, error) {
+	queries := make([]*sdp.Query, 0)
 
-	err := source.LoadFunction(
-		cs.AppsV1().StatefulSets,
-	)
+	if resource.Spec.Selector != nil {
+		// Stateful sets are linked to pods via their selector
+		queries = append(queries, &sdp.Query{
+			Type:   "Pod",
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  LabelSelectorToQuery(resource.Spec.Selector),
+			Scope:  scope,
+		})
 
-	return source, err
-}
-
-// MapStatefulSetList maps an interface that is underneath a
-// *appsV1.StatefulSetList to a list of Items
-func MapStatefulSetList(i interface{}) ([]*sdp.Item, error) {
-	var objectList *appsV1.StatefulSetList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
-
-	// Expect this to be a objectList
-	if objectList, ok = i.(*appsV1.StatefulSetList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *appsV1.StatefulSetList", i)
-	}
-
-	for _, object := range objectList.Items {
-		if item, err = MapStatefulSetGet(&object); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
+		if len(resource.Spec.VolumeClaimTemplates) > 0 {
+			queries = append(queries, &sdp.Query{
+				Type:   "PersistentVolumeClaim",
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  LabelSelectorToQuery(resource.Spec.Selector),
+				Scope:  scope,
+			})
 		}
 	}
 
-	return items, nil
-}
-
-// MapStatefulSetGet maps an interface that is underneath a *appsV1.StatefulSet to an item. If
-// the interface isn't actually a *appsV1.StatefulSet this will fail
-func MapStatefulSetGet(i interface{}) (*sdp.Item, error) {
-	var object *appsV1.StatefulSet
-	var ok bool
-
-	// Expect this to be a *appsV1.StatefulSet
-	if object, ok = i.(*appsV1.StatefulSet); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *appsV1.StatefulSet", i)
-	}
-
-	item, err := mapK8sObject("statefulset", object)
-
-	if err != nil {
-		return &sdp.Item{}, err
-	}
-
-	item.LinkedItemQueries = make([]*sdp.Query, 0)
-
-	if object.Spec.Selector != nil {
-		// Stateful sets are linked to pods via their selector
-		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-			Scope:  item.Scope,
-			Method: sdp.QueryMethod_SEARCH,
-			Query:  LabelSelectorToQuery(object.Spec.Selector),
-			Type:   "pod",
-		})
-	}
-
-	if object.Spec.ServiceName != "" {
-		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-			Scope:  item.Scope,
+	if resource.Spec.ServiceName != "" {
+		queries = append(queries, &sdp.Query{
+			Scope:  scope,
 			Method: sdp.QueryMethod_SEARCH,
 			Query: ListOptionsToQuery(&metaV1.ListOptions{
 				FieldSelector: Selector{
-					"metadata.name":      object.Spec.ServiceName,
-					"metadata.namespace": object.Namespace,
+					"metadata.name":      resource.Spec.ServiceName,
+					"metadata.namespace": resource.Namespace,
 				}.String(),
 			}),
-			Type: "service",
+			Type: "Service",
 		})
 	}
 
-	return item, nil
+	return queries, nil
+}
+
+func NewStatefulSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.StatefulSet, *v1.StatefulSetList] {
+	return KubeTypeSource[*v1.StatefulSet, *v1.StatefulSetList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "StatefulSet",
+		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.StatefulSet, *v1.StatefulSetList] {
+			return cs.AppsV1().StatefulSets(namespace)
+		},
+		ListExtractor: func(list *v1.StatefulSetList) ([]*v1.StatefulSet, error) {
+			extracted := make([]*v1.StatefulSet, len(list.Items))
+
+			for i := range list.Items {
+				extracted[i] = &list.Items[i]
+			}
+
+			return extracted, nil
+		},
+		LinkedItemQueryExtractor: statefulSetExtractor,
+	}
 }

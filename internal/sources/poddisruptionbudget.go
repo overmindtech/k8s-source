@@ -1,80 +1,43 @@
 package sources
 
 import (
-	"fmt"
-
 	"github.com/overmindtech/sdp-go"
-	policyV1beta1 "k8s.io/api/policy/v1beta1"
+	v1 "k8s.io/api/policy/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-// PodDisruptionBudgetSource returns a ResourceSource for PersistentVolumeClaims for a given
-// client and namespace
-func PodDisruptionBudgetSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	source := ResourceSource{
-		ItemType:   "poddisruptionbudget",
-		MapGet:     MapPodDisruptionBudgetGet,
-		MapList:    MapPodDisruptionBudgetList,
-		Namespaced: true,
-	}
+func podDisruptionBudgetExtractor(resource *v1.PodDisruptionBudget, scope string) ([]*sdp.Query, error) {
+	queries := make([]*sdp.Query, 0)
 
-	err := source.LoadFunction(
-		cs.PolicyV1beta1().PodDisruptionBudgets,
-	)
-
-	return source, err
-}
-
-// MapPodDisruptionBudgetList maps an interface that is underneath a
-// *policyV1beta1.PodDisruptionBudgetList to a list of Items
-func MapPodDisruptionBudgetList(i interface{}) ([]*sdp.Item, error) {
-	var objectList *policyV1beta1.PodDisruptionBudgetList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
-
-	// Expect this to be a objectList
-	if objectList, ok = i.(*policyV1beta1.PodDisruptionBudgetList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *policyV1beta1.PodDisruptionBudgetList", i)
-	}
-
-	for _, object := range objectList.Items {
-		if item, err = MapPodDisruptionBudgetGet(&object); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
-		}
-	}
-
-	return items, nil
-}
-
-// MapPodDisruptionBudgetGet maps an interface that is underneath a *policyV1beta1.PodDisruptionBudget to an item. If
-// the interface isn't actually a *policyV1beta1.PodDisruptionBudget this will fail
-func MapPodDisruptionBudgetGet(i interface{}) (*sdp.Item, error) {
-	var object *policyV1beta1.PodDisruptionBudget
-	var ok bool
-
-	// Expect this to be a *policyV1beta1.PodDisruptionBudget
-	if object, ok = i.(*policyV1beta1.PodDisruptionBudget); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *policyV1beta1.PodDisruptionBudget", i)
-	}
-
-	item, err := mapK8sObject("poddisruptionbudget", object)
-
-	if err != nil {
-		return &sdp.Item{}, err
-	}
-
-	if selector := object.Spec.Selector; selector != nil {
-		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-			Scope:  item.Scope,
+	if resource.Spec.Selector != nil {
+		queries = append(queries, &sdp.Query{
+			Type:   "Pod",
 			Method: sdp.QueryMethod_SEARCH,
-			Query:  LabelSelectorToQuery(selector),
-			Type:   "pod",
+			Query:  LabelSelectorToQuery(resource.Spec.Selector),
+			Scope:  scope,
 		})
 	}
 
-	return item, nil
+	return queries, nil
+}
+
+func NewPodDisruptionBudgetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList] {
+	return KubeTypeSource[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "PodDisruptionBudget",
+		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList] {
+			return cs.PolicyV1().PodDisruptionBudgets(namespace)
+		},
+		ListExtractor: func(list *v1.PodDisruptionBudgetList) ([]*v1.PodDisruptionBudget, error) {
+			extracted := make([]*v1.PodDisruptionBudget, len(list.Items))
+
+			for i := range list.Items {
+				extracted[i] = &list.Items[i]
+			}
+
+			return extracted, nil
+		},
+		LinkedItemQueryExtractor: podDisruptionBudgetExtractor,
+	}
 }

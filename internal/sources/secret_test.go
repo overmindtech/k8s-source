@@ -8,34 +8,28 @@ var secretYAML = `
 apiVersion: v1
 kind: Secret
 metadata:
-  name: secret-basic-auth
-  namespace: k8s-source-testing
-type: kubernetes.io/basic-auth
-stringData:
-  username: admin
-  password: t0p-Secret
+  name: secret-test-secret
+type: Opaque
+data:
+  username: dXNlcm5hbWUx   # base64-encoded "username1"
+  password: cGFzc3dvcmQx   # base64-encoded "password1"
+
 `
 
 func TestSecretSource(t *testing.T) {
-	var err error
-	var source ResourceSource
-
-	// Create the required pod
-	err = CurrentCluster.Apply(secretYAML)
-
-	t.Cleanup(func() {
-		CurrentCluster.Delete(secretYAML)
-	})
-
-	if err != nil {
-		t.Error(err)
+	sd := ScopeDetails{
+		ClusterName: CurrentCluster.Name,
+		Namespace:   "default",
 	}
 
-	source, err = SecretSource(CurrentCluster.ClientSet)
+	source := NewSecretSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
-	if err != nil {
-		t.Error(err)
+	st := SourceTests{
+		Source:    &source,
+		GetQuery:  "secret-test-secret",
+		GetScope:  sd.String(),
+		SetupYAML: secretYAML,
 	}
 
-	BasicGetListSearchTests(t, `{"fieldSelector": "metadata.name=secret-basic-auth"}`, source)
+	st.Execute(t)
 }

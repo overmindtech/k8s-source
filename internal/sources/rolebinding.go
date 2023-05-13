@@ -1,109 +1,75 @@
 package sources
 
 import (
-	"fmt"
-	"strings"
-
-	rbacV1 "k8s.io/api/rbac/v1"
+	v1 "k8s.io/api/rbac/v1"
 
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
 
-// RoleBindingSource returns a ResourceSource for PersistentVolumeClaims for a given
-// client and namespace
-func RoleBindingSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	source := ResourceSource{
-		ItemType:   "rolebinding",
-		MapGet:     MapRoleBindingGet,
-		MapList:    MapRoleBindingList,
-		Namespaced: true,
-	}
+func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Query, error) {
+	queries := make([]*sdp.Query, 0)
 
-	err := source.LoadFunction(
-		cs.RbacV1().RoleBindings,
-	)
-
-	return source, err
-}
-
-// MapRoleBindingList maps an interface that is underneath a
-// *rbacV1.RoleBindingList to a list of Items
-func MapRoleBindingList(i interface{}) ([]*sdp.Item, error) {
-	var objectList *rbacV1.RoleBindingList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
-
-	// Expect this to be a objectList
-	if objectList, ok = i.(*rbacV1.RoleBindingList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *rbacV1.RoleBindingList", i)
-	}
-
-	for _, object := range objectList.Items {
-		if item, err = MapRoleBindingGet(&object); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
-		}
-	}
-
-	return items, nil
-}
-
-// MapRoleBindingGet maps an interface that is underneath a *rbacV1.RoleBinding to an item. If
-// the interface isn't actually a *rbacV1.RoleBinding this will fail
-func MapRoleBindingGet(i interface{}) (*sdp.Item, error) {
-	var object *rbacV1.RoleBinding
-	var ok bool
-
-	// Expect this to be a *rbacV1.RoleBinding
-	if object, ok = i.(*rbacV1.RoleBinding); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *rbacV1.RoleBinding", i)
-	}
-
-	item, err := mapK8sObject("rolebinding", object)
+	sd, err := ParseScope(scope, true)
 
 	if err != nil {
-		return &sdp.Item{}, err
+		return nil, err
 	}
 
-	// Link the referenced role
-	var scope string
+	for _, subject := range resource.Subjects {
+		queries = append(queries, &sdp.Query{
+			Method: sdp.QueryMethod_GET,
+			Query:  subject.Name,
+			Type:   subject.Kind,
+			Scope: ScopeDetails{
+				ClusterName: sd.ClusterName,
+				Namespace:   subject.Namespace,
+			}.String(),
+		})
+	}
 
-	switch object.RoleRef.Name {
+	refSD := ScopeDetails{
+		ClusterName: sd.ClusterName,
+	}
+
+	switch resource.RoleRef.Kind {
 	case "Role":
 		// If this binding is linked to a role then it's in the same namespace
-		scope = item.Scope
+		refSD.Namespace = sd.Namespace
 	case "ClusterRole":
 		// If this is linked to a ClusterRole (which is not namespaced) we need
 		// to make sure that we are querying the root scope i.e. the
 		// non-namespaced scope
-		scope = ClusterName
+		refSD.Namespace = ""
 	}
 
-	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-		Scope:  scope,
+	queries = append(queries, &sdp.Query{
+		Scope:  refSD.String(),
 		Method: sdp.QueryMethod_GET,
-		Query:  object.RoleRef.Name,
-		Type:   strings.ToLower(object.RoleRef.Kind),
+		Query:  resource.RoleRef.Name,
+		Type:   resource.RoleRef.Kind,
 	})
 
-	for _, subject := range object.Subjects {
-		if subject.Namespace == "" {
-			scope = ClusterName
-		} else {
-			scope = ClusterName + "." + subject.Namespace
-		}
+	return queries, nil
+}
 
-		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-			Scope:  scope,
-			Method: sdp.QueryMethod_GET,
-			Query:  subject.Name,
-			Type:   strings.ToLower(subject.Kind),
-		})
+func NewRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.RoleBinding, *v1.RoleBindingList] {
+	return KubeTypeSource[*v1.RoleBinding, *v1.RoleBindingList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "RoleBinding",
+		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.RoleBinding, *v1.RoleBindingList] {
+			return cs.RbacV1().RoleBindings(namespace)
+		},
+		ListExtractor: func(list *v1.RoleBindingList) ([]*v1.RoleBinding, error) {
+			extracted := make([]*v1.RoleBinding, len(list.Items))
+
+			for i := range list.Items {
+				extracted[i] = &list.Items[i]
+			}
+
+			return extracted, nil
+		},
+		LinkedItemQueryExtractor: roleBindingExtractor,
 	}
-
-	return item, nil
 }

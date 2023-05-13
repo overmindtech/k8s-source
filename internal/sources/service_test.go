@@ -1,68 +1,83 @@
 package sources
 
 import (
+	"regexp"
 	"testing"
+
+	"github.com/overmindtech/sdp-go"
 )
 
 var serviceYAML = `
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
-  namespace: k8s-source-testing
-  labels:
-    app: nginx
+  name: service-test-deployment
 spec:
-  replicas: 3
   selector:
     matchLabels:
-      app: nginx
+      app: service-test
+  replicas: 1
   template:
     metadata:
       labels:
-        app: nginx
+        app: service-test
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.14.2
+      - name: my-container
+        image: nginx
         ports:
-        - containerPort: 80
+        - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-service
-  namespace: k8s-source-testing
+  name: service-test-service
 spec:
   selector:
-    app: nginx
+    app: service-test
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: LoadBalancer
+  externalName: service-test-external
 `
 
 func TestServiceSource(t *testing.T) {
-	var err error
-	var source ResourceSource
-
-	// Create the required pod
-	err = CurrentCluster.Apply(serviceYAML)
-
-	t.Cleanup(func() {
-		CurrentCluster.Delete(serviceYAML)
-	})
-
-	if err != nil {
-		t.Error(err)
+	sd := ScopeDetails{
+		ClusterName: CurrentCluster.Name,
+		Namespace:   "default",
 	}
 
-	source, err = ServiceSource(CurrentCluster.ClientSet)
+	source := NewServiceSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
-	if err != nil {
-		t.Error(err)
+	st := SourceTests{
+		Source:    &source,
+		GetQuery:  "service-test-service",
+		GetScope:  sd.String(),
+		SetupYAML: serviceYAML,
+		GetQueryTests: QueryTests{
+			{
+				ExpectedType:         "Pod",
+				ExpectedMethod:       sdp.QueryMethod_SEARCH,
+				ExpectedScope:        sd.String(),
+				ExpectedQueryMatches: regexp.MustCompile(`app=service-test`),
+			},
+			{
+				ExpectedType:   "Endpoint",
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "service-test-service",
+				ExpectedScope:  sd.String(),
+			},
+			{
+				ExpectedType:   "dns",
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "service-test-external",
+				ExpectedScope:  "global",
+			},
+		},
 	}
 
-	BasicGetListSearchTests(t, `{"fieldSelector": "metadata.name=nginx-service"}`, source)
+	st.Execute(t)
 }

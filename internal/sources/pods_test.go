@@ -1,47 +1,120 @@
 package sources
 
 import (
+	"regexp"
 	"testing"
+
+	"github.com/overmindtech/sdp-go"
 )
 
-var podYAML = `
-apiVersion: batch/v1
-kind: Job
+var PodYAML = `
+apiVersion: v1
+kind: ServiceAccount
 metadata:
-  name: hello
-  namespace: k8s-source-testing
+  name: pod-test-serviceaccount
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pod-test-secret
+type: Opaque
+data:
+  username: dXNlcm5hbWU=
+  password: cGFzc3dvcmQ=
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod-test-configmap
+data:
+  config.ini: |
+    [database]
+    host=example.com
+    port=5432
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pod-test-pvc
 spec:
-  template:
-    # This is the pod template
-    spec:
-      containers:
-      - name: hello
-        image: busybox
-        command: ['sh', '-c', 'echo "Hello, Kubernetes!" && sleep 3600']
-      restartPolicy: OnFailure
-    # The pod template ends here
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-test-pod
+spec:
+  serviceAccountName: pod-test-serviceaccount
+  volumes:
+  - name: pod-test-pvc-volume
+    persistentVolumeClaim:
+      claimName: pod-test-pvc
+  - name: database-config
+    configMap:
+      name: pod-test-configmap
+  containers:
+  - name: pod-test-container
+    image: nginx
+    volumeMounts:
+    - name: pod-test-pvc-volume
+      mountPath: /mnt/data
+    - name: database-config
+      mountPath: /etc/database
+    envFrom:
+    - secretRef:
+        name: pod-test-secret
 `
 
 func TestPodSource(t *testing.T) {
-	var err error
-	var source ResourceSource
-
-	// Create the required pod
-	err = CurrentCluster.Apply(podYAML)
-
-	t.Cleanup(func() {
-		CurrentCluster.Delete(podYAML)
-	})
-
-	if err != nil {
-		t.Error(err)
+	sd := ScopeDetails{
+		ClusterName: CurrentCluster.Name,
+		Namespace:   "default",
 	}
 
-	source, err = PodSource(CurrentCluster.ClientSet)
+	source := NewPodSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
-	if err != nil {
-		t.Error(err)
+	st := SourceTests{
+		Source:    &source,
+		GetQuery:  "pod-test-pod",
+		GetScope:  sd.String(),
+		SetupYAML: PodYAML,
+		GetQueryTests: QueryTests{
+			{
+				ExpectedQueryMatches: regexp.MustCompile(`10\.`),
+				ExpectedType:         "ip",
+				ExpectedMethod:       sdp.QueryMethod_GET,
+				ExpectedScope:        "global",
+			},
+			{
+				ExpectedType:   "ServiceAccount",
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "pod-test-serviceaccount",
+				ExpectedScope:  sd.String(),
+			},
+			{
+				ExpectedType:   "Secret",
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "pod-test-secret",
+				ExpectedScope:  sd.String(),
+			},
+			{
+				ExpectedType:   "ConfigMap",
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "pod-test-configmap",
+				ExpectedScope:  sd.String(),
+			},
+			{
+				ExpectedType:   "PersistentVolumeClaim",
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "pod-test-pvc",
+				ExpectedScope:  sd.String(),
+			},
+		},
 	}
 
-	BasicGetListSearchTests(t, `{"labelSelector": "job-name=hello"}`, source)
+	st.Execute(t)
 }

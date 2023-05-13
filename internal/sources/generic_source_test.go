@@ -161,6 +161,9 @@ func createSource(namespaced bool) KubeTypeSource[*v1.Pod, *v1.PodList] {
 
 			return queries, nil
 		},
+		HealthExtractor: func(resource *v1.Pod) *sdp.Health {
+			return sdp.Health_HEALTH_OK.Enum()
+		},
 		TypeName:    "Pod",
 		ClusterName: "minikube",
 		Namespaces:  []string{"default", "app1"},
@@ -321,6 +324,10 @@ func TestSourceGet(t *testing.T) {
 		if item.UniqueAttributeValue() != "example" {
 			t.Errorf("expected item with unique attribute value 'example', got %s", item.UniqueAttributeValue())
 		}
+
+		if *item.Health != sdp.Health_HEALTH_OK {
+			t.Errorf("expected item with health HEALTH_OK, got %s", item.Health)
+		}
 	})
 
 	t.Run("get non-existent item", func(t *testing.T) {
@@ -359,7 +366,7 @@ func TestList(t *testing.T) {
 	t.Run("when namespaced", func(t *testing.T) {
 		source := createSource(true)
 
-		items, err := source.List(context.Background(), "foo")
+		items, err := source.List(context.Background(), "foo.bar")
 
 		if err != nil {
 			t.Errorf("expected no error, got %s", err)
@@ -367,6 +374,10 @@ func TestList(t *testing.T) {
 
 		if len(items) != 2 {
 			t.Errorf("expected 2 items, got %d", len(items))
+		}
+
+		if *items[0].Health != sdp.Health_HEALTH_OK {
+			t.Errorf("expected item with health HEALTH_OK, got %s", items[0].Health)
 		}
 	})
 
@@ -435,6 +446,31 @@ func TestSearch(t *testing.T) {
 			t.Errorf("expected error, got none")
 		}
 	})
+}
+
+func TestRedact(t *testing.T) {
+	source := createSource(true)
+	source.Redact = func(resource *v1.Pod) *v1.Pod {
+		resource.Spec.Hostname = "redacted"
+
+		return resource
+	}
+
+	item, err := source.Get(context.Background(), "cluster.namespace", "test")
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	hostname, err := item.Attributes.Get("spec.hostname")
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if hostname != "redacted" {
+		t.Errorf("expected hostname to be redacted, got %v", hostname)
+	}
 }
 
 type QueryTest struct {

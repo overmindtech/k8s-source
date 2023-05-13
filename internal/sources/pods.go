@@ -1,98 +1,30 @@
 package sources
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/overmindtech/sdp-go"
-	coreV1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-// PodSource returns a ResourceSource for Pods for a given client and namespace
-func PodSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	podsBackend := ResourceSource{
-		ItemType:   "pod",
-		MapGet:     MapPodGet,
-		MapList:    MapPodList,
-		Namespaced: true,
-	}
-
-	err := podsBackend.LoadFunction(
-		cs.CoreV1().Pods,
-	)
-
-	return podsBackend, err
-}
-
-// MapPodList maps an interface that is underneath a *coreV1.PodList to a list of
-// Items
-func MapPodList(i interface{}) ([]*sdp.Item, error) {
-	var podList *coreV1.PodList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
-
-	// Expect this to be a podList
-	if podList, ok = i.(*coreV1.PodList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *coreV1.PodList", i)
-	}
-
-	for _, pod := range podList.Items {
-		if item, err = MapPodGet(&pod); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
-		}
-	}
-
-	return items, nil
-}
-
-// MapPodGet maps an interface that is underneath a *coreV1.Pod to an item. If the
-// interface isn't actually a *coreV1.Pod this will fail
-func MapPodGet(i interface{}) (*sdp.Item, error) {
-	var pod *coreV1.Pod
-	var ok bool
-
-	// Expect this to be a pod
-	if pod, ok = i.(*coreV1.Pod); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *coreV1.Pod", i)
-	}
-
-	item, err := mapK8sObject("pod", pod)
-
-	if err != nil {
-		return &sdp.Item{}, err
-	}
+func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.Query, error) {
+	queries := make([]*sdp.Query, 0)
 
 	// Link service accounts
-	if pod.Spec.ServiceAccountName != "" {
-		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-			Scope:  item.Scope,
+	if resource.Spec.ServiceAccountName != "" {
+		queries = append(queries, &sdp.Query{
+			Scope:  scope,
 			Method: sdp.QueryMethod_GET,
-			Query:  pod.Spec.ServiceAccountName,
-			Type:   "serviceaccount",
-		})
-	}
-
-	// Link to the controller if relevant
-	for _, ref := range pod.GetOwnerReferences() {
-		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-			Scope:  item.Scope,
-			Type:   strings.ToLower(ref.Kind),
-			Method: sdp.QueryMethod_GET,
-			Query:  ref.Name,
+			Query:  resource.Spec.ServiceAccountName,
+			Type:   "ServiceAccount",
 		})
 	}
 
 	// Link items from volumes
-	for _, vol := range pod.Spec.Volumes {
+	for _, vol := range resource.Spec.Volumes {
 		// Link PVCs
 		if vol.PersistentVolumeClaim != nil {
-			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-				Scope:  item.Scope,
+			queries = append(queries, &sdp.Query{
+				Scope:  scope,
 				Method: sdp.QueryMethod_GET,
 				Query:  vol.PersistentVolumeClaim.ClaimName,
 				Type:   "PersistentVolumeClaim",
@@ -101,46 +33,46 @@ func MapPodGet(i interface{}) (*sdp.Item, error) {
 
 		// Link secrets
 		if vol.Secret != nil {
-			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-				Scope:  item.Scope,
+			queries = append(queries, &sdp.Query{
+				Scope:  scope,
 				Method: sdp.QueryMethod_GET,
 				Query:  vol.Secret.SecretName,
-				Type:   "secret",
+				Type:   "Secret",
 			})
 		}
 
 		// Link config map volumes
 		if vol.ConfigMap != nil {
-			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-				Scope:  item.Scope,
+			queries = append(queries, &sdp.Query{
+				Scope:  scope,
 				Method: sdp.QueryMethod_GET,
 				Query:  vol.ConfigMap.Name,
-				Type:   "configMap",
+				Type:   "ConfigMap",
 			})
 		}
 	}
 
 	// Link items from containers
-	for _, container := range pod.Spec.Containers {
+	for _, container := range resource.Spec.Containers {
 		// Loop over environment variables
 		for _, env := range container.Env {
 			if env.ValueFrom != nil {
 				if env.ValueFrom.SecretKeyRef != nil {
 					// Add linked item from spec.containers[].env[].valueFrom.secretKeyRef
-					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-						Scope:  item.Scope,
+					queries = append(queries, &sdp.Query{
+						Scope:  scope,
 						Method: sdp.QueryMethod_GET,
 						Query:  env.ValueFrom.SecretKeyRef.Name,
-						Type:   "secret",
+						Type:   "Secret",
 					})
 				}
 
 				if env.ValueFrom.ConfigMapKeyRef != nil {
-					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-						Scope:  item.Scope,
+					queries = append(queries, &sdp.Query{
+						Scope:  scope,
 						Method: sdp.QueryMethod_GET,
 						Query:  env.ValueFrom.ConfigMapKeyRef.Name,
-						Type:   "configMap",
+						Type:   "ConfigMap",
 					})
 				}
 			}
@@ -149,24 +81,79 @@ func MapPodGet(i interface{}) (*sdp.Item, error) {
 		for _, envFrom := range container.EnvFrom {
 			if envFrom.SecretRef != nil {
 				// Add linked item from spec.containers[].EnvFrom[].secretKeyRef
-				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-					Scope:  item.Scope,
+				queries = append(queries, &sdp.Query{
+					Scope:  scope,
 					Method: sdp.QueryMethod_GET,
 					Query:  envFrom.SecretRef.Name,
-					Type:   "secret",
+					Type:   "Secret",
 				})
 			}
 		}
 	}
 
-	if pod.Spec.PriorityClassName != "" {
-		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
+	if resource.Spec.PriorityClassName != "" {
+		queries = append(queries, &sdp.Query{
 			Scope:  ClusterName,
 			Method: sdp.QueryMethod_GET,
-			Query:  pod.Spec.PriorityClassName,
-			Type:   "priorityclassname",
+			Query:  resource.Spec.PriorityClassName,
+			Type:   "PriorityClass",
 		})
 	}
 
-	return item, nil
+	if len(resource.Status.PodIPs) > 0 {
+		for _, ip := range resource.Status.PodIPs {
+			queries = append(queries, &sdp.Query{
+				Scope:  "global",
+				Method: sdp.QueryMethod_GET,
+				Query:  ip.IP,
+				Type:   "ip",
+			})
+		}
+	} else if resource.Status.PodIP != "" {
+		queries = append(queries, &sdp.Query{
+			Type:   "ip",
+			Method: sdp.QueryMethod_GET,
+			Query:  resource.Status.PodIP,
+			Scope:  "global",
+		})
+	}
+
+	return queries, nil
+}
+
+func NewPodSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Pod, *v1.PodList] {
+	return KubeTypeSource[*v1.Pod, *v1.PodList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "Pod",
+		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Pod, *v1.PodList] {
+			return cs.CoreV1().Pods(namespace)
+		},
+		ListExtractor: func(list *v1.PodList) ([]*v1.Pod, error) {
+			extracted := make([]*v1.Pod, len(list.Items))
+
+			for i := range list.Items {
+				extracted[i] = &list.Items[i]
+			}
+
+			return extracted, nil
+		},
+		LinkedItemQueryExtractor: PodExtractor,
+		HealthExtractor: func(resource *v1.Pod) *sdp.Health {
+			switch resource.Status.Phase {
+			case v1.PodPending:
+				return sdp.Health_HEALTH_PENDING.Enum()
+			case v1.PodRunning:
+				return sdp.Health_HEALTH_OK.Enum()
+			case v1.PodSucceeded:
+				return sdp.Health_HEALTH_OK.Enum()
+			case v1.PodFailed:
+				return sdp.Health_HEALTH_ERROR.Enum()
+			case v1.PodUnknown:
+				return sdp.Health_HEALTH_UNKNOWN.Enum()
+			}
+
+			return nil
+		},
+	}
 }

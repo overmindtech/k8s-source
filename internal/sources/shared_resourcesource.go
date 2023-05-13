@@ -42,21 +42,7 @@ type NonNamespacedSourceFunction func(cs *kubernetes.Clientset) ResourceSource
 type SourceFunction func(cs *kubernetes.Clientset) (ResourceSource, error)
 
 // SourceFunctions is the list of functions to load
-var SourceFunctions = []SourceFunction{
-	PodSource,
-	ServiceSource,
-	SecretSource,
-	ServiceAccountSource,
-	ReplicationControllerSource,
-	ResourceQuotaSource,
-	ReplicaSetSource,
-	StatefulSetSource,
-	PodDisruptionBudgetSource,
-	RoleBindingSource,
-	RoleSource,
-	StorageClassSource,
-	PriorityClassSource,
-}
+var SourceFunctions = []SourceFunction{}
 
 // ResourceSource represents a source of Kubernetes resources. one of these
 // sources needs to be created, and then have its get and list functions

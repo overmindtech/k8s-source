@@ -1,86 +1,46 @@
 package sources
 
 import (
-	"fmt"
-
 	"github.com/overmindtech/sdp-go"
-	coreV1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-// ReplicationControllerSource returns a ResourceSource for PersistentVolumeClaims for a given
-// client and namespace
-func ReplicationControllerSource(cs *kubernetes.Clientset) (ResourceSource, error) {
-	source := ResourceSource{
-		ItemType:   "replicationcontroller",
-		MapGet:     MapReplicationControllerGet,
-		MapList:    MapReplicationControllerList,
-		Namespaced: true,
+func replicationControllerExtractor(resource *v1.ReplicationController, scope string) ([]*sdp.Query, error) {
+	queries := make([]*sdp.Query, 0)
+
+	if resource.Spec.Selector != nil {
+		queries = append(queries, &sdp.Query{
+			Scope:  scope,
+			Method: sdp.QueryMethod_SEARCH,
+			Query: LabelSelectorToQuery(&metaV1.LabelSelector{
+				MatchLabels: resource.Spec.Selector,
+			}),
+			Type: "Pod",
+		})
 	}
 
-	err := source.LoadFunction(
-		cs.CoreV1().ReplicationControllers,
-	)
-
-	return source, err
+	return queries, nil
 }
 
-// MapReplicationControllerList maps an interface that is underneath a
-// *coreV1.ReplicationControllerList to a list of Items
-func MapReplicationControllerList(i interface{}) ([]*sdp.Item, error) {
-	var objectList *coreV1.ReplicationControllerList
-	var ok bool
-	var items []*sdp.Item
-	var item *sdp.Item
-	var err error
+func NewReplicationControllerSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.ReplicationController, *v1.ReplicationControllerList] {
+	return KubeTypeSource[*v1.ReplicationController, *v1.ReplicationControllerList]{
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "ReplicationController",
+		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ReplicationController, *v1.ReplicationControllerList] {
+			return cs.CoreV1().ReplicationControllers(namespace)
+		},
+		ListExtractor: func(list *v1.ReplicationControllerList) ([]*v1.ReplicationController, error) {
+			extracted := make([]*v1.ReplicationController, len(list.Items))
 
-	// Expect this to be a objectList
-	if objectList, ok = i.(*coreV1.ReplicationControllerList); !ok {
-		return make([]*sdp.Item, 0), fmt.Errorf("could not convert %v to *coreV1.objectList", i)
+			for i := range list.Items {
+				extracted[i] = &list.Items[i]
+			}
+
+			return extracted, nil
+		},
+		LinkedItemQueryExtractor: replicationControllerExtractor,
 	}
-
-	for _, object := range objectList.Items {
-		if item, err = MapReplicationControllerGet(&object); err == nil {
-			items = append(items, item)
-		} else {
-			return items, err
-		}
-	}
-
-	return items, nil
-}
-
-// MapReplicationControllerGet maps an interface that is underneath a *coreV1.ReplicationController to an item. If
-// the interface isn't actually a *coreV1.ReplicationController this will fail
-func MapReplicationControllerGet(i interface{}) (*sdp.Item, error) {
-	var object *coreV1.ReplicationController
-	var ok bool
-
-	// Expect this to be a *coreV1.ReplicationController
-	if object, ok = i.(*coreV1.ReplicationController); !ok {
-		return &sdp.Item{}, fmt.Errorf("could not assert %v as a *coreV1.ReplicationController", i)
-	}
-
-	item, err := mapK8sObject("replicationcontroller", object)
-
-	if err != nil {
-		return &sdp.Item{}, err
-	}
-
-	if object.Spec.Selector != nil {
-		item.LinkedItemQueries = []*sdp.Query{
-			// Replication controllers are linked to pods via their selector
-			{
-				Scope:  item.Scope,
-				Method: sdp.QueryMethod_SEARCH,
-				Query: LabelSelectorToQuery(&metaV1.LabelSelector{
-					MatchLabels: object.Spec.Selector,
-				}),
-				Type: "pod",
-			},
-		}
-	}
-
-	return item, nil
 }

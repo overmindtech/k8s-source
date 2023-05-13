@@ -4,38 +4,47 @@ import (
 	"testing"
 )
 
-var roleYAML = `
+var RoleYAML = `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  namespace: k8s-source-testing
-  name: pod-reader
+  name: role-test-role
 rules:
-- apiGroups: [""] # "" indicates the core API group
-  resources: ["pods"]
-  verbs: ["get", "watch", "list"]
+  - apiGroups:
+      - ""
+      - "apps"
+      - "batch"
+      - "extensions"
+    resources:
+      - pods
+      - deployments
+      - jobs
+      - cronjobs
+      - configmaps
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
 `
 
 func TestRoleSource(t *testing.T) {
-	var err error
-	var source ResourceSource
-
-	// Create the required pod
-	err = CurrentCluster.Apply(roleYAML)
-
-	t.Cleanup(func() {
-		CurrentCluster.Delete(roleYAML)
-	})
-
-	if err != nil {
-		t.Error(err)
+	sd := ScopeDetails{
+		ClusterName: CurrentCluster.Name,
+		Namespace:   "default",
 	}
 
-	source, err = RoleSource(CurrentCluster.ClientSet)
+	source := NewRoleSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
-	if err != nil {
-		t.Error(err)
+	st := SourceTests{
+		Source:    &source,
+		GetQuery:  "role-test-role",
+		GetScope:  sd.String(),
+		SetupYAML: RoleYAML,
 	}
 
-	BasicGetListSearchTests(t, `{"fieldSelector": "metadata.name=pod-reader"}`, source)
+	st.Execute(t)
 }
