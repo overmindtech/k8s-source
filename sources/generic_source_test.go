@@ -533,10 +533,15 @@ type SourceTests struct {
 
 	// YAML to apply before testing, it will be removed after
 	SetupYAML string
+
+	// An optional function to wait to return true before running the tests. It
+	// is passed the current item that Get tests will be run against, and should
+	// return a boolean indicating whether the tests should continue or wait
+	Wait func(item *sdp.Item) bool
 }
 
 func (s SourceTests) Execute(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	if s.SetupYAML != "" {
 		err := CurrentCluster.Apply(s.SetupYAML)
@@ -550,26 +555,43 @@ func (s SourceTests) Execute(t *testing.T) {
 		})
 	}
 
-	t.Run(s.Source.Name(), func(t *testing.T) {
-		var getQuery string
+	var getQuery string
 
-		if s.GetQueryRegexp != nil {
-			items, err := s.Source.List(context.Background(), s.GetScope)
+	if s.GetQueryRegexp != nil {
+		items, err := s.Source.List(context.Background(), s.GetScope)
 
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			for _, item := range items {
-				if s.GetQueryRegexp.MatchString(item.UniqueAttributeValue()) {
-					getQuery = item.UniqueAttributeValue()
-					break
-				}
-			}
-		} else {
-			getQuery = s.GetQuery
+		if err != nil {
+			t.Fatal(err)
 		}
 
+		for _, item := range items {
+			if s.GetQueryRegexp.MatchString(item.UniqueAttributeValue()) {
+				getQuery = item.UniqueAttributeValue()
+				break
+			}
+		}
+	} else {
+		getQuery = s.GetQuery
+	}
+
+	if s.Wait != nil {
+		t.Log("waiting before executing tests")
+		err := WaitFor(20*time.Second, func() bool {
+			item, err := s.Source.Get(context.Background(), s.GetScope, getQuery)
+
+			if err != nil {
+				return false
+			}
+
+			return s.Wait(item)
+		})
+
+		if err != nil {
+			t.Fatalf("timed out waiting before starting tests: %v", err)
+		}
+	}
+
+	t.Run(s.Source.Name(), func(t *testing.T) {
 		if getQuery != "" {
 			t.Run(fmt.Sprintf("GET:%v", getQuery), func(t *testing.T) {
 				item, err := s.Source.Get(context.Background(), s.GetScope, getQuery)

@@ -114,6 +114,9 @@ func TestPodSource(t *testing.T) {
 				ExpectedScope:  sd.String(),
 			},
 		},
+		Wait: func(item *sdp.Item) bool {
+			return len(item.LinkedItemQueries) >= 5
+		},
 	}
 
 	st.Execute(t)

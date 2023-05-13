@@ -8,20 +8,6 @@ import (
 )
 
 var statefulSetYAML = `
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: stateful-set-test-pv
-spec:
-  capacity:
-    storage: 5Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: nginx-sc
-  hostPath:
-    path: /data/nginx
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -53,8 +39,7 @@ spec:
       resources:
         requests:
           storage: 1Gi
-      storageClassName: nginx-sc
-
+      storageClassName: standard
 `
 
 func TestStatefulSetSource(t *testing.T) {

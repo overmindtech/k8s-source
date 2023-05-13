@@ -77,6 +77,9 @@ func TestEndpointsSource(t *testing.T) {
 				ExpectedScope:        sd.String(),
 			},
 		},
+		Wait: func(item *sdp.Item) bool {
+			return len(item.LinkedItemQueries) > 0
+		},
 	}
 
 	st.Execute(t)

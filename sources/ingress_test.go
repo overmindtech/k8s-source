@@ -12,7 +12,7 @@ kind: Deployment
 metadata:
   name: ingress-app
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: ingress-app
