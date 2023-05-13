@@ -9,6 +9,12 @@ import (
 func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.Query, error) {
 	queries := make([]*sdp.Query, 0)
 
+	sd, err := ParseScope(scope, true)
+
+	if err != nil {
+		return nil, err
+	}
+
 	// Link service accounts
 	if resource.Spec.ServiceAccountName != "" {
 		queries = append(queries, &sdp.Query{
@@ -93,7 +99,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.Query, error) {
 
 	if resource.Spec.PriorityClassName != "" {
 		queries = append(queries, &sdp.Query{
-			Scope:  ClusterName,
+			Scope:  sd.ClusterName,
 			Method: sdp.QueryMethod_GET,
 			Query:  resource.Spec.PriorityClassName,
 			Type:   "PriorityClass",

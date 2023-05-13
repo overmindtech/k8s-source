@@ -66,23 +66,23 @@ type KubeTypeSource[Resource metav1.Object, ResourceList any] struct {
 // validate Validates that the source is correctly set up
 func (k *KubeTypeSource[Resource, ResourceList]) Validate() error {
 	if k.NamespacedInterfaceBuilder == nil && k.ClusterInterfaceBuilder == nil {
-		return fmt.Errorf("either NamespacedInterfaceBuilder or ClusterInterfaceBuilder must be specified")
+		return errors.New("either NamespacedInterfaceBuilder or ClusterInterfaceBuilder must be specified")
 	}
 
 	if k.ListExtractor == nil {
-		return fmt.Errorf("ListExtractor must be specified")
+		return errors.New("listExtractor must be specified")
 	}
 
 	if k.TypeName == "" {
-		return fmt.Errorf("TypeName must be specified")
+		return errors.New("typeName must be specified")
 	}
 
 	if k.namespaced() && len(k.Namespaces) == 0 {
-		return fmt.Errorf("Namespaces must be specified when NamespacedInterfaceBuilder is specified")
+		return errors.New("namespaces must be specified when NamespacedInterfaceBuilder is specified")
 	}
 
 	if k.ClusterName == "" {
-		return fmt.Errorf("ClusterName must be specified")
+		return errors.New("clusterName must be specified")
 	}
 
 	return nil
