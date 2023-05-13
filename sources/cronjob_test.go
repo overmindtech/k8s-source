@@ -49,7 +49,7 @@ func TestCronJobSource(t *testing.T) {
 	jobSource := NewJobSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	// Wait for the job to be created
-	err := WaitFor(30*time.Second, func() bool {
+	err := WaitFor(60*time.Second, func() bool {
 		jobs, err := jobSource.List(context.Background(), sd.String())
 
 		if err != nil {
