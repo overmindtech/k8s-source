@@ -20,7 +20,7 @@ import (
 	"github.com/overmindtech/k8s-source/sources"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -193,7 +193,7 @@ var rootCmd = &cobra.Command{
 		restart := make(chan watch.Event, 1024)
 
 		// Get the initial starting point
-		list, err := clientSet.CoreV1().Namespaces().List(context.Background(), v1.ListOptions{})
+		list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 
 		if err != nil {
 			log.Fatalf("Could not list namespaces: %v", err)
@@ -201,7 +201,7 @@ var rootCmd = &cobra.Command{
 
 		// Watch namespaces from here
 		sendInitialEvents := false
-		wi, err := clientSet.CoreV1().Namespaces().Watch(context.Background(), v1.ListOptions{
+		wi, err := clientSet.CoreV1().Namespaces().Watch(context.Background(), metav1.ListOptions{
 			SendInitialEvents: &sendInitialEvents,
 			ResourceVersion:   list.ResourceVersion,
 		})
@@ -228,7 +228,7 @@ var rootCmd = &cobra.Command{
 		for {
 			// Query all namespaces
 			log.Info("Listing namespaces")
-			list, err := clientSet.CoreV1().Namespaces().List(context.Background(), v1.ListOptions{})
+			list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 
 			if err != nil {
 				log.Fatal(err)
