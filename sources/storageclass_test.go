@@ -21,10 +21,10 @@ func TestStorageClassSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewStorageClassSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newStorageClassSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "storage-class-test",
 		GetScope:  sd.String(),
 		SetupYAML: storageClassYAML,

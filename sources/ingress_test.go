@@ -64,10 +64,10 @@ func TestIngressSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewIngressSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newIngressSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "ingress-app",
 		GetScope:  sd.String(),
 		SetupYAML: ingressYAML,

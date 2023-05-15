@@ -6,32 +6,36 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Source.PersistentVolumeName != nil {
-		queries = append(queries, &sdp.Query{
-			Type:   "PersistentVolume",
-			Method: sdp.QueryMethod_GET,
-			Query:  *resource.Spec.Source.PersistentVolumeName,
-			Scope:  scope,
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "PersistentVolume",
+				Method: sdp.QueryMethod_GET,
+				Query:  *resource.Spec.Source.PersistentVolumeName,
+				Scope:  scope,
+			},
 		})
 	}
 
 	if resource.Spec.NodeName != "" {
-		queries = append(queries, &sdp.Query{
-			Type:   "Node",
-			Method: sdp.QueryMethod_GET,
-			Query:  resource.Spec.NodeName,
-			Scope:  scope,
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "Node",
+				Method: sdp.QueryMethod_GET,
+				Query:  resource.Spec.NodeName,
+				Scope:  scope,
+			},
 		})
 	}
 
 	return queries, nil
 }
 
-func NewVolumeAttachmentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.VolumeAttachment, *v1.VolumeAttachmentList] {
-	return KubeTypeSource[*v1.VolumeAttachment, *v1.VolumeAttachmentList]{
+func newVolumeAttachmentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.VolumeAttachment, *v1.VolumeAttachmentList] {
+	return &KubeTypeSource[*v1.VolumeAttachment, *v1.VolumeAttachmentList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "VolumeAttachment",

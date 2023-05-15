@@ -7,21 +7,23 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func horizontalPodAutoscalerExtractor(resource *v2.HorizontalPodAutoscaler, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func horizontalPodAutoscalerExtractor(resource *v2.HorizontalPodAutoscaler, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
-	queries = append(queries, &sdp.Query{
-		Type:   resource.Spec.ScaleTargetRef.Kind,
-		Method: sdp.QueryMethod_GET,
-		Query:  resource.Spec.ScaleTargetRef.Name,
-		Scope:  scope,
+	queries = append(queries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   resource.Spec.ScaleTargetRef.Kind,
+			Method: sdp.QueryMethod_GET,
+			Query:  resource.Spec.ScaleTargetRef.Name,
+			Scope:  scope,
+		},
 	})
 
 	return queries, nil
 }
 
-func NewHorizontalPodAutoscalerSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList] {
-	return KubeTypeSource[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList]{
+func newHorizontalPodAutoscalerSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList] {
+	return &KubeTypeSource[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "HorizontalPodAutoscaler",

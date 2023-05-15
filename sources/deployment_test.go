@@ -32,10 +32,10 @@ func TestDeploymentSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewDeploymentSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newDeploymentSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "my-deployment",
 		GetScope:  sd.String(),
 		SetupYAML: deploymentYAML,

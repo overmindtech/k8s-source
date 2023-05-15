@@ -22,10 +22,10 @@ roleRef:
 `
 
 func TestClusterRoleBindingSource(t *testing.T) {
-	source := NewClusterRoleBindingSource(CurrentCluster.ClientSet, CurrentCluster.Name, []string{})
+	source := newClusterRoleBindingSource(CurrentCluster.ClientSet, CurrentCluster.Name, []string{})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "admin-binding",
 		GetScope:  CurrentCluster.Name,
 		SetupYAML: clusterRoleBindingYAML,

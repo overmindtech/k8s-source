@@ -6,8 +6,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Deployment, *v1.DeploymentList] {
-	return KubeTypeSource[*v1.Deployment, *v1.DeploymentList]{
+func newDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Deployment, *v1.DeploymentList] {
+	return &KubeTypeSource[*v1.Deployment, *v1.DeploymentList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Deployment",

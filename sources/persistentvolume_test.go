@@ -25,10 +25,10 @@ func TestPersistentVolumeSource(t *testing.T) {
 		Namespace:   "",
 	}
 
-	source := NewPersistentVolumeSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newPersistentVolumeSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:        &source,
+		Source:        source,
 		GetQuery:      "pv-test-pv",
 		GetScope:      sd.String(),
 		SetupYAML:     persistentVolumeYAML,

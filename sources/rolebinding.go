@@ -7,8 +7,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	sd, err := ParseScope(scope, true)
 
@@ -17,14 +17,16 @@ func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Query,
 	}
 
 	for _, subject := range resource.Subjects {
-		queries = append(queries, &sdp.Query{
-			Method: sdp.QueryMethod_GET,
-			Query:  subject.Name,
-			Type:   subject.Kind,
-			Scope: ScopeDetails{
-				ClusterName: sd.ClusterName,
-				Namespace:   subject.Namespace,
-			}.String(),
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Method: sdp.QueryMethod_GET,
+				Query:  subject.Name,
+				Type:   subject.Kind,
+				Scope: ScopeDetails{
+					ClusterName: sd.ClusterName,
+					Namespace:   subject.Namespace,
+				}.String(),
+			},
 		})
 	}
 
@@ -43,18 +45,20 @@ func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Query,
 		refSD.Namespace = ""
 	}
 
-	queries = append(queries, &sdp.Query{
-		Scope:  refSD.String(),
-		Method: sdp.QueryMethod_GET,
-		Query:  resource.RoleRef.Name,
-		Type:   resource.RoleRef.Kind,
+	queries = append(queries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Scope:  refSD.String(),
+			Method: sdp.QueryMethod_GET,
+			Query:  resource.RoleRef.Name,
+			Type:   resource.RoleRef.Kind,
+		},
 	})
 
 	return queries, nil
 }
 
-func NewRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.RoleBinding, *v1.RoleBindingList] {
-	return KubeTypeSource[*v1.RoleBinding, *v1.RoleBindingList]{
+func newRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.RoleBinding, *v1.RoleBindingList] {
+	return &KubeTypeSource[*v1.RoleBinding, *v1.RoleBindingList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "RoleBinding",

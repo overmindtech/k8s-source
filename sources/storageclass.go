@@ -6,8 +6,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewStorageClassSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.StorageClass, *v1.StorageClassList] {
-	return KubeTypeSource[*v1.StorageClass, *v1.StorageClassList]{
+func newStorageClassSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.StorageClass, *v1.StorageClassList] {
+	return &KubeTypeSource[*v1.StorageClass, *v1.StorageClassList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "StorageClass",

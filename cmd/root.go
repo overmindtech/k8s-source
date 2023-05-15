@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -16,9 +17,11 @@ import (
 	"github.com/nats-io/nkeys"
 	"github.com/overmindtech/connect"
 	"github.com/overmindtech/discovery"
-	"github.com/overmindtech/k8s-source/internal/sources"
+	"github.com/overmindtech/k8s-source/sources"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -32,17 +35,8 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "k8s-source",
-	Short: "Remote primary source for kubernetes",
-	Long: `This is designed to be run as part of srcman
-(https://github.com/overmindtech/srcman)
-
-It responds to requests for items relating to kubernetes clusters.
-Each namespace is a separate scope, as are non-namespaced resources
-within each cluster.
-
-This can be configured using a yaml file and the --config flag, or by
-using appropriately named environment variables, for example "nats-name-prefix"
-can be set using an environment variable named "NATS_NAME_PREFIX"
+	Short: "Kubernetes source",
+	Long: `Gathers details from existing kubernetes clusters
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		natsServers := viper.GetStringSlice("nats-servers")
@@ -108,8 +102,6 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 		// Now that we have a connection to the kubernetes cluster we need to go
 		// about generating some sources.
 		var k8sURL *url.URL
-		var nss sources.NamespaceStorage
-		var sourceList []discovery.Source
 
 		k8sURL, err = url.Parse(rc.Host)
 
@@ -129,32 +121,6 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 			case "https":
 				k8sURL.Host = k8sURL.Host + ":443"
 			}
-		}
-
-		sources.ClusterName = k8sURL.Host
-
-		// Get list of namspaces
-		nss = sources.NamespaceStorage{
-			CS:            clientSet,
-			CacheDuration: (10 * time.Second),
-		}
-
-		// Load all sources
-		for _, srcFunction := range sources.SourceFunctions {
-			src, err := srcFunction(clientSet)
-
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error":      err,
-					"sourceName": src.Name(),
-				}).Error("Failed loading source")
-
-				continue
-			}
-
-			src.NSS = &nss
-
-			sourceList = append(sourceList, &src)
 		}
 
 		// Validate the auth params and create a token client if we are using
@@ -177,7 +143,7 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 				"error": err.Error(),
 			}).Fatal("Error initializing Engine")
 		}
-		e.Name = "source-template"
+		e.Name = "k8s-source"
 		e.NATSOptions = &connect.NATSOptions{
 			NumRetries:        -1,
 			RetryDelay:        5 * time.Second,
@@ -189,10 +155,8 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 			ReconnectJitter:   2 * time.Second,
 			TokenClient:       tokenClient,
 		}
-		e.NATSQueueName = "source-template" // This should be the same as your engine name
+		e.NATSQueueName = "k8s-source" // This should be the same as your engine name
 		e.MaxParallelExecutions = maxParallel
-
-		e.AddSources(sourceList...)
 
 		// Start HTTP server for status
 		healthCheckPort := 8080
@@ -223,37 +187,121 @@ can be set using an environment variable named "NATS_NAME_PREFIX"
 			os.Exit(1)
 		}
 
-		err = e.Start()
+		// Create channels for interrupts
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		restart := make(chan watch.Event, 1024)
+
+		// Get the initial starting point
+		list, err := clientSet.CoreV1().Namespaces().List(context.Background(), v1.ListOptions{})
 
 		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err,
-			}).Error("Could not start engine")
-
-			os.Exit(1)
+			log.Fatalf("Could not list namespaces: %v", err)
 		}
 
-		sigs := make(chan os.Signal, 1)
-
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		<-sigs
-
-		log.Info("Stopping engine")
-
-		err = e.Stop()
+		// Watch namespaces from here
+		sendInitialEvents := false
+		wi, err := clientSet.CoreV1().Namespaces().Watch(context.Background(), v1.ListOptions{
+			SendInitialEvents: &sendInitialEvents,
+			ResourceVersion:   list.ResourceVersion,
+		})
 
 		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err,
-			}).Error("Could not stop engine")
-
-			os.Exit(1)
+			log.Fatalf("Could not start watching namespaces: %v", err)
 		}
 
-		log.Info("Stopped")
+		watchCtx, watchCancel := context.WithCancel(context.Background())
+		defer watchCancel()
 
-		os.Exit(0)
+		go func() {
+			for {
+				select {
+				case event := <-wi.ResultChan():
+					// Restart the engine
+					restart <- event
+				case <-watchCtx.Done():
+					return
+				}
+			}
+		}()
+
+		for {
+			// Query all namespaces
+			log.Info("Listing namespaces")
+			list, err := clientSet.CoreV1().Namespaces().List(context.Background(), v1.ListOptions{})
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			namespaces := make([]string, len(list.Items))
+
+			for i := range list.Items {
+				namespaces[i] = list.Items[i].Name
+			}
+
+			log.Infof("got %v namespaces", len(namespaces))
+
+			// Create the sources
+			sourceList := sources.LoadAllSources(clientSet, k8sURL.Host, namespaces)
+
+			// Add sources to the engine
+			e.AddSources(sourceList...)
+
+			// Start the engine
+			err = e.Start()
+
+			if err != nil {
+				log.WithFields(log.Fields{
+					"error": err,
+				}).Error("Could not start engine")
+
+				os.Exit(1)
+			}
+
+			// Start waiting for either an interrupt or a restart
+			select {
+			case <-quit:
+				log.Info("Stopping engine")
+
+				err = e.Stop()
+
+				if err != nil {
+					log.WithFields(log.Fields{
+						"error": err,
+					}).Error("Could not stop engine")
+
+					os.Exit(1)
+				}
+
+				log.Info("Stopped")
+
+				os.Exit(0)
+			case event := <-restart:
+				log.Infof("Restarting engine due to namespace event: %v", event.Type)
+
+				// Stop the engine
+				err = e.Stop()
+
+				if err != nil {
+					log.WithFields(log.Fields{
+						"error": err,
+					}).Error("Could not stop engine")
+
+					os.Exit(1)
+				}
+
+				// Clear the sources
+				e.ClearSources()
+
+				// Stop the engine
+				err = e.Stop()
+
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
 	},
 }
 

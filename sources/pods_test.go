@@ -75,10 +75,10 @@ func TestPodSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewPodSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newPodSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "pod-test-pod",
 		GetScope:  sd.String(),
 		SetupYAML: PodYAML,

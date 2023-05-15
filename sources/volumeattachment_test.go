@@ -65,10 +65,10 @@ func TestVolumeAttachmentSource(t *testing.T) {
 		ClusterName: CurrentCluster.Name,
 	}
 
-	source := NewVolumeAttachmentSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newVolumeAttachmentSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "volume-attachment-attachment",
 		GetScope:  sd.String(),
 		SetupYAML: volumeAttachmentYAML,

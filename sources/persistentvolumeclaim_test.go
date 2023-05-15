@@ -51,10 +51,10 @@ func TestPersistentVolumeClaimSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewPersistentVolumeClaimSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newPersistentVolumeClaimSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:        &source,
+		Source:        source,
 		GetQuery:      "pvc-test-pvc",
 		GetScope:      sd.String(),
 		SetupYAML:     persistentVolumeClaimYAML,

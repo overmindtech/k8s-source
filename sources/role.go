@@ -6,8 +6,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewRoleSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Role, *v1.RoleList] {
-	return KubeTypeSource[*v1.Role, *v1.RoleList]{
+func newRoleSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Role, *v1.RoleList] {
+	return &KubeTypeSource[*v1.Role, *v1.RoleList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Role",

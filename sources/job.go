@@ -7,23 +7,25 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func jobExtractor(resource *v1.Job, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func jobExtractor(resource *v1.Job, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
-		queries = append(queries, &sdp.Query{
-			Scope:  scope,
-			Method: sdp.QueryMethod_SEARCH,
-			Query:  LabelSelectorToQuery(resource.Spec.Selector),
-			Type:   "Pod",
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Scope:  scope,
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  LabelSelectorToQuery(resource.Spec.Selector),
+				Type:   "Pod",
+			},
 		})
 	}
 
 	return queries, nil
 }
 
-func NewJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Job, *v1.JobList] {
-	return KubeTypeSource[*v1.Job, *v1.JobList]{
+func newJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Job, *v1.JobList] {
+	return &KubeTypeSource[*v1.Job, *v1.JobList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Job",

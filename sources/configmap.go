@@ -1,13 +1,12 @@
 package sources
 
 import (
-	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewConfigMapSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.ConfigMap, *v1.ConfigMapList] {
-	return KubeTypeSource[*v1.ConfigMap, *v1.ConfigMapList]{
+func newConfigMapSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.ConfigMap, *v1.ConfigMapList] {
+	return &KubeTypeSource[*v1.ConfigMap, *v1.ConfigMapList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "ConfigMap",
@@ -22,9 +21,6 @@ func NewConfigMapSource(cs *kubernetes.Clientset, cluster string, namespaces []s
 			}
 
 			return bindings, nil
-		},
-		LinkedItemQueryExtractor: func(resource *v1.ConfigMap, scope string) ([]*sdp.Query, error) {
-			return []*sdp.Query{}, nil
 		},
 	}
 }

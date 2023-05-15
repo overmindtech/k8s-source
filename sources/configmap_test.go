@@ -18,10 +18,10 @@ func TestConfigMapSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewConfigMapSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newConfigMapSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:        &source,
+		Source:        source,
 		GetQuery:      "my-configmap",
 		GetScope:      sd.String(),
 		SetupYAML:     configMapYAML,

@@ -24,10 +24,10 @@ func TestResourceQuotaSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewResourceQuotaSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newResourceQuotaSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "quota-example",
 		GetScope:  sd.String(),
 		SetupYAML: resourceQuotaYAML,

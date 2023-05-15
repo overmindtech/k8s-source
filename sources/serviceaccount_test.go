@@ -40,10 +40,10 @@ func TestServiceAccountSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewServiceAccountSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newServiceAccountSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "test-service-account",
 		GetScope:  sd.String(),
 		SetupYAML: serviceAccountYAML,

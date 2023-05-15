@@ -5,8 +5,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewLimitRangeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.LimitRange, *v1.LimitRangeList] {
-	return KubeTypeSource[*v1.LimitRange, *v1.LimitRangeList]{
+func newLimitRangeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.LimitRange, *v1.LimitRangeList] {
+	return &KubeTypeSource[*v1.LimitRange, *v1.LimitRangeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "LimitRange",

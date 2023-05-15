@@ -50,10 +50,10 @@ func TestServiceSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewServiceSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newServiceSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "service-test-service",
 		GetScope:  sd.String(),
 		SetupYAML: serviceYAML,

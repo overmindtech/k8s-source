@@ -6,8 +6,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewDaemonSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.DaemonSet, *v1.DaemonSetList] {
-	return KubeTypeSource[*v1.DaemonSet, *v1.DaemonSetList]{
+func newDaemonSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.DaemonSet, *v1.DaemonSetList] {
+	return &KubeTypeSource[*v1.DaemonSet, *v1.DaemonSetList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "DaemonSet",

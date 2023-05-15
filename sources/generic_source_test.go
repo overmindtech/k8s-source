@@ -121,7 +121,7 @@ func (p PodClient) List(ctx context.Context, opts metav1.ListOptions) (*v1.PodLi
 	}, nil
 }
 
-func createSource(namespaced bool) KubeTypeSource[*v1.Pod, *v1.PodList] {
+func createSource(namespaced bool) *KubeTypeSource[*v1.Pod, *v1.PodList] {
 	var clusterInterfaceBuilder ClusterInterfaceBuilder[*v1.Pod, *v1.PodList]
 	var namespacedInterfaceBuilder NamespacedInterfaceBuilder[*v1.Pod, *v1.PodList]
 
@@ -135,7 +135,7 @@ func createSource(namespaced bool) KubeTypeSource[*v1.Pod, *v1.PodList] {
 		}
 	}
 
-	return KubeTypeSource[*v1.Pod, *v1.PodList]{
+	return &KubeTypeSource[*v1.Pod, *v1.PodList]{
 		ClusterInterfaceBuilder:    clusterInterfaceBuilder,
 		NamespacedInterfaceBuilder: namespacedInterfaceBuilder,
 		ListExtractor: func(p *v1.PodList) ([]*v1.Pod, error) {
@@ -147,15 +147,17 @@ func createSource(namespaced bool) KubeTypeSource[*v1.Pod, *v1.PodList] {
 
 			return pods, nil
 		},
-		LinkedItemQueryExtractor: func(p *v1.Pod, scope string) ([]*sdp.Query, error) {
-			queries := make([]*sdp.Query, 0)
+		LinkedItemQueryExtractor: func(p *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error) {
+			queries := make([]*sdp.LinkedItemQuery, 0)
 
 			if p.Spec.NodeName == "" {
-				queries = append(queries, &sdp.Query{
-					Type:   "node",
-					Method: sdp.QueryMethod_GET,
-					Query:  p.Spec.NodeName,
-					Scope:  scope,
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   "node",
+						Method: sdp.QueryMethod_GET,
+						Query:  p.Spec.NodeName,
+						Scope:  scope,
+					},
 				})
 			}
 
@@ -351,7 +353,7 @@ func TestSourceGet(t *testing.T) {
 
 func TestFailingQueryExtractor(t *testing.T) {
 	source := createSource(false)
-	source.LinkedItemQueryExtractor = func(_ *v1.Pod, _ string) ([]*sdp.Query, error) {
+	source.LinkedItemQueryExtractor = func(_ *v1.Pod, _ string) ([]*sdp.LinkedItemQuery, error) {
 		return nil, errors.New("failed to extract queries")
 	}
 
@@ -410,7 +412,7 @@ func TestList(t *testing.T) {
 
 	t.Run("with failing query extractor", func(t *testing.T) {
 		source := createSource(false)
-		source.LinkedItemQueryExtractor = func(_ *v1.Pod, _ string) ([]*sdp.Query, error) {
+		source.LinkedItemQueryExtractor = func(_ *v1.Pod, _ string) ([]*sdp.LinkedItemQuery, error) {
 			return nil, errors.New("failed to extract queries")
 		}
 
@@ -503,19 +505,32 @@ func (i QueryTests) Execute(t *testing.T, item *sdp.Item) {
 	}
 }
 
-func lirMatches(test QueryTest, req *sdp.Query) bool {
-	methodOK := test.ExpectedMethod == req.Method
-	scopeOK := test.ExpectedScope == req.Scope
-	typeOK := test.ExpectedType == req.Type
-	var queryOK bool
+func lirMatches(test QueryTest, req *sdp.LinkedItemQuery) bool {
+	if req.Query != nil {
+		if test.ExpectedMethod != req.Query.Method {
+			return false
+		}
+		if test.ExpectedScope != req.Query.Scope {
+			return false
+		}
+		if test.ExpectedType != req.Query.Type {
+			return false
+		}
 
-	if test.ExpectedQueryMatches != nil {
-		queryOK = test.ExpectedQueryMatches.MatchString(req.Query)
-	} else {
-		queryOK = test.ExpectedQuery == req.Query
+		if test.ExpectedQueryMatches != nil {
+			if !test.ExpectedQueryMatches.MatchString(req.Query.Query) {
+				return false
+			}
+		} else {
+			if test.ExpectedQuery != req.Query.Query {
+				return false
+			}
+		}
 	}
 
-	return methodOK && scopeOK && typeOK && queryOK
+	// TODO: check for blast radius differences
+
+	return true
 }
 
 type SourceTests struct {
@@ -670,16 +685,16 @@ func TestObjectReferenceToQuery(t *testing.T) {
 			Namespace:   "default",
 		})
 
-		if query.Type != "Pod" {
-			t.Errorf("expected type Pod, got %s", query.Type)
+		if query.Query.Type != "Pod" {
+			t.Errorf("expected type Pod, got %s", query.Query.Type)
 		}
 
-		if query.Query != "foo" {
-			t.Errorf("expected query to be foo, got %s", query.Query)
+		if query.Query.Query != "foo" {
+			t.Errorf("expected query to be foo, got %s", query.Query.Query)
 		}
 
-		if query.Scope != "test-cluster.default" {
-			t.Errorf("expected scope to be test-cluster.default, got %s", query.Scope)
+		if query.Query.Scope != "test-cluster.default" {
+			t.Errorf("expected scope to be test-cluster.default, got %s", query.Query.Scope)
 		}
 	})
 

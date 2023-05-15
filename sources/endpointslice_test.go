@@ -50,10 +50,10 @@ func TestEndpointSliceSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewEndpointSliceSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newEndpointSliceSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:         &source,
+		Source:         source,
 		GetQueryRegexp: regexp.MustCompile("endpoint-service"),
 		GetScope:       sd.String(),
 		SetupYAML:      endpointSliceYAML,

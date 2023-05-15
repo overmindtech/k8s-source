@@ -37,10 +37,10 @@ func TestLimitRangeSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewLimitRangeSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newLimitRangeSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:        &source,
+		Source:        source,
 		GetQuery:      "example-limit-range",
 		GetScope:      sd.String(),
 		SetupYAML:     limitRangeYAML,

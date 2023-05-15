@@ -7,8 +7,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	sd, err := ParseScope(scope, true)
 
@@ -18,20 +18,24 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Qu
 
 	for _, endpoint := range resource.Endpoints {
 		if endpoint.Hostname != nil {
-			queries = append(queries, &sdp.Query{
-				Type:   "dns",
-				Method: sdp.QueryMethod_GET,
-				Query:  *endpoint.Hostname,
-				Scope:  "global",
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "dns",
+					Method: sdp.QueryMethod_GET,
+					Query:  *endpoint.Hostname,
+					Scope:  "global",
+				},
 			})
 		}
 
 		if endpoint.NodeName != nil {
-			queries = append(queries, &sdp.Query{
-				Type:   "Node",
-				Method: sdp.QueryMethod_GET,
-				Query:  *endpoint.NodeName,
-				Scope:  sd.ClusterName,
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "Node",
+					Method: sdp.QueryMethod_GET,
+					Query:  *endpoint.NodeName,
+					Scope:  sd.ClusterName,
+				},
 			})
 		}
 
@@ -43,18 +47,22 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Qu
 		for _, address := range endpoint.Addresses {
 			switch resource.AddressType {
 			case v1.AddressTypeIPv4, v1.AddressTypeIPv6:
-				queries = append(queries, &sdp.Query{
-					Type:   "ip",
-					Method: sdp.QueryMethod_GET,
-					Query:  address,
-					Scope:  "global",
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   "ip",
+						Method: sdp.QueryMethod_GET,
+						Query:  address,
+						Scope:  "global",
+					},
 				})
 			case v1.AddressTypeFQDN:
-				queries = append(queries, &sdp.Query{
-					Type:   "dns",
-					Method: sdp.QueryMethod_GET,
-					Query:  address,
-					Scope:  "global",
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   "dns",
+						Method: sdp.QueryMethod_GET,
+						Query:  address,
+						Scope:  "global",
+					},
 				})
 			}
 		}
@@ -63,8 +71,8 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Qu
 	return queries, nil
 }
 
-func NewEndpointSliceSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.EndpointSlice, *v1.EndpointSliceList] {
-	return KubeTypeSource[*v1.EndpointSlice, *v1.EndpointSliceList]{
+func newEndpointSliceSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.EndpointSlice, *v1.EndpointSliceList] {
+	return &KubeTypeSource[*v1.EndpointSlice, *v1.EndpointSliceList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "EndpointSlice",

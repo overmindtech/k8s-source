@@ -50,10 +50,10 @@ func TestEndpointsSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewEndpointsSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newEndpointsSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "endpoint-service",
 		GetScope:  sd.String(),
 		SetupYAML: endpointsYAML,

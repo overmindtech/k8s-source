@@ -22,10 +22,10 @@ func TestSecretSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewSecretSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newSecretSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "secret-test-secret",
 		GetScope:  sd.String(),
 		SetupYAML: secretYAML,

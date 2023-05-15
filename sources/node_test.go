@@ -13,10 +13,10 @@ func TestNodeSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewNodeSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newNodeSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:   &source,
+		Source:   source,
 		GetQuery: "k8s-source-tests-control-plane",
 		GetScope: sd.String(),
 		GetQueryTests: QueryTests{

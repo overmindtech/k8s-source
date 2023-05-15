@@ -5,8 +5,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewResourceQuotaSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.ResourceQuota, *v1.ResourceQuotaList] {
-	return KubeTypeSource[*v1.ResourceQuota, *v1.ResourceQuotaList]{
+func newResourceQuotaSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.ResourceQuota, *v1.ResourceQuotaList] {
+	return &KubeTypeSource[*v1.ResourceQuota, *v1.ResourceQuotaList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "ResourceQuota",

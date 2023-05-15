@@ -7,25 +7,27 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func replicationControllerExtractor(resource *v1.ReplicationController, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func replicationControllerExtractor(resource *v1.ReplicationController, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
-		queries = append(queries, &sdp.Query{
-			Scope:  scope,
-			Method: sdp.QueryMethod_SEARCH,
-			Query: LabelSelectorToQuery(&metaV1.LabelSelector{
-				MatchLabels: resource.Spec.Selector,
-			}),
-			Type: "Pod",
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Scope:  scope,
+				Method: sdp.QueryMethod_SEARCH,
+				Query: LabelSelectorToQuery(&metaV1.LabelSelector{
+					MatchLabels: resource.Spec.Selector,
+				}),
+				Type: "Pod",
+			},
 		})
 	}
 
 	return queries, nil
 }
 
-func NewReplicationControllerSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.ReplicationController, *v1.ReplicationControllerList] {
-	return KubeTypeSource[*v1.ReplicationController, *v1.ReplicationControllerList]{
+func newReplicationControllerSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.ReplicationController, *v1.ReplicationControllerList] {
+	return &KubeTypeSource[*v1.ReplicationController, *v1.ReplicationControllerList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "ReplicationController",

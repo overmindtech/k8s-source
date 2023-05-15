@@ -20,10 +20,10 @@ func TestPriorityClassSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewPriorityClassSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newPriorityClassSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:        &source,
+		Source:        source,
 		GetQuery:      "ultra-mega-priority",
 		GetScope:      sd.String(),
 		SetupYAML:     priorityClassYAML,

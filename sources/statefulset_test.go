@@ -48,10 +48,10 @@ func TestStatefulSetSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewStatefulSetSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newStatefulSetSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "stateful-set-test",
 		GetScope:  sd.String(),
 		SetupYAML: statefulSetYAML,

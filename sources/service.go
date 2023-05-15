@@ -7,17 +7,19 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
-		queries = append(queries, &sdp.Query{
-			Type:   "Pod",
-			Method: sdp.QueryMethod_SEARCH,
-			Query: LabelSelectorToQuery(&metaV1.LabelSelector{
-				MatchLabels: resource.Spec.Selector,
-			}),
-			Scope: scope,
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "Pod",
+				Method: sdp.QueryMethod_SEARCH,
+				Query: LabelSelectorToQuery(&metaV1.LabelSelector{
+					MatchLabels: resource.Spec.Selector,
+				}),
+				Scope: scope,
+			},
 		})
 	}
 
@@ -34,48 +36,58 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.Query, error) 
 
 	for _, ip := range ips {
 		if ip != "" {
-			queries = append(queries, &sdp.Query{
-				Type:   "ip",
-				Method: sdp.QueryMethod_GET,
-				Query:  ip,
-				Scope:  "global",
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "ip",
+					Method: sdp.QueryMethod_GET,
+					Query:  ip,
+					Scope:  "global",
+				},
 			})
 		}
 	}
 
 	if resource.Spec.ExternalName != "" {
-		queries = append(queries, &sdp.Query{
-			Type:   "dns",
-			Method: sdp.QueryMethod_GET,
-			Query:  resource.Spec.ExternalName,
-			Scope:  "global",
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "dns",
+				Method: sdp.QueryMethod_GET,
+				Query:  resource.Spec.ExternalName,
+				Scope:  "global",
+			},
 		})
 	}
 
 	// Services also generate an endpoint with the same name
-	queries = append(queries, &sdp.Query{
-		Type:   "Endpoint",
-		Method: sdp.QueryMethod_GET,
-		Query:  resource.Name,
-		Scope:  scope,
+	queries = append(queries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   "Endpoint",
+			Method: sdp.QueryMethod_GET,
+			Query:  resource.Name,
+			Scope:  scope,
+		},
 	})
 
 	for _, ingress := range resource.Status.LoadBalancer.Ingress {
 		if ingress.IP != "" {
-			queries = append(queries, &sdp.Query{
-				Type:   "ip",
-				Method: sdp.QueryMethod_GET,
-				Query:  ingress.IP,
-				Scope:  "global",
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "ip",
+					Method: sdp.QueryMethod_GET,
+					Query:  ingress.IP,
+					Scope:  "global",
+				},
 			})
 		}
 
 		if ingress.Hostname != "" {
-			queries = append(queries, &sdp.Query{
-				Type:   "dns",
-				Method: sdp.QueryMethod_GET,
-				Query:  ingress.Hostname,
-				Scope:  "global",
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "dns",
+					Method: sdp.QueryMethod_GET,
+					Query:  ingress.Hostname,
+					Scope:  "global",
+				},
 			})
 		}
 	}
@@ -83,8 +95,8 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.Query, error) 
 	return queries, nil
 }
 
-func NewServiceSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Service, *v1.ServiceList] {
-	return KubeTypeSource[*v1.Service, *v1.ServiceList]{
+func newServiceSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Service, *v1.ServiceList] {
+	return &KubeTypeSource[*v1.Service, *v1.ServiceList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Service",

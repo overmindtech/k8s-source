@@ -32,10 +32,10 @@ func TestCronJobSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewCronJobSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newCronJobSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:        &source,
+		Source:        source,
 		GetQuery:      "my-cronjob",
 		GetScope:      sd.String(),
 		SetupYAML:     cronJobYAML,
@@ -46,7 +46,7 @@ func TestCronJobSource(t *testing.T) {
 
 	// Additionally, make sure that the job has a link back to the cronjob that
 	// created it
-	jobSource := NewJobSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	jobSource := newJobSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	// Wait for the job to be created
 	err := WaitFor(60*time.Second, func() bool {
@@ -60,8 +60,10 @@ func TestCronJobSource(t *testing.T) {
 		// Ensure that the job has a link back to the cronjob
 		for _, job := range jobs {
 			for _, q := range job.LinkedItemQueries {
-				if q.Query == "my-cronjob" {
-					return true
+				if q.Query != nil {
+					if q.Query.Query == "my-cronjob" {
+						return true
+					}
 				}
 			}
 

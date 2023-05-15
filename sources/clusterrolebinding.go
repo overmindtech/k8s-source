@@ -7,14 +7,16 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
-	queries = append(queries, &sdp.Query{
-		Scope:  scope,
-		Method: sdp.QueryMethod_GET,
-		Query:  resource.RoleRef.Name,
-		Type:   resource.RoleRef.Kind,
+	queries = append(queries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Scope:  scope,
+			Method: sdp.QueryMethod_GET,
+			Query:  resource.RoleRef.Name,
+			Type:   resource.RoleRef.Kind,
+		},
 	})
 
 	for _, subject := range resource.Subjects {
@@ -26,19 +28,21 @@ func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) 
 			sd.Namespace = subject.Namespace
 		}
 
-		queries = append(queries, &sdp.Query{
-			Scope:  sd.String(),
-			Method: sdp.QueryMethod_GET,
-			Query:  subject.Name,
-			Type:   subject.Kind,
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Scope:  sd.String(),
+				Method: sdp.QueryMethod_GET,
+				Query:  subject.Name,
+				Type:   subject.Kind,
+			},
 		})
 	}
 
 	return queries, nil
 }
 
-func NewClusterRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList] {
-	return KubeTypeSource[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList]{
+func newClusterRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList] {
+	return &KubeTypeSource[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "ClusterRoleBinding",

@@ -17,10 +17,10 @@ rules:
 `
 
 func TestClusterRoleSource(t *testing.T) {
-	source := NewClusterRoleSource(CurrentCluster.ClientSet, CurrentCluster.Name, []string{})
+	source := newClusterRoleSource(CurrentCluster.ClientSet, CurrentCluster.Name, []string{})
 
 	st := SourceTests{
-		Source:        &source,
+		Source:        source,
 		GetQuery:      "read-only",
 		GetScope:      CurrentCluster.Name,
 		SetupYAML:     clusterRoleYAML,

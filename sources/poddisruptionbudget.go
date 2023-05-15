@@ -6,23 +6,25 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func podDisruptionBudgetExtractor(resource *v1.PodDisruptionBudget, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func podDisruptionBudgetExtractor(resource *v1.PodDisruptionBudget, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
-		queries = append(queries, &sdp.Query{
-			Type:   "Pod",
-			Method: sdp.QueryMethod_SEARCH,
-			Query:  LabelSelectorToQuery(resource.Spec.Selector),
-			Scope:  scope,
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "Pod",
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  LabelSelectorToQuery(resource.Spec.Selector),
+				Scope:  scope,
+			},
 		})
 	}
 
 	return queries, nil
 }
 
-func NewPodDisruptionBudgetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList] {
-	return KubeTypeSource[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList]{
+func newPodDisruptionBudgetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList] {
+	return &KubeTypeSource[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "PodDisruptionBudget",

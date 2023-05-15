@@ -36,10 +36,10 @@ func TestReplicaSetSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewReplicaSetSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newReplicaSetSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "replica-set-test",
 		GetScope:  sd.String(),
 		SetupYAML: replicaSetYAML,

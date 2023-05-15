@@ -6,8 +6,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	sd, err := ParseScope(scope, false)
 
@@ -17,11 +17,13 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 
 	if resource.Spec.PersistentVolumeSource.AWSElasticBlockStore != nil {
 		// Link to EBS volume
-		queries = append(queries, &sdp.Query{
-			Type:   "ec2-volume",
-			Method: sdp.QueryMethod_GET,
-			Query:  resource.Spec.PersistentVolumeSource.AWSElasticBlockStore.VolumeID,
-			Scope:  "*",
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "ec2-volume",
+				Method: sdp.QueryMethod_GET,
+				Query:  resource.Spec.PersistentVolumeSource.AWSElasticBlockStore.VolumeID,
+				Scope:  "*",
+			},
 		})
 	}
 
@@ -30,19 +32,21 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 	}
 
 	if resource.Spec.StorageClassName != "" {
-		queries = append(queries, &sdp.Query{
-			Type:   "StorageClass",
-			Method: sdp.QueryMethod_GET,
-			Query:  resource.Spec.StorageClassName,
-			Scope:  sd.ClusterName,
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "StorageClass",
+				Method: sdp.QueryMethod_GET,
+				Query:  resource.Spec.StorageClassName,
+				Scope:  sd.ClusterName,
+			},
 		})
 	}
 
 	return queries, nil
 }
 
-func NewPersistentVolumeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.PersistentVolume, *v1.PersistentVolumeList] {
-	return KubeTypeSource[*v1.PersistentVolume, *v1.PersistentVolumeList]{
+func newPersistentVolumeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.PersistentVolume, *v1.PersistentVolumeList] {
+	return &KubeTypeSource[*v1.PersistentVolume, *v1.PersistentVolumeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "PersistentVolume",

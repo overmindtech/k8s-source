@@ -44,7 +44,7 @@ type KubeTypeSource[Resource metav1.Object, ResourceList any] struct {
 
 	// A function that returns a list of linked item queries for a given
 	// resource and scope
-	LinkedItemQueryExtractor func(resource Resource, scope string) ([]*sdp.Query, error)
+	LinkedItemQueryExtractor func(resource Resource, scope string) ([]*sdp.LinkedItemQuery, error)
 
 	// A function that extracts health from the resource, this is optional
 	HealthExtractor func(resource Resource) *sdp.Health
@@ -304,11 +304,13 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 
 	// Automatically create links to owner references
 	for _, ref := range resource.GetOwnerReferences() {
-		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.Query{
-			Type:   ref.Kind,
-			Method: sdp.QueryMethod_GET,
-			Query:  ref.Name,
-			Scope:  sd.String(),
+		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   ref.Kind,
+				Method: sdp.QueryMethod_GET,
+				Query:  ref.Name,
+				Scope:  sd.String(),
+			},
 		})
 	}
 
@@ -334,7 +336,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 // request. Note that you must provide the parent scope since the reference
 // could be an object in a different namespace, if it is we need to re-use the
 // cluster name from the parent scope
-func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetails) *sdp.Query {
+func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetails) *sdp.LinkedItemQuery {
 	if ref == nil {
 		return nil
 	}
@@ -342,10 +344,12 @@ func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetail
 	// Update the namespace, but keep the cluster the same
 	parentScope.Namespace = ref.Namespace
 
-	return &sdp.Query{
-		Type:   ref.Kind,
-		Method: sdp.QueryMethod_GET, // Object references are to a specific object
-		Query:  ref.Name,
-		Scope:  parentScope.String(),
+	return &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   ref.Kind,
+			Method: sdp.QueryMethod_GET, // Object references are to a specific object
+			Query:  ref.Name,
+			Scope:  parentScope.String(),
+		},
 	}
 }

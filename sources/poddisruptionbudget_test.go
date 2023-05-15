@@ -25,10 +25,10 @@ func TestPodDisruptionBudgetSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewPodDisruptionBudgetSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newPodDisruptionBudgetSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "example-pdb",
 		GetScope:  sd.String(),
 		SetupYAML: PodDisruptionBudgetYAML,

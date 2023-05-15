@@ -37,10 +37,10 @@ func TestRoleSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewRoleSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newRoleSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "role-test-role",
 		GetScope:  sd.String(),
 		SetupYAML: RoleYAML,

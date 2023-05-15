@@ -6,8 +6,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewCronJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.CronJob, *v1.CronJobList] {
-	return KubeTypeSource[*v1.CronJob, *v1.CronJobList]{
+func newCronJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.CronJob, *v1.CronJobList] {
+	return &KubeTypeSource[*v1.CronJob, *v1.CronJobList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "CronJob",

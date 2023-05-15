@@ -6,8 +6,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	sd, err := ParseScope(scope, true)
 
@@ -18,29 +18,35 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.Query, err
 	for _, subset := range resource.Subsets {
 		for _, address := range subset.Addresses {
 			if address.Hostname != "" {
-				queries = append(queries, &sdp.Query{
-					Scope:  "global",
-					Method: sdp.QueryMethod_GET,
-					Query:  address.Hostname,
-					Type:   "dns",
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Scope:  "global",
+						Method: sdp.QueryMethod_GET,
+						Query:  address.Hostname,
+						Type:   "dns",
+					},
 				})
 			}
 
 			if address.NodeName != nil {
-				queries = append(queries, &sdp.Query{
-					Type:   "Node",
-					Scope:  sd.ClusterName,
-					Method: sdp.QueryMethod_GET,
-					Query:  *address.NodeName,
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   "Node",
+						Scope:  sd.ClusterName,
+						Method: sdp.QueryMethod_GET,
+						Query:  *address.NodeName,
+					},
 				})
 			}
 
 			if address.IP != "" {
-				queries = append(queries, &sdp.Query{
-					Type:   "ip",
-					Method: sdp.QueryMethod_GET,
-					Query:  address.IP,
-					Scope:  "global",
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   "ip",
+						Method: sdp.QueryMethod_GET,
+						Query:  address.IP,
+						Scope:  "global",
+					},
 				})
 			}
 
@@ -54,8 +60,8 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.Query, err
 	return queries, nil
 }
 
-func NewEndpointsSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Endpoints, *v1.EndpointsList] {
-	return KubeTypeSource[*v1.Endpoints, *v1.EndpointsList]{
+func newEndpointsSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Endpoints, *v1.EndpointsList] {
+	return &KubeTypeSource[*v1.Endpoints, *v1.EndpointsList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Endpoints",

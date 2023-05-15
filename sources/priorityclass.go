@@ -6,8 +6,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewPriorityClassSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.PriorityClass, *v1.PriorityClassList] {
-	return KubeTypeSource[*v1.PriorityClass, *v1.PriorityClassList]{
+func newPriorityClassSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.PriorityClass, *v1.PriorityClassList] {
+	return &KubeTypeSource[*v1.PriorityClass, *v1.PriorityClassList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "PriorityClass",

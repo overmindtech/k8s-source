@@ -72,11 +72,11 @@ func TestRoleBindingSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewRoleBindingSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newRoleBindingSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	t.Run("With a Role", func(t *testing.T) {
 		st := SourceTests{
-			Source:    &source,
+			Source:    source,
 			GetQuery:  "rb-test-role-binding",
 			GetScope:  sd.String(),
 			SetupYAML: roleBindingYAML,
@@ -101,7 +101,7 @@ func TestRoleBindingSource(t *testing.T) {
 
 	t.Run("With a ClusterRole", func(t *testing.T) {
 		st := SourceTests{
-			Source:    &source,
+			Source:    source,
 			GetQuery:  "rb-test-role-binding-cluster",
 			GetScope:  sd.String(),
 			SetupYAML: roleBindingYAML2,

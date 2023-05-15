@@ -35,10 +35,10 @@ func TestReplicationControllerSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewReplicationControllerSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newReplicationControllerSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "replication-controller-test",
 		GetScope:  sd.String(),
 		SetupYAML: replicationControllerYAML,

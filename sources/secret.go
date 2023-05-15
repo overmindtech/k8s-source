@@ -8,8 +8,8 @@ import (
 )
 
 // TODO: Configure redaction
-func NewSecretSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Secret, *v1.SecretList] {
-	return KubeTypeSource[*v1.Secret, *v1.SecretList]{
+func newSecretSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Secret, *v1.SecretList] {
+	return &KubeTypeSource[*v1.Secret, *v1.SecretList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Secret",

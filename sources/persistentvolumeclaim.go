@@ -5,8 +5,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewPersistentVolumeClaimSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList] {
-	return KubeTypeSource[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList]{
+func newPersistentVolumeClaimSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList] {
+	return &KubeTypeSource[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "PersistentVolumeClaim",

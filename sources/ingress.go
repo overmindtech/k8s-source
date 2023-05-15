@@ -7,65 +7,77 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.IngressClassName != nil {
-		queries = append(queries, &sdp.Query{
-			Type:   "IngressClass",
-			Method: sdp.QueryMethod_GET,
-			Query:  *resource.Spec.IngressClassName,
-			Scope:  scope,
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "IngressClass",
+				Method: sdp.QueryMethod_GET,
+				Query:  *resource.Spec.IngressClassName,
+				Scope:  scope,
+			},
 		})
 	}
 
 	if resource.Spec.DefaultBackend != nil {
 		if resource.Spec.DefaultBackend.Service != nil {
-			queries = append(queries, &sdp.Query{
-				Type:   "Service",
-				Method: sdp.QueryMethod_GET,
-				Query:  resource.Spec.DefaultBackend.Service.Name,
-				Scope:  scope,
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "Service",
+					Method: sdp.QueryMethod_GET,
+					Query:  resource.Spec.DefaultBackend.Service.Name,
+					Scope:  scope,
+				},
 			})
 		}
 
 		if linkRes := resource.Spec.DefaultBackend.Resource; linkRes != nil {
-			queries = append(queries, &sdp.Query{
-				Type:   linkRes.Kind,
-				Method: sdp.QueryMethod_GET,
-				Query:  linkRes.Name,
-				Scope:  scope,
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   linkRes.Kind,
+					Method: sdp.QueryMethod_GET,
+					Query:  linkRes.Name,
+					Scope:  scope,
+				},
 			})
 		}
 	}
 
 	for _, rule := range resource.Spec.Rules {
 		if rule.Host != "" {
-			queries = append(queries, &sdp.Query{
-				Type:   "dns",
-				Method: sdp.QueryMethod_GET,
-				Query:  rule.Host,
-				Scope:  "global",
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "dns",
+					Method: sdp.QueryMethod_GET,
+					Query:  rule.Host,
+					Scope:  "global",
+				},
 			})
 		}
 
 		if rule.HTTP != nil {
 			for _, path := range rule.HTTP.Paths {
 				if path.Backend.Service != nil {
-					queries = append(queries, &sdp.Query{
-						Type:   "Service",
-						Method: sdp.QueryMethod_GET,
-						Query:  path.Backend.Service.Name,
-						Scope:  scope,
+					queries = append(queries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   "Service",
+							Method: sdp.QueryMethod_GET,
+							Query:  path.Backend.Service.Name,
+							Scope:  scope,
+						},
 					})
 				}
 
 				if path.Backend.Resource != nil {
-					queries = append(queries, &sdp.Query{
-						Type:   path.Backend.Resource.Kind,
-						Method: sdp.QueryMethod_GET,
-						Query:  path.Backend.Resource.Name,
-						Scope:  scope,
+					queries = append(queries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   path.Backend.Resource.Kind,
+							Method: sdp.QueryMethod_GET,
+							Query:  path.Backend.Resource.Name,
+							Scope:  scope,
+						},
 					})
 				}
 			}
@@ -75,8 +87,8 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.Query, error) 
 	return queries, nil
 }
 
-func NewIngressSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Ingress, *v1.IngressList] {
-	return KubeTypeSource[*v1.Ingress, *v1.IngressList]{
+func newIngressSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Ingress, *v1.IngressList] {
+	return &KubeTypeSource[*v1.Ingress, *v1.IngressList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Ingress",

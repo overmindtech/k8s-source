@@ -6,8 +6,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	sd, err := ParseScope(scope, true)
 
@@ -17,11 +17,13 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.Query, error) {
 
 	// Link service accounts
 	if resource.Spec.ServiceAccountName != "" {
-		queries = append(queries, &sdp.Query{
-			Scope:  scope,
-			Method: sdp.QueryMethod_GET,
-			Query:  resource.Spec.ServiceAccountName,
-			Type:   "ServiceAccount",
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Scope:  scope,
+				Method: sdp.QueryMethod_GET,
+				Query:  resource.Spec.ServiceAccountName,
+				Type:   "ServiceAccount",
+			},
 		})
 	}
 
@@ -29,31 +31,37 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.Query, error) {
 	for _, vol := range resource.Spec.Volumes {
 		// Link PVCs
 		if vol.PersistentVolumeClaim != nil {
-			queries = append(queries, &sdp.Query{
-				Scope:  scope,
-				Method: sdp.QueryMethod_GET,
-				Query:  vol.PersistentVolumeClaim.ClaimName,
-				Type:   "PersistentVolumeClaim",
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Scope:  scope,
+					Method: sdp.QueryMethod_GET,
+					Query:  vol.PersistentVolumeClaim.ClaimName,
+					Type:   "PersistentVolumeClaim",
+				},
 			})
 		}
 
 		// Link secrets
 		if vol.Secret != nil {
-			queries = append(queries, &sdp.Query{
-				Scope:  scope,
-				Method: sdp.QueryMethod_GET,
-				Query:  vol.Secret.SecretName,
-				Type:   "Secret",
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Scope:  scope,
+					Method: sdp.QueryMethod_GET,
+					Query:  vol.Secret.SecretName,
+					Type:   "Secret",
+				},
 			})
 		}
 
 		// Link config map volumes
 		if vol.ConfigMap != nil {
-			queries = append(queries, &sdp.Query{
-				Scope:  scope,
-				Method: sdp.QueryMethod_GET,
-				Query:  vol.ConfigMap.Name,
-				Type:   "ConfigMap",
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Scope:  scope,
+					Method: sdp.QueryMethod_GET,
+					Query:  vol.ConfigMap.Name,
+					Type:   "ConfigMap",
+				},
 			})
 		}
 	}
@@ -65,20 +73,24 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.Query, error) {
 			if env.ValueFrom != nil {
 				if env.ValueFrom.SecretKeyRef != nil {
 					// Add linked item from spec.containers[].env[].valueFrom.secretKeyRef
-					queries = append(queries, &sdp.Query{
-						Scope:  scope,
-						Method: sdp.QueryMethod_GET,
-						Query:  env.ValueFrom.SecretKeyRef.Name,
-						Type:   "Secret",
+					queries = append(queries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Scope:  scope,
+							Method: sdp.QueryMethod_GET,
+							Query:  env.ValueFrom.SecretKeyRef.Name,
+							Type:   "Secret",
+						},
 					})
 				}
 
 				if env.ValueFrom.ConfigMapKeyRef != nil {
-					queries = append(queries, &sdp.Query{
-						Scope:  scope,
-						Method: sdp.QueryMethod_GET,
-						Query:  env.ValueFrom.ConfigMapKeyRef.Name,
-						Type:   "ConfigMap",
+					queries = append(queries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Scope:  scope,
+							Method: sdp.QueryMethod_GET,
+							Query:  env.ValueFrom.ConfigMapKeyRef.Name,
+							Type:   "ConfigMap",
+						},
 					})
 				}
 			}
@@ -87,48 +99,56 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.Query, error) {
 		for _, envFrom := range container.EnvFrom {
 			if envFrom.SecretRef != nil {
 				// Add linked item from spec.containers[].EnvFrom[].secretKeyRef
-				queries = append(queries, &sdp.Query{
-					Scope:  scope,
-					Method: sdp.QueryMethod_GET,
-					Query:  envFrom.SecretRef.Name,
-					Type:   "Secret",
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Scope:  scope,
+						Method: sdp.QueryMethod_GET,
+						Query:  envFrom.SecretRef.Name,
+						Type:   "Secret",
+					},
 				})
 			}
 		}
 	}
 
 	if resource.Spec.PriorityClassName != "" {
-		queries = append(queries, &sdp.Query{
-			Scope:  sd.ClusterName,
-			Method: sdp.QueryMethod_GET,
-			Query:  resource.Spec.PriorityClassName,
-			Type:   "PriorityClass",
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Scope:  sd.ClusterName,
+				Method: sdp.QueryMethod_GET,
+				Query:  resource.Spec.PriorityClassName,
+				Type:   "PriorityClass",
+			},
 		})
 	}
 
 	if len(resource.Status.PodIPs) > 0 {
 		for _, ip := range resource.Status.PodIPs {
-			queries = append(queries, &sdp.Query{
-				Scope:  "global",
-				Method: sdp.QueryMethod_GET,
-				Query:  ip.IP,
-				Type:   "ip",
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Scope:  "global",
+					Method: sdp.QueryMethod_GET,
+					Query:  ip.IP,
+					Type:   "ip",
+				},
 			})
 		}
 	} else if resource.Status.PodIP != "" {
-		queries = append(queries, &sdp.Query{
-			Type:   "ip",
-			Method: sdp.QueryMethod_GET,
-			Query:  resource.Status.PodIP,
-			Scope:  "global",
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "ip",
+				Method: sdp.QueryMethod_GET,
+				Query:  resource.Status.PodIP,
+				Scope:  "global",
+			},
 		})
 	}
 
 	return queries, nil
 }
 
-func NewPodSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Pod, *v1.PodList] {
-	return KubeTypeSource[*v1.Pod, *v1.PodList]{
+func newPodSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Pod, *v1.PodList] {
+	return &KubeTypeSource[*v1.Pod, *v1.PodList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Pod",

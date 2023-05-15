@@ -6,32 +6,36 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	for _, secret := range resource.Secrets {
-		queries = append(queries, &sdp.Query{
-			Scope:  scope,
-			Method: sdp.QueryMethod_GET,
-			Query:  secret.Name,
-			Type:   "Secret",
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Scope:  scope,
+				Method: sdp.QueryMethod_GET,
+				Query:  secret.Name,
+				Type:   "Secret",
+			},
 		})
 	}
 
 	for _, ipSecret := range resource.ImagePullSecrets {
-		queries = append(queries, &sdp.Query{
-			Scope:  scope,
-			Method: sdp.QueryMethod_GET,
-			Query:  ipSecret.Name,
-			Type:   "Secret",
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Scope:  scope,
+				Method: sdp.QueryMethod_GET,
+				Query:  ipSecret.Name,
+				Type:   "Secret",
+			},
 		})
 	}
 
 	return queries, nil
 }
 
-func NewServiceAccountSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.ServiceAccount, *v1.ServiceAccountList] {
-	return KubeTypeSource[*v1.ServiceAccount, *v1.ServiceAccountList]{
+func newServiceAccountSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.ServiceAccount, *v1.ServiceAccountList] {
+	return &KubeTypeSource[*v1.ServiceAccount, *v1.ServiceAccountList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "ServiceAccount",

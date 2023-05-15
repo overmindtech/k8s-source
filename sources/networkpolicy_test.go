@@ -34,10 +34,10 @@ func TestNetworkPolicySource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewNetworkPolicySource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newNetworkPolicySource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "allow-nginx",
 		GetScope:  sd.String(),
 		SetupYAML: NetworkPolicyYAML,

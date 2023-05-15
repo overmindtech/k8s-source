@@ -32,10 +32,10 @@ func TestDaemonSetSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	source := NewDaemonSetSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	source := newDaemonSetSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:    &source,
+		Source:    source,
 		GetQuery:  "my-daemonset",
 		GetScope:  sd.String(),
 		SetupYAML: daemonSetYAML,

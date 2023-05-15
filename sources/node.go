@@ -9,24 +9,28 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.Query, error) {
-	queries := make([]*sdp.Query, 0)
+func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuery, error) {
+	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	for _, addr := range resource.Status.Addresses {
 		switch addr.Type {
 		case v1.NodeExternalDNS:
-			queries = append(queries, &sdp.Query{
-				Type:   "dns",
-				Method: sdp.QueryMethod_GET,
-				Query:  addr.Address,
-				Scope:  "global",
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "dns",
+					Method: sdp.QueryMethod_GET,
+					Query:  addr.Address,
+					Scope:  "global",
+				},
 			})
 		case v1.NodeExternalIP, v1.NodeInternalIP:
-			queries = append(queries, &sdp.Query{
-				Type:   "ip",
-				Method: sdp.QueryMethod_GET,
-				Query:  addr.Address,
-				Scope:  "global",
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "ip",
+					Method: sdp.QueryMethod_GET,
+					Query:  addr.Address,
+					Scope:  "global",
+				},
 			})
 		}
 	}
@@ -38,11 +42,13 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.Query, error) 
 			sections := strings.Split(string(vol.Name), "^")
 
 			if len(sections) == 2 {
-				queries = append(queries, &sdp.Query{
-					Type:   "ec2-volume",
-					Method: sdp.QueryMethod_GET,
-					Query:  sections[1],
-					Scope:  "*",
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   "ec2-volume",
+						Method: sdp.QueryMethod_GET,
+						Query:  sections[1],
+						Scope:  "*",
+					},
 				})
 			}
 		}
@@ -53,8 +59,8 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.Query, error) 
 
 // TODO: Should we try a DNS lookup for a node name? Is the hostname stored anywhere?
 
-func NewNodeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) KubeTypeSource[*v1.Node, *v1.NodeList] {
-	return KubeTypeSource[*v1.Node, *v1.NodeList]{
+func newNodeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Node, *v1.NodeList] {
+	return &KubeTypeSource[*v1.Node, *v1.NodeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Node",
