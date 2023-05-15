@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"crypto/sha1"
 	"errors"
 	"fmt"
 	"net/http"
@@ -137,6 +138,12 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
+		// Calculate the SHA-1 hash of the config to use as the queue name. This
+		// means that sources with the same config will be in the same queue.
+		// Note that the config object implements redaction in the String()
+		// method so we don't have to worry about leaking secrets
+		configHash := fmt.Sprintf("%x", sha1.Sum([]byte(rc.String())))
+
 		e, err := discovery.NewEngine()
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -155,7 +162,7 @@ var rootCmd = &cobra.Command{
 			ReconnectJitter:   2 * time.Second,
 			TokenClient:       tokenClient,
 		}
-		e.NATSQueueName = "k8s-source" // This should be the same as your engine name
+		e.NATSQueueName = fmt.Sprintf("k8s-source-%v", configHash)
 		e.MaxParallelExecutions = maxParallel
 
 		// Start HTTP server for status
