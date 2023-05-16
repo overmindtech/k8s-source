@@ -4,6 +4,15 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Supported Kubernetes versions are available here:
+        # https://kubernetes.io/releases/
+        kube_version:
+          - v1.27.1
+          - v1.26.3
+          - v1.25.8
+          - v1.24.12
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
@@ -18,6 +27,8 @@ jobs:
         run: go vet ./...
 
       - name: Test
+        env:
+          KUBE_VERSION: ${{ matrix.kube_version }}
         run: go test -v -race -timeout 3m ./...
 
   build:
