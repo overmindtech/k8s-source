@@ -1,0 +1,12 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run NATS Server",
+            "type": "shell",
+            "command": "docker run  -p 4222:4222 -p 8222:8222 nats"
+        }
+    ]
+}

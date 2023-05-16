@@ -4,11 +4,12 @@ go 1.20
 
 // Direct dependencies of my codebase
 require (
+	github.com/google/uuid v1.3.0
 	github.com/nats-io/jwt/v2 v2.4.1
 	github.com/nats-io/nkeys v0.4.4
-	github.com/overmindtech/connect v0.9.0
-	github.com/overmindtech/discovery v0.19.0
-	github.com/overmindtech/sdp-go v0.29.1
+	github.com/overmindtech/connect v0.10.0
+	github.com/overmindtech/discovery v0.20.2
+	github.com/overmindtech/sdp-go v0.30.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
@@ -42,7 +43,6 @@ require (
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.15 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -58,7 +58,7 @@ require (
 	github.com/nats-io/nats.go v1.25.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/overmindtech/api-client v0.14.0 // indirect
-	github.com/overmindtech/sdpcache v1.3.0 // indirect
+	github.com/overmindtech/sdpcache v1.4.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
