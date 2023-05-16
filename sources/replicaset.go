@@ -19,6 +19,12 @@ func replicaSetExtractor(resource *v1.ReplicaSet, scope string) ([]*sdp.LinkedIt
 				Query:  LabelSelectorToQuery(resource.Spec.Selector),
 				Type:   "Pod",
 			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Bidirectional propagation since we control the pods, and the
+				// pods host the service
+				In:  true,
+				Out: true,
+			},
 		})
 	}
 

@@ -26,6 +26,11 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 					Query:  *endpoint.Hostname,
 					Scope:  "global",
 				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Always propagate over DNS
+					In:  true,
+					Out: true,
+				},
 			})
 		}
 
@@ -36,6 +41,12 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 					Method: sdp.QueryMethod_GET,
 					Query:  *endpoint.NodeName,
 					Scope:  sd.ClusterName,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Changes to the node can affect the endpoint
+					In: true,
+					// Changes to the endpoint cannot affect the node
+					Out: false,
 				},
 			})
 		}
@@ -55,6 +66,11 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 						Query:  address,
 						Scope:  "global",
 					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// Always propagate over IP
+						In:  true,
+						Out: true,
+					},
 				})
 			case v1.AddressTypeFQDN:
 				queries = append(queries, &sdp.LinkedItemQuery{
@@ -63,6 +79,11 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 						Method: sdp.QueryMethod_GET,
 						Query:  address,
 						Scope:  "global",
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// Always propagate over DNS
+						In:  true,
+						Out: true,
 					},
 				})
 			}

@@ -25,6 +25,12 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 				Query:  resource.Spec.PersistentVolumeSource.AWSElasticBlockStore.VolumeID,
 				Scope:  "*",
 			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Changes to the EBS volume can affect the PV
+				In: true,
+				// Changes to the PV might affect the EBS volume
+				Out: true,
+			},
 		})
 	}
 
@@ -39,6 +45,12 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 				Method: sdp.QueryMethod_GET,
 				Query:  resource.Spec.StorageClassName,
 				Scope:  sd.ClusterName,
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Changes to the storage class can affect the PV
+				In: true,
+				// Changes to the PV cannot affect the storage class
+				Out: false,
 			},
 		})
 	}

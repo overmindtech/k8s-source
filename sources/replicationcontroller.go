@@ -21,6 +21,12 @@ func replicationControllerExtractor(resource *v1.ReplicationController, scope st
 				}),
 				Type: "Pod",
 			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Bidirectional propagation since we control the pods, and the
+				// pods host the service
+				In:  true,
+				Out: true,
+			},
 		})
 	}
 

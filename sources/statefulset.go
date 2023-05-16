@@ -21,6 +21,12 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 				Query:  LabelSelectorToQuery(resource.Spec.Selector),
 				Scope:  scope,
 			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Bidirectional propagation since we control the pods, and the
+				// pods host the stateful set
+				In:  true,
+				Out: true,
+			},
 		})
 
 		if len(resource.Spec.VolumeClaimTemplates) > 0 {
@@ -30,6 +36,12 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  LabelSelectorToQuery(resource.Spec.Selector),
 					Scope:  scope,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Bidirectional propagation since we control the pods, and the
+					// pods host the stateful set
+					In:  true,
+					Out: true,
 				},
 			})
 		}

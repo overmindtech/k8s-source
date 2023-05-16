@@ -2,29 +2,47 @@ package sources
 
 import (
 	"testing"
+
+	"github.com/overmindtech/sdp-go"
 )
 
-var clusterRoleYAML = `
+var clusterRoleBindingYAML = `
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: ClusterRoleBinding
 metadata:
-  name: read-only
-rules:
-- apiGroups: [""]
-  resources: ["*"]
-  verbs: ["get", "list", "watch"]
-
+  name: admin-binding
+subjects:
+- kind: Group
+  name: system:serviceaccounts:default
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: admin
+  apiGroup: rbac.authorization.k8s.io
 `
 
-func TestClusterRoleSource(t *testing.T) {
-	source := newClusterRoleSource(CurrentCluster.ClientSet, CurrentCluster.Name, []string{})
+func TestClusterRoleBindingSource(t *testing.T) {
+	source := newClusterRoleBindingSource(CurrentCluster.ClientSet, CurrentCluster.Name, []string{})
 
 	st := SourceTests{
-		Source:        source,
-		GetQuery:      "read-only",
-		GetScope:      CurrentCluster.Name,
-		SetupYAML:     clusterRoleYAML,
-		GetQueryTests: QueryTests{},
+		Source:    source,
+		GetQuery:  "admin-binding",
+		GetScope:  CurrentCluster.Name,
+		SetupYAML: clusterRoleBindingYAML,
+		GetQueryTests: QueryTests{
+			{
+				ExpectedType:   "ClusterRole",
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "admin",
+				ExpectedScope:  CurrentCluster.Name,
+			},
+			{
+				ExpectedType:   "Group",
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "system:serviceaccounts:default",
+				ExpectedScope:  CurrentCluster.Name,
+			},
+		},
 	}
 
 	st.Execute(t)
