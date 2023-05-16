@@ -300,13 +300,6 @@ var rootCmd = &cobra.Command{
 
 				// Clear the sources
 				e.ClearSources()
-
-				// Stop the engine
-				err = e.Stop()
-
-				if err != nil {
-					log.Fatal(err)
-				}
 			}
 		}
 	},
