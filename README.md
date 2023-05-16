@@ -2,6 +2,10 @@
 
 This primary source is designed to be used with [srcman](https://github.com/overmindtech/srcman). It connects directly to your Kubernetes clusters using the k8s API and then responds to [SDP](https://github.com/overmindtech/sdp) requests over a NATS network. Usually this will be run as a container and managed by [srcman](https://github.com/overmindtech/srcman).
 
+## Support
+
+This source will support all Kubernetes versions that are currently maintained in the kubernetes project. The list can be found here: https://kubernetes.io/releases/
+
 ## Config
 
 All configuration options can be provided via the command line or as environment variables:
