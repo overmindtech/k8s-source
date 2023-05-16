@@ -83,8 +83,22 @@ func (t *TestCluster) Start() error {
 		// If there is an error then create out own cluster
 		log.Println("🤞 Creating Kubernetes cluster using Kind")
 
+		clusterConfig := new(v1alpha4.Cluster)
+
+		// Read environment variables to check for kube version
+		if version, ok := os.LookupEnv("KUBE_VERSION"); ok {
+			log.Printf("⚙️ Setting custom Kubernetes version: %v\n", version)
+
+			clusterConfig.Nodes = []v1alpha4.Node{
+				{
+					Role:  v1alpha4.ControlPlaneRole,
+					Image: fmt.Sprintf("kindest/node:%v", version),
+				},
+			}
+		}
+
 		t.provider = cluster.NewProvider()
-		err = t.provider.Create(clusterName, cluster.CreateWithV1Alpha4Config(&v1alpha4.Cluster{}))
+		err = t.provider.Create(clusterName, cluster.CreateWithV1Alpha4Config(clusterConfig))
 
 		if err != nil {
 			return err
