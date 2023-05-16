@@ -1,12 +1,13 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	v1 "k8s.io/api/batch/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
 
-func newCronJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.CronJob, *v1.CronJobList] {
+func newCronJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.CronJob, *v1.CronJobList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -26,4 +27,8 @@ func newCronJobSource(cs *kubernetes.Clientset, cluster string, namespaces []str
 		// Cronjobs don't need linked items as the jobs they produce are linked
 		// automatically
 	}
+}
+
+func init() {
+	registerSourceLoader(newCronJobSource)
 }

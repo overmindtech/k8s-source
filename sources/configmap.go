@@ -1,11 +1,12 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-func newConfigMapSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.ConfigMap, *v1.ConfigMapList] {
+func newConfigMapSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ConfigMap, *v1.ConfigMapList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -23,4 +24,8 @@ func newConfigMapSource(cs *kubernetes.Clientset, cluster string, namespaces []s
 			return bindings, nil
 		},
 	}
+}
+
+func init() {
+	registerSourceLoader(newConfigMapSource)
 }

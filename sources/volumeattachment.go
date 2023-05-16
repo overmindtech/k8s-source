@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/storage/v1"
 	"k8s.io/client-go/kubernetes"
@@ -34,7 +35,7 @@ func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*
 	return queries, nil
 }
 
-func newVolumeAttachmentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.VolumeAttachment, *v1.VolumeAttachmentList] {
+func newVolumeAttachmentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.VolumeAttachment, *v1.VolumeAttachmentList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -60,4 +61,8 @@ func newVolumeAttachmentSource(cs *kubernetes.Clientset, cluster string, namespa
 			return sdp.Health_HEALTH_OK.Enum()
 		},
 	}
+}
+
+func init() {
+	registerSourceLoader(newVolumeAttachmentSource)
 }

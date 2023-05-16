@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -45,7 +46,7 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 	return queries, nil
 }
 
-func newPersistentVolumeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.PersistentVolume, *v1.PersistentVolumeList] {
+func newPersistentVolumeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.PersistentVolume, *v1.PersistentVolumeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -64,4 +65,8 @@ func newPersistentVolumeSource(cs *kubernetes.Clientset, cluster string, namespa
 		},
 		LinkedItemQueryExtractor: PersistentVolumeExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newPersistentVolumeSource)
 }

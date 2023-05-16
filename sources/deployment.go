@@ -1,12 +1,13 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	v1 "k8s.io/api/apps/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
 
-func newDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Deployment, *v1.DeploymentList] {
+func newDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Deployment, *v1.DeploymentList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -25,4 +26,8 @@ func newDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []
 		},
 		// Replicasets are linked automatically
 	}
+}
+
+func init() {
+	registerSourceLoader(newDeploymentSource)
 }

@@ -3,6 +3,7 @@ package sources
 import (
 	v2 "k8s.io/api/autoscaling/v2"
 
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
@@ -22,7 +23,7 @@ func horizontalPodAutoscalerExtractor(resource *v2.HorizontalPodAutoscaler, scop
 	return queries, nil
 }
 
-func newHorizontalPodAutoscalerSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList] {
+func newHorizontalPodAutoscalerSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -41,4 +42,8 @@ func newHorizontalPodAutoscalerSource(cs *kubernetes.Clientset, cluster string, 
 		},
 		LinkedItemQueryExtractor: horizontalPodAutoscalerExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newHorizontalPodAutoscalerSource)
 }

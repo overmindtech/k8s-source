@@ -3,12 +3,12 @@ package sources
 import (
 	"crypto/sha512"
 
+	"github.com/overmindtech/discovery"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-// TODO: Configure redaction
-func newSecretSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Secret, *v1.SecretList] {
+func newSecretSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Secret, *v1.SecretList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -44,4 +44,8 @@ func newSecretSource(cs *kubernetes.Clientset, cluster string, namespaces []stri
 			return resource
 		},
 	}
+}
+
+func init() {
+	registerSourceLoader(newSecretSource)
 }

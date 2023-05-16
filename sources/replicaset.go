@@ -3,6 +3,7 @@ package sources
 import (
 	v1 "k8s.io/api/apps/v1"
 
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
@@ -24,7 +25,7 @@ func replicaSetExtractor(resource *v1.ReplicaSet, scope string) ([]*sdp.LinkedIt
 	return queries, nil
 }
 
-func newReplicaSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.ReplicaSet, *v1.ReplicaSetList] {
+func newReplicaSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ReplicaSet, *v1.ReplicaSetList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -43,4 +44,8 @@ func newReplicaSetSource(cs *kubernetes.Clientset, cluster string, namespaces []
 		},
 		LinkedItemQueryExtractor: replicaSetExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newReplicaSetSource)
 }

@@ -3,6 +3,7 @@ package sources
 import (
 	v1 "k8s.io/api/networking/v1"
 
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
@@ -87,7 +88,7 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 	return queries, nil
 }
 
-func newIngressSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Ingress, *v1.IngressList] {
+func newIngressSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Ingress, *v1.IngressList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -106,4 +107,8 @@ func newIngressSource(cs *kubernetes.Clientset, cluster string, namespaces []str
 		},
 		LinkedItemQueryExtractor: ingressExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newIngressSource)
 }

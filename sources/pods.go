@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -147,7 +148,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 	return queries, nil
 }
 
-func newPodSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Pod, *v1.PodList] {
+func newPodSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Pod, *v1.PodList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -182,4 +183,8 @@ func newPodSource(cs *kubernetes.Clientset, cluster string, namespaces []string)
 			return nil
 		},
 	}
+}
+
+func init() {
+	registerSourceLoader(newPodSource)
 }

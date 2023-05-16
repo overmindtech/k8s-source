@@ -1,12 +1,13 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	v1 "k8s.io/api/rbac/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
 
-func newClusterRoleSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.ClusterRole, *v1.ClusterRoleList] {
+func newClusterRoleSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ClusterRole, *v1.ClusterRoleList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -24,4 +25,8 @@ func newClusterRoleSource(cs *kubernetes.Clientset, cluster string, namespaces [
 			return bindings, nil
 		},
 	}
+}
+
+func init() {
+	registerSourceLoader(newClusterRoleSource)
 }

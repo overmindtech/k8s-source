@@ -1,12 +1,13 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	v1 "k8s.io/api/scheduling/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
 
-func newPriorityClassSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.PriorityClass, *v1.PriorityClassList] {
+func newPriorityClassSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.PriorityClass, *v1.PriorityClassList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -24,4 +25,8 @@ func newPriorityClassSource(cs *kubernetes.Clientset, cluster string, namespaces
 			return extracted, nil
 		},
 	}
+}
+
+func init() {
+	registerSourceLoader(newPriorityClassSource)
 }

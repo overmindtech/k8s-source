@@ -1,12 +1,13 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	v1 "k8s.io/api/storage/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
 
-func newStorageClassSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.StorageClass, *v1.StorageClassList] {
+func newStorageClassSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.StorageClass, *v1.StorageClassList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -24,4 +25,8 @@ func newStorageClassSource(cs *kubernetes.Clientset, cluster string, namespaces 
 			return extracted, nil
 		},
 	}
+}
+
+func init() {
+	registerSourceLoader(newStorageClassSource)
 }

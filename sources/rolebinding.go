@@ -3,6 +3,7 @@ package sources
 import (
 	v1 "k8s.io/api/rbac/v1"
 
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
@@ -57,7 +58,7 @@ func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Linked
 	return queries, nil
 }
 
-func newRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.RoleBinding, *v1.RoleBindingList] {
+func newRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.RoleBinding, *v1.RoleBindingList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -76,4 +77,8 @@ func newRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces [
 		},
 		LinkedItemQueryExtractor: roleBindingExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newRoleBindingSource)
 }

@@ -3,6 +3,7 @@ package sources
 import (
 	"strings"
 
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/core/v1"
 
@@ -59,7 +60,7 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 
 // TODO: Should we try a DNS lookup for a node name? Is the hostname stored anywhere?
 
-func newNodeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Node, *v1.NodeList] {
+func newNodeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Node, *v1.NodeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -78,4 +79,8 @@ func newNodeSource(cs *kubernetes.Clientset, cluster string, namespaces []string
 		},
 		LinkedItemQueryExtractor: linkedItemExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newNodeSource)
 }

@@ -3,6 +3,7 @@ package sources
 import (
 	v1 "k8s.io/api/batch/v1"
 
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
@@ -24,7 +25,7 @@ func jobExtractor(resource *v1.Job, scope string) ([]*sdp.LinkedItemQuery, error
 	return queries, nil
 }
 
-func newJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.Job, *v1.JobList] {
+func newJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Job, *v1.JobList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -43,4 +44,8 @@ func newJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string)
 		},
 		LinkedItemQueryExtractor: jobExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newJobSource)
 }

@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/policy/v1"
 	"k8s.io/client-go/kubernetes"
@@ -23,7 +24,7 @@ func podDisruptionBudgetExtractor(resource *v1.PodDisruptionBudget, scope string
 	return queries, nil
 }
 
-func newPodDisruptionBudgetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList] {
+func newPodDisruptionBudgetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -42,4 +43,8 @@ func newPodDisruptionBudgetSource(cs *kubernetes.Clientset, cluster string, name
 		},
 		LinkedItemQueryExtractor: podDisruptionBudgetExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newPodDisruptionBudgetSource)
 }

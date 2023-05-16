@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -34,7 +35,7 @@ func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.
 	return queries, nil
 }
 
-func newServiceAccountSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.ServiceAccount, *v1.ServiceAccountList] {
+func newServiceAccountSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ServiceAccount, *v1.ServiceAccountList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -53,4 +54,8 @@ func newServiceAccountSource(cs *kubernetes.Clientset, cluster string, namespace
 		},
 		LinkedItemQueryExtractor: serviceAccountExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newServiceAccountSource)
 }

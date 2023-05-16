@@ -3,6 +3,7 @@ package sources
 import (
 	v1 "k8s.io/api/networking/v1"
 
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
@@ -51,7 +52,7 @@ func NetworkPolicyExtractor(resource *v1.NetworkPolicy, scope string) ([]*sdp.Li
 	return queries, nil
 }
 
-func newNetworkPolicySource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.NetworkPolicy, *v1.NetworkPolicyList] {
+func newNetworkPolicySource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.NetworkPolicy, *v1.NetworkPolicyList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -70,4 +71,8 @@ func newNetworkPolicySource(cs *kubernetes.Clientset, cluster string, namespaces
 		},
 		LinkedItemQueryExtractor: NetworkPolicyExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newNetworkPolicySource)
 }

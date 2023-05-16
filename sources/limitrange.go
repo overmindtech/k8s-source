@@ -1,11 +1,12 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-func newLimitRangeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.LimitRange, *v1.LimitRangeList] {
+func newLimitRangeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.LimitRange, *v1.LimitRangeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -23,4 +24,8 @@ func newLimitRangeSource(cs *kubernetes.Clientset, cluster string, namespaces []
 			return extracted, nil
 		},
 	}
+}
+
+func init() {
+	registerSourceLoader(newLimitRangeSource)
 }

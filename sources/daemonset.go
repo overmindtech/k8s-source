@@ -1,12 +1,13 @@
 package sources
 
 import (
+	"github.com/overmindtech/discovery"
 	v1 "k8s.io/api/apps/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
 
-func newDaemonSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.DaemonSet, *v1.DaemonSetList] {
+func newDaemonSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.DaemonSet, *v1.DaemonSetList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -25,4 +26,8 @@ func newDaemonSetSource(cs *kubernetes.Clientset, cluster string, namespaces []s
 		},
 		// Pods are linked automatically
 	}
+}
+
+func init() {
+	registerSourceLoader(newDaemonSetSource)
 }

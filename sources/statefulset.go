@@ -4,6 +4,7 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
@@ -53,7 +54,7 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 	return queries, nil
 }
 
-func newStatefulSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.StatefulSet, *v1.StatefulSetList] {
+func newStatefulSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.StatefulSet, *v1.StatefulSetList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -72,4 +73,8 @@ func newStatefulSetSource(cs *kubernetes.Clientset, cluster string, namespaces [
 		},
 		LinkedItemQueryExtractor: statefulSetExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newStatefulSetSource)
 }

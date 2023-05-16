@@ -3,6 +3,7 @@ package sources
 import (
 	v1 "k8s.io/api/discovery/v1"
 
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	"k8s.io/client-go/kubernetes"
 )
@@ -71,7 +72,7 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 	return queries, nil
 }
 
-func newEndpointSliceSource(cs *kubernetes.Clientset, cluster string, namespaces []string) *KubeTypeSource[*v1.EndpointSlice, *v1.EndpointSliceList] {
+func newEndpointSliceSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.EndpointSlice, *v1.EndpointSliceList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
@@ -90,4 +91,8 @@ func newEndpointSliceSource(cs *kubernetes.Clientset, cluster string, namespaces
 		},
 		LinkedItemQueryExtractor: endpointSliceExtractor,
 	}
+}
+
+func init() {
+	registerSourceLoader(newEndpointSliceSource)
 }
