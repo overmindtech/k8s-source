@@ -74,20 +74,31 @@ var rootCmd = &cobra.Command{
 
 		var rc *rest.Config
 		var clientSet *kubernetes.Clientset
+		var restConfig *rest.Config
 
-		// Load kubernetes config
-		rc, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if kubeconfig == "" {
+			log.Info("Using in-cluster config")
 
-		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err,
-			}).Error("Could not load kubernetes config")
+			restConfig, err = rest.InClusterConfig()
 
-			os.Exit(1)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"error": err,
+				}).Fatal("Could not load in-cluster config")
+			}
+		} else {
+			// Load kubernetes config from a file
+			restConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+
+			if err != nil {
+				log.WithFields(log.Fields{
+					"error": err,
+				}).Fatal("Could not load kubernetes config")
+			}
 		}
 
 		// Create clientset
-		clientSet, err = kubernetes.NewForConfig(rc)
+		clientSet, err = kubernetes.NewForConfig(restConfig)
 
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -332,7 +343,7 @@ func init() {
 	rootCmd.PersistentFlags().Int("max-parallel", (runtime.NumCPU() * 2), "Max number of requests to run in parallel")
 
 	// source-specific flags
-	rootCmd.PersistentFlags().String("kubeconfig", "/etc/srcman/config/kubeconfig", "Path to the kubeconfig file containing cluster details")
+	rootCmd.PersistentFlags().String("kubeconfig", "", "Path to the kubeconfig file containing cluster details. If this is blank, the in-cluster config will be used")
 
 	// Bind these to viper
 	viper.BindPFlags(rootCmd.PersistentFlags())
