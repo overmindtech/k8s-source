@@ -76,6 +76,7 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 					Scope:  "global",
 				},
 				BlastPropagation: &sdp.BlastPropagation{
+					// Always propagate through rules
 					In:  true,
 					Out: true,
 				},
@@ -112,7 +113,7 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changes can go in both directions here. An
-							// ingress change can affect the backend, and a
+							// backend change can affect the ingress by rendering
 							// backend change can affect the ingress by rending
 							// it broken
 							In:  true,
