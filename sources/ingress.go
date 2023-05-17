@@ -94,11 +94,10 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 							Scope:  scope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							// Changes to the service won't affect the ingress
-							In: false,
-							// Changing an ingress could absolutely affect the
-							// service
-							Out: true,
+							// Changes to the service affects the ingress' endpoints
+							In: true,
+							// Changing an ingress does not affect the service
+							Out: false,
 						},
 					})
 				}
