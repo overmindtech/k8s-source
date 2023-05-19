@@ -9,15 +9,15 @@ require (
 	github.com/nats-io/nkeys v0.4.4
 	github.com/overmindtech/connect v0.10.0
 	github.com/overmindtech/discovery v0.20.2
-	github.com/overmindtech/sdp-go v0.30.0
-	github.com/sirupsen/logrus v1.9.0
+	github.com/overmindtech/sdp-go v0.30.1
+	github.com/sirupsen/logrus v1.9.2
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
-	k8s.io/api v0.27.1
-	k8s.io/apimachinery v0.27.1
-	k8s.io/client-go v0.27.1
-	sigs.k8s.io/kind v0.18.0
+	k8s.io/api v0.27.2
+	k8s.io/apimachinery v0.27.2
+	k8s.io/client-go v0.27.2
+	sigs.k8s.io/kind v0.19.0
 )
 
 // Transitive dependencies
