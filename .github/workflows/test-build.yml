@@ -53,6 +53,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          audience: sts.amazonaws.com # set default value to work around https://github.com/aws-actions/configure-aws-credentials/issues/271#issuecomment-1401481855
+          aws-region: eu-west-2
+          role-to-assume: ${{ vars.BUILDKIT_CONNECT_ARN }}
+
+      - name: Fetch EKS Configuration
+        run: |
+          aws eks update-kubeconfig --name dogfood
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -74,6 +85,16 @@ jobs:
       - name: Set up Docker Buildx
         id: setup-builder
         uses: docker/setup-buildx-action@v2
+        with:
+          driver: kubernetes
+          platforms: linux/amd64
+          driver-opts: |
+            namespace=buildkit,"nodeselector=kubernetes.io/arch=amd64",requests.cpu=0.9,requests.memory=1G,limits.memory=4G
+          append: |
+            - name: ${{ matrix.image_name }}-${{ github.run_id }}-${{ github.run_attempt }}-arm64
+              platforms: linux/arm64
+              driver-opts:
+                - namespace=buildkit,"nodeselector=kubernetes.io/arch=arm64",requests.cpu=0.9,requests.memory=1G,limits.memory=4G
 
       - name: Build and push
         id: push
@@ -87,3 +108,14 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+
+      - name: Prepare Deployment
+        run: |
+          echo "ghcr.io/overmindtech/${{ matrix.image_name }}@${{ steps.push.outputs.digest }}" | tee ${{ matrix.image_name }}.imageref
+
+      - name: Upload Deployment File
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.image_name }}.imageref
+          path: ${{ matrix.image_name }}.imageref
