@@ -17,7 +17,7 @@ require (
 	k8s.io/api v0.27.1
 	k8s.io/apimachinery v0.27.1
 	k8s.io/client-go v0.27.1
-	sigs.k8s.io/kind v0.18.0
+	sigs.k8s.io/kind v0.19.0
 )
 
 // Transitive dependencies
