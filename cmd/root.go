@@ -72,7 +72,6 @@ var rootCmd = &cobra.Command{
 			"kubeconfig":       kubeconfig,
 		}).Info("Got config")
 
-		var rc *rest.Config
 		var clientSet *kubernetes.Clientset
 		var restConfig *rest.Config
 
@@ -115,12 +114,12 @@ var rootCmd = &cobra.Command{
 		// about generating some sources.
 		var k8sURL *url.URL
 
-		k8sURL, err = url.Parse(rc.Host)
+		k8sURL, err = url.Parse(restConfig.Host)
 
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err,
-			}).Errorf("Could not parse kubernetes url: %v", rc.Host)
+			}).Errorf("Could not parse kubernetes url: %v", restConfig.Host)
 
 			os.Exit(1)
 		}
@@ -153,7 +152,7 @@ var rootCmd = &cobra.Command{
 		// means that sources with the same config will be in the same queue.
 		// Note that the config object implements redaction in the String()
 		// method so we don't have to worry about leaking secrets
-		configHash := fmt.Sprintf("%x", sha1.Sum([]byte(rc.String())))
+		configHash := fmt.Sprintf("%x", sha1.Sum([]byte(restConfig.String())))
 
 		e, err := discovery.NewEngine()
 		if err != nil {
