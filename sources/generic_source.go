@@ -296,7 +296,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 	}
 
 	item := &sdp.Item{
-		Type:            resource.GetName(),
+		Type:            k.TypeName,
 		UniqueAttribute: "name",
 		Scope:           sd.String(),
 		Attributes:      attributes,
