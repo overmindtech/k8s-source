@@ -19,6 +19,13 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 				Query:  *resource.Spec.IngressClassName,
 				Scope:  scope,
 			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Changes to the ingress (e.g. nginx) class can affect the
+				// ingresses that use it
+				In: true,
+				// Changes to an ingress wont' affect the class
+				Out: false,
+			},
 		})
 	}
 
@@ -31,6 +38,12 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 					Query:  resource.Spec.DefaultBackend.Service.Name,
 					Scope:  scope,
 				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Changes to the service affects the ingress' endpoints
+					In: true,
+					// Changing an ingress does not affect the service
+					Out: false,
+				},
 			})
 		}
 
@@ -41,6 +54,13 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 					Method: sdp.QueryMethod_GET,
 					Query:  linkRes.Name,
 					Scope:  scope,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Changes to the default backend won't affect the ingress
+					// itself
+					In: false,
+					// Changes to the ingress could affect the default backend
+					Out: true,
 				},
 			})
 		}
@@ -55,6 +75,11 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 					Query:  rule.Host,
 					Scope:  "global",
 				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Always propagate through rules
+					In:  true,
+					Out: true,
+				},
 			})
 		}
 
@@ -68,6 +93,12 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 							Query:  path.Backend.Service.Name,
 							Scope:  scope,
 						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// Changes to the service affects the ingress' endpoints
+							In: true,
+							// Changing an ingress does not affect the service
+							Out: false,
+						},
 					})
 				}
 
@@ -78,6 +109,14 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 							Method: sdp.QueryMethod_GET,
 							Query:  path.Backend.Resource.Name,
 							Scope:  scope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// Changes can go in both directions here. An
+							// backend change can affect the ingress by rendering
+							// backend change can affect the ingress by rending
+							// it broken
+							In:  true,
+							Out: true,
 						},
 					})
 				}

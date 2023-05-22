@@ -23,6 +23,11 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 					Query:  addr.Address,
 					Scope:  "global",
 				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Always propagate over DNS
+					In:  true,
+					Out: true,
+				},
 			})
 		case v1.NodeExternalIP, v1.NodeInternalIP:
 			queries = append(queries, &sdp.LinkedItemQuery{
@@ -31,6 +36,11 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 					Method: sdp.QueryMethod_GET,
 					Query:  addr.Address,
 					Scope:  "global",
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Always propagate over IP
+					In:  true,
+					Out: true,
 				},
 			})
 		}
@@ -50,6 +60,12 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 						Query:  sections[1],
 						Scope:  "*",
 					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// Changes to the volume can affect the node
+						In: true,
+						// Changes to the node cannot affect the volume
+						Out: true,
+					},
 				})
 			}
 		}
@@ -57,8 +73,6 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 
 	return queries, nil
 }
-
-// TODO: Should we try a DNS lookup for a node name? Is the hostname stored anywhere?
 
 func newNodeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Node, *v1.NodeList]{

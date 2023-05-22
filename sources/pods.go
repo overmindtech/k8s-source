@@ -20,10 +20,16 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 	if resource.Spec.ServiceAccountName != "" {
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
+				Type:   "ServiceAccount",
 				Scope:  scope,
 				Method: sdp.QueryMethod_GET,
 				Query:  resource.Spec.ServiceAccountName,
-				Type:   "ServiceAccount",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Changes to the service account can affect the pod
+				In: true,
+				// Changes to the pod cannot affect the service account
+				Out: false,
 			},
 		})
 	}
@@ -39,6 +45,13 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 					Query:  vol.PersistentVolumeClaim.ClaimName,
 					Type:   "PersistentVolumeClaim",
 				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Changes to the PVC will affect the pod
+					In: true,
+					// The pod can definitely affect the PVC, by filling it up
+					// for example
+					Out: true,
+				},
 			})
 		}
 
@@ -51,6 +64,12 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 					Query:  vol.Secret.SecretName,
 					Type:   "Secret",
 				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Changing the secret could easily break the pod
+					In: true,
+					// The pod however isn't going to affect a secret
+					Out: false,
+				},
 			})
 		}
 
@@ -62,6 +81,12 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 					Method: sdp.QueryMethod_GET,
 					Query:  vol.ConfigMap.Name,
 					Type:   "ConfigMap",
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Changing the config map could easily break the pod
+					In: true,
+					// The pod however isn't going to affect a config map
+					Out: false,
 				},
 			})
 		}
@@ -81,6 +106,12 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 							Query:  env.ValueFrom.SecretKeyRef.Name,
 							Type:   "Secret",
 						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// Changing the secret could easily break the pod
+							In: true,
+							// The pod however isn't going to affect a secret
+							Out: false,
+						},
 					})
 				}
 
@@ -91,6 +122,12 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 							Method: sdp.QueryMethod_GET,
 							Query:  env.ValueFrom.ConfigMapKeyRef.Name,
 							Type:   "ConfigMap",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// Changing the config map could easily break the pod
+							In: true,
+							// The pod however isn't going to affect a config map
+							Out: false,
 						},
 					})
 				}
@@ -107,6 +144,12 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 						Query:  envFrom.SecretRef.Name,
 						Type:   "Secret",
 					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// Changing the secret could easily break the pod
+						In: true,
+						// The pod however isn't going to affect a secret
+						Out: false,
+					},
 				})
 			}
 		}
@@ -120,6 +163,14 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 				Query:  resource.Spec.PriorityClassName,
 				Type:   "PriorityClass",
 			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Changing the priority class could break a pod by meaning that
+				// it would now be scheduled with a lower priority and could
+				// therefore end up pending for ages
+				In: true,
+				// The pod however isn't going to affect a priority class
+				Out: false,
+			},
 		})
 	}
 
@@ -132,6 +183,11 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 					Query:  ip.IP,
 					Type:   "ip",
 				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// IPs go in both directions
+					In:  true,
+					Out: true,
+				},
 			})
 		}
 	} else if resource.Status.PodIP != "" {
@@ -141,6 +197,11 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 				Method: sdp.QueryMethod_GET,
 				Query:  resource.Status.PodIP,
 				Scope:  "global",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// IPs go in both directions
+				In:  true,
+				Out: true,
 			},
 		})
 	}

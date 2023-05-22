@@ -311,6 +311,17 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 				Query:  ref.Name,
 				Scope:  sd.String(),
 			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Changes to the owner will definitely affect the owned e.g.
+				// changes to a deployment will affect the pods in that
+				// deployment
+				In: true,
+				// Changes to the owned may affect the owner e.g. changing a
+				// secret could affect a pod, but if all pods used that secret
+				// then the change should propagate from the pods to the
+				// deployment too
+				Out: true,
+			},
 		})
 	}
 
