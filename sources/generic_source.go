@@ -295,6 +295,9 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 		attributes.AttrStruct.Fields["metadata"] = nil
 	}
 
+	// Make sure the name is set
+	attributes.Set("name", resource.GetName())
+
 	item := &sdp.Item{
 		Type:            k.TypeName,
 		UniqueAttribute: "name",
