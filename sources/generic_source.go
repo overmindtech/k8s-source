@@ -292,7 +292,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 		}
 
 		// Remove the metadata attribute
-		attributes.AttrStruct.Fields["metadata"] = nil
+		delete(attributes.AttrStruct.Fields, "metadata")
 	}
 
 	// Make sure the name is set
