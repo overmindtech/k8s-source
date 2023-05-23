@@ -17,7 +17,7 @@ func TestNodeSource(t *testing.T) {
 
 	st := SourceTests{
 		Source:   source,
-		GetQuery: "k8s-source-tests-control-plane",
+		GetQuery: "local-tests-control-plane",
 		GetScope: sd.String(),
 		GetQueryTests: QueryTests{
 			{
