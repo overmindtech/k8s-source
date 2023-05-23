@@ -1,0 +1,11 @@
+---
+# ConfigMap definition
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "overmind-kube-source.fullname" . }}-config
+data:
+  LOG: {{ .Values.source.log }}
+  MAX_PARALLEL: {{ .Values.source.maxParallel | quote }}
+  NATS_SERVERS: {{ join "," .Values.source.natsServers }}
+---
