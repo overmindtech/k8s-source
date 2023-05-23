@@ -74,7 +74,7 @@ func (t *TestCluster) ConnectExisting(name string) error {
 }
 
 func (t *TestCluster) Start() error {
-	clusterName := "k8s-source-tests"
+	clusterName := "local-tests"
 
 	log.Println("🔍 Trying to connect to existing cluster")
 	err := t.ConnectExisting(clusterName)
