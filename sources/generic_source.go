@@ -292,11 +292,14 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 		}
 
 		// Remove the metadata attribute
-		attributes.AttrStruct.Fields["metadata"] = nil
+		delete(attributes.AttrStruct.Fields, "metadata")
 	}
 
+	// Make sure the name is set
+	attributes.Set("name", resource.GetName())
+
 	item := &sdp.Item{
-		Type:            resource.GetName(),
+		Type:            k.TypeName,
 		UniqueAttribute: "name",
 		Scope:           sd.String(),
 		Attributes:      attributes,

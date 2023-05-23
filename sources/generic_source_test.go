@@ -330,6 +330,10 @@ func TestSourceGet(t *testing.T) {
 		if *item.Health != sdp.Health_HEALTH_OK {
 			t.Errorf("expected item with health HEALTH_OK, got %s", item.Health)
 		}
+
+		if item.Type != "Pod" {
+			t.Errorf("expected item with type Pod, got %s", item.Type)
+		}
 	})
 
 	t.Run("get non-existent item", func(t *testing.T) {

@@ -160,6 +160,9 @@ func (t *TestCluster) kubectl(method string, yaml string) error {
 	cmd.Stderr = &stderr
 	cmd.Dir = filepath.Dir(config.Name())
 
+	// Inherit from the ENV
+	cmd.Env = os.Environ()
+
 	// Set KUBECONFIG location
 	cmd.Env = append(cmd.Env, fmt.Sprintf("KUBECONFIG=%v", t.Kubeconfig))
 

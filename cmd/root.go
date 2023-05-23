@@ -176,7 +176,7 @@ var rootCmd = &cobra.Command{
 		e.MaxParallelExecutions = maxParallel
 
 		// Start HTTP server for status
-		healthCheckPort := 8080
+		healthCheckPort := viper.GetInt("health-check-port")
 		healthCheckPath := "/healthz"
 
 		http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
@@ -193,7 +193,7 @@ var rootCmd = &cobra.Command{
 		}).Debug("Starting healthcheck server")
 
 		go func() {
-			log.Fatal(http.ListenAndServe(":8080", nil))
+			log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", healthCheckPort), nil))
 		}()
 
 		if err != nil {
@@ -217,10 +217,8 @@ var rootCmd = &cobra.Command{
 		}
 
 		// Watch namespaces from here
-		sendInitialEvents := false
 		wi, err := clientSet.CoreV1().Namespaces().Watch(context.Background(), metav1.ListOptions{
-			SendInitialEvents: &sendInitialEvents,
-			ResourceVersion:   list.ResourceVersion,
+			ResourceVersion: list.ResourceVersion,
 		})
 
 		if err != nil {
@@ -339,6 +337,7 @@ func init() {
 	rootCmd.PersistentFlags().String("nats-name-prefix", "", "A name label prefix. Sources should append a dot and their hostname .{hostname} to this, then set this is the NATS connection name which will be sent to the server on CONNECT to identify the client")
 	rootCmd.PersistentFlags().String("nats-jwt", "", "The JWT token that should be used to authenticate to NATS, provided in raw format e.g. eyJ0eXAiOiJKV1Q...")
 	rootCmd.PersistentFlags().String("nats-nkey-seed", "", "The NKey seed which corresponds to the NATS JWT e.g. SUAFK6QUC...")
+	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve the /healthz endpoint")
 	rootCmd.PersistentFlags().Int("max-parallel", (runtime.NumCPU() * 2), "Max number of requests to run in parallel")
 
 	// source-specific flags
