@@ -53,7 +53,7 @@ kind: VolumeAttachment
 metadata:
   name: volume-attachment-attachment
 spec:
-  nodeName: k8s-source-tests-control-plane
+  nodeName: local-tests-control-plane
   attacher: kubernetes.io
   source:
     persistentVolumeName: volume-attachment-pv
@@ -82,7 +82,7 @@ func TestVolumeAttachmentSource(t *testing.T) {
 			{
 				ExpectedType:   "Node",
 				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "k8s-source-tests-control-plane",
+				ExpectedQuery:  "local-tests-control-plane",
 				ExpectedScope:  sd.String(),
 			},
 		},

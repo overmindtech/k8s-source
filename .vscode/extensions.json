@@ -4,6 +4,8 @@
 	// List of extensions which should be recommended for users of this workspace.
 	"recommendations": [
 		"ms-vscode-remote.remote-containers",
+		"tim-koehler.helm-intellisense",
+		"ms-kubernetes-tools.vscode-kubernetes-tools"
 	],
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
 	"unwantedRecommendations": []

@@ -18,7 +18,9 @@
 				"github.vscode-pull-request-github",
 				"golang.go",
 				"gruntfuggly.todo-tree",
-				"streetsidesoftware.code-spell-checker"
+				"streetsidesoftware.code-spell-checker",
+				"Tim-Koehler.helm-intellisense",
+				"ms-kubernetes-tools.vscode-kubernetes-tools",
 			]
 		}
 	},

@@ -67,7 +67,7 @@ func TestEndpointSliceSource(t *testing.T) {
 			{
 				ExpectedType:   "Node",
 				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "k8s-source-tests-control-plane",
+				ExpectedQuery:  "local-tests-control-plane",
 				ExpectedScope:  CurrentCluster.Name,
 			},
 			{
