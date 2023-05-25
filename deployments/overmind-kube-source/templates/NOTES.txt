@@ -1,3 +1,1 @@
-Some stuff goes here
-
-NOTES.txt
+The overmind source has now been installed ✅
