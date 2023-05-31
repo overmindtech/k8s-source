@@ -33,6 +33,14 @@ data:
     port=5432
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod-test-configmap-cert
+data:
+  ca.pem: |
+    wow such cert
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: pod-test-pvc
@@ -56,6 +64,14 @@ spec:
   - name: database-config
     configMap:
       name: pod-test-configmap
+  - name: projected-config
+    projected:
+      sources:
+        - configMap:
+            name: pod-test-configmap-cert
+            items:
+              - key: ca.pem
+                path: ca.pem
   containers:
   - name: pod-test-container
     image: nginx
@@ -64,6 +80,8 @@ spec:
       mountPath: /mnt/data
     - name: database-config
       mountPath: /etc/database
+    - name: projected-config
+      mountPath: /etc/projected
     envFrom:
     - secretRef:
         name: pod-test-secret
@@ -113,9 +131,15 @@ func TestPodSource(t *testing.T) {
 				ExpectedQuery:  "pod-test-pvc",
 				ExpectedScope:  sd.String(),
 			},
+			{
+				ExpectedType:   "ConfigMap",
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "pod-test-configmap-cert",
+				ExpectedScope:  sd.String(),
+			},
 		},
 		Wait: func(item *sdp.Item) bool {
-			return len(item.LinkedItemQueries) >= 5
+			return len(item.LinkedItemQueries) >= 7
 		},
 	}
 
