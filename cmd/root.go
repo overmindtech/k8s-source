@@ -293,6 +293,15 @@ var rootCmd = &cobra.Command{
 
 				os.Exit(0)
 			case event := <-restart:
+				if event.Type == "" {
+					// Discard empty events. After a certain period kubernetes
+					// starts sending occasional empty events, I can't work out why,
+					// maybe it's to keep the connection open. Either way they don't
+					// represent anything and should be discarded
+					log.Debug("Discarding empty event")
+					continue
+				}
+
 				log.Infof("Restarting engine due to namespace event: %v", event.Type)
 
 				// Stop the engine
