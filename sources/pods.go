@@ -90,6 +90,45 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 				},
 			})
 		}
+
+		// Link projected volumes
+		if vol.Projected != nil {
+			for _, source := range vol.Projected.Sources {
+				if source.ConfigMap != nil {
+					queries = append(queries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Scope:  scope,
+							Method: sdp.QueryMethod_GET,
+							Query:  source.ConfigMap.Name,
+							Type:   "ConfigMap",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// Changing the config map could easily break the pod
+							In: true,
+							// The pod however isn't going to affect a config map
+							Out: false,
+						},
+					})
+				}
+
+				if source.Secret != nil {
+					queries = append(queries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Scope:  scope,
+							Method: sdp.QueryMethod_GET,
+							Query:  source.Secret.Name,
+							Type:   "Secret",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// Changing the secret could easily break the pod
+							In: true,
+							// The pod however isn't going to affect a secret
+							Out: false,
+						},
+					})
+				}
+			}
+		}
 	}
 
 	// Link items from containers
