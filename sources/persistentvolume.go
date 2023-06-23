@@ -1,6 +1,8 @@
 package sources
 
 import (
+	"regexp"
+
 	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/core/v1"
@@ -32,6 +34,32 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 				Out: true,
 			},
 		})
+	}
+
+	if resource.Spec.CSI != nil {
+		// Link to an EFS file system access point
+		efsVolumeHandle := regexp.MustCompile(`fs-[a-f0-9]+::(fsap-[a-f0-9]+)`)
+
+		matches := efsVolumeHandle.FindStringSubmatch(resource.Spec.CSI.VolumeHandle)
+
+		if matches != nil {
+			if len(matches) == 2 {
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   "efs-access-point",
+						Method: sdp.QueryMethod_GET,
+						Query:  matches[1],
+						Scope:  "*",
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// Changes to the EFS access point can affect the PV
+						In: true,
+						// Changes to the PV won't affect the EFS access point
+						Out: false,
+					},
+				})
+			}
+		}
 	}
 
 	if resource.Spec.ClaimRef != nil {
