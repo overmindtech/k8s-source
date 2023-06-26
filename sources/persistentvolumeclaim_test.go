@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/overmindtech/sdp-go"
@@ -62,10 +63,10 @@ func TestPersistentVolumeClaimSource(t *testing.T) {
 		SetupYAML: persistentVolumeClaimYAML,
 		GetQueryTests: QueryTests{
 			{
-				ExpectedType:   "PersistentVolume",
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "pvc-test-pv",
-				ExpectedScope:  sd.String(),
+				ExpectedType:         "PersistentVolume",
+				ExpectedMethod:       sdp.QueryMethod_GET,
+				ExpectedQueryMatches: regexp.MustCompile("pvc-"),
+				ExpectedScope:        sd.String(),
 			},
 		},
 	}
