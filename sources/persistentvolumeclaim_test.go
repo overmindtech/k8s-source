@@ -2,6 +2,8 @@ package sources
 
 import (
 	"testing"
+
+	"github.com/overmindtech/sdp-go"
 )
 
 var persistentVolumeClaimYAML = `
@@ -54,11 +56,18 @@ func TestPersistentVolumeClaimSource(t *testing.T) {
 	source := newPersistentVolumeClaimSource(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
 
 	st := SourceTests{
-		Source:        source,
-		GetQuery:      "pvc-test-pvc",
-		GetScope:      sd.String(),
-		SetupYAML:     persistentVolumeClaimYAML,
-		GetQueryTests: QueryTests{},
+		Source:    source,
+		GetQuery:  "pvc-test-pvc",
+		GetScope:  sd.String(),
+		SetupYAML: persistentVolumeClaimYAML,
+		GetQueryTests: QueryTests{
+			{
+				ExpectedType:   "PersistentVolume",
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "pvc-test-pv",
+				ExpectedScope:  sd.String(),
+			},
+		},
 	}
 
 	st.Execute(t)

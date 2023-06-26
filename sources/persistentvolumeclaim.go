@@ -1,10 +1,41 @@
 package sources
 
 import (
+	"errors"
+
 	"github.com/overmindtech/discovery"
+	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
+
+func PersistentVolumeClaimExtractor(resource *v1.PersistentVolumeClaim, scope string) ([]*sdp.LinkedItemQuery, error) {
+	if resource == nil {
+		return nil, errors.New("resource is nil")
+	}
+
+	links := make([]*sdp.LinkedItemQuery, 0)
+
+	if resource.Spec.VolumeName != "" {
+		links = append(links, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "PersistentVolume",
+				Method: sdp.QueryMethod_GET,
+				Query:  resource.Spec.VolumeName,
+				Scope:  scope,
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Changes to the volume could affect the claim
+				In: true,
+				// Changes to the claim could affect the volume if there are
+				// other claims
+				Out: true,
+			},
+		})
+	}
+
+	return links, nil
+}
 
 func newPersistentVolumeClaimSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList]{
@@ -23,6 +54,7 @@ func newPersistentVolumeClaimSource(cs *kubernetes.Clientset, cluster string, na
 
 			return extracted, nil
 		},
+		LinkedItemQueryExtractor: PersistentVolumeClaimExtractor,
 	}
 }
 
