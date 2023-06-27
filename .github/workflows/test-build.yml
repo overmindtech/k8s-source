@@ -5,14 +5,15 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         # Supported Kubernetes versions are available here:
         # https://kubernetes.io/releases/
         kube_version:
-          - v1.27.1
-          - v1.26.3
-          - v1.25.8
-          - v1.24.12
+          - v1.27.3
+          - v1.26.6
+          - v1.25.11
+          - v1.24.15
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
