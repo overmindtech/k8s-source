@@ -69,6 +69,11 @@ func TestPersistentVolumeClaimSource(t *testing.T) {
 				ExpectedScope:        sd.String(),
 			},
 		},
+		Wait: func(item *sdp.Item) bool {
+			phase, _ := item.Attributes.Get("status.phase")
+
+			return phase != "Pending"
+		},
 	}
 
 	st.Execute(t)
