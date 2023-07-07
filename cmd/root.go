@@ -240,7 +240,7 @@ var rootCmd = &cobra.Command{
 			}
 		}()
 
-		for {
+		start := func() {
 			// Query all namespaces
 			log.Info("Listing namespaces")
 			list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
@@ -273,8 +273,28 @@ var rootCmd = &cobra.Command{
 
 				os.Exit(1)
 			}
+		}
 
-			// Start waiting for either an interrupt or a restart
+		stop := func() {
+			// Stop the engine
+			err = e.Stop()
+
+			if err != nil {
+				log.WithFields(log.Fields{
+					"error": err,
+				}).Error("Could not stop engine")
+
+				os.Exit(1)
+			}
+
+			// Clear the sources
+			e.ClearSources()
+		}
+
+		// Start the service initially
+		start()
+
+		for {
 			select {
 			case <-quit:
 				log.Info("Stopping engine")
@@ -299,24 +319,10 @@ var rootCmd = &cobra.Command{
 					// maybe it's to keep the connection open. Either way they don't
 					// represent anything and should be discarded
 					log.Debug("Discarding empty event")
-					continue
+				} else {
+					stop()
+					start()
 				}
-
-				log.Infof("Restarting engine due to namespace event: %v", event.Type)
-
-				// Stop the engine
-				err = e.Stop()
-
-				if err != nil {
-					log.WithFields(log.Fields{
-						"error": err,
-					}).Error("Could not stop engine")
-
-					os.Exit(1)
-				}
-
-				// Clear the sources
-				e.ClearSources()
 			}
 		}
 	},
