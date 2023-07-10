@@ -56,12 +56,14 @@ func run(cmd *cobra.Command, args []string) int {
 	hostname, err := os.Hostname()
 
 	if err != nil {
+		sentry.CaptureException(err)
 		log.WithError(err).Error("Could not determine hostname")
 
 		return 1
 	}
 
 	if err != nil {
+		sentry.CaptureException(err)
 		log.WithError(err).Error("Could not determine hostname for use in NATS connection name")
 
 		return 1
@@ -92,6 +94,7 @@ func run(cmd *cobra.Command, args []string) int {
 		restConfig, err = rest.InClusterConfig()
 
 		if err != nil {
+			sentry.CaptureException(err)
 			log.WithError(err).Error("Could not load in-cluster config")
 
 			return 1
@@ -101,6 +104,7 @@ func run(cmd *cobra.Command, args []string) int {
 		restConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 
 		if err != nil {
+			sentry.CaptureException(err)
 			log.WithError(err).Error("Could not load kubernetes config")
 
 			return 1
@@ -111,6 +115,7 @@ func run(cmd *cobra.Command, args []string) int {
 	clientSet, err = kubernetes.NewForConfig(restConfig)
 
 	if err != nil {
+		sentry.CaptureException(err)
 		log.WithError(err).Error("Could not create kubernetes client")
 
 		return 1
@@ -126,6 +131,7 @@ func run(cmd *cobra.Command, args []string) int {
 	k8sURL, err = url.Parse(restConfig.Host)
 
 	if err != nil {
+		sentry.CaptureException(err)
 		log.WithError(err).Errorf("Could not parse kubernetes url: %v", restConfig.Host)
 
 		return 1
@@ -149,6 +155,7 @@ func run(cmd *cobra.Command, args []string) int {
 		tokenClient, err = createTokenClient(natsJWT, natsNKeySeed)
 
 		if err != nil {
+			sentry.CaptureException(err)
 			log.WithError(err).Error("Error validating authentication info")
 
 			return 1
@@ -163,6 +170,7 @@ func run(cmd *cobra.Command, args []string) int {
 
 	e, err := discovery.NewEngine()
 	if err != nil {
+		sentry.CaptureException(err)
 		log.WithError(err).Error("Error initializing Engine")
 
 		return 1
@@ -219,6 +227,7 @@ func run(cmd *cobra.Command, args []string) int {
 	list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 
 	if err != nil {
+		sentry.CaptureException(err)
 		log.WithError(err).Error("could not list namespaces")
 
 		return 1
@@ -230,6 +239,7 @@ func run(cmd *cobra.Command, args []string) int {
 	})
 
 	if err != nil {
+		sentry.CaptureException(err)
 		log.WithError(err).Error("could not start watching namespaces")
 
 		return 1
@@ -250,6 +260,7 @@ func run(cmd *cobra.Command, args []string) int {
 					list, err = clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 
 					if err != nil {
+						sentry.CaptureException(err)
 						log.WithError(err).Error("could not list namespaces")
 
 						// Send a fatal event that will kill the main goroutine
@@ -266,6 +277,7 @@ func run(cmd *cobra.Command, args []string) int {
 					})
 
 					if err != nil {
+						sentry.CaptureException(err)
 						log.WithError(err).Error("could not start watching namespaces")
 
 						// Send a fatal event that will kill the main goroutine
@@ -333,6 +345,7 @@ func run(cmd *cobra.Command, args []string) int {
 	defer stop()
 
 	if err != nil {
+		sentry.CaptureException(err)
 		log.WithError(err).Error("Could not start engine")
 
 		return 1
@@ -363,6 +376,7 @@ func run(cmd *cobra.Command, args []string) int {
 				err = stop()
 
 				if err != nil {
+					sentry.CaptureException(err)
 					log.WithError(err).Error("Could not stop engine")
 
 					return 1
@@ -371,6 +385,7 @@ func run(cmd *cobra.Command, args []string) int {
 				err = start()
 
 				if err != nil {
+					sentry.CaptureException(err)
 					log.WithError(err).Error("Could not start engine")
 
 					return 1
