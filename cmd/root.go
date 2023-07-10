@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nkeys"
 	"github.com/overmindtech/connect"
@@ -193,16 +194,15 @@ var rootCmd = &cobra.Command{
 		}).Debug("Starting healthcheck server")
 
 		go func() {
-			log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", healthCheckPort), nil))
-		}()
+			defer sentry.Recover()
 
-		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err,
+			err := http.ListenAndServe(fmt.Sprintf(":%v", healthCheckPort), nil)
+
+			log.WithError(err).WithFields(log.Fields{
+				"port": healthCheckPort,
+				"path": healthCheckPath,
 			}).Error("Could not start HTTP server for /healthz health checks")
-
-			os.Exit(1)
-		}
+		}()
 
 		// Create channels for interrupts
 		quit := make(chan os.Signal, 1)
