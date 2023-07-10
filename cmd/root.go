@@ -41,291 +41,362 @@ var rootCmd = &cobra.Command{
 	Long: `Gathers details from existing kubernetes clusters
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		natsServers := viper.GetStringSlice("nats-servers")
-		natsNamePrefix := viper.GetString("nats-name-prefix")
-		natsJWT := viper.GetString("nats-jwt")
-		natsNKeySeed := viper.GetString("nats-nkey-seed")
-		kubeconfig := viper.GetString("kubeconfig")
-		maxParallel := viper.GetInt("max-parallel")
-		hostname, err := os.Hostname()
+		os.Exit(run(cmd, args))
+	},
+}
 
-		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err,
-			}).Error("Could not determine hostname for use in NATS connection name")
+func run(cmd *cobra.Command, args []string) int {
+	natsServers := viper.GetStringSlice("nats-servers")
+	natsNamePrefix := viper.GetString("nats-name-prefix")
+	natsJWT := viper.GetString("nats-jwt")
+	natsNKeySeed := viper.GetString("nats-nkey-seed")
+	kubeconfig := viper.GetString("kubeconfig")
+	maxParallel := viper.GetInt("max-parallel")
+	hostname, err := os.Hostname()
 
-			os.Exit(1)
-		}
+	if err != nil {
+		log.Error(err)
 
-		var natsNKeySeedLog string
-		var tokenClient connect.TokenClient
+		return 1
+	}
 
-		if natsNKeySeed != "" {
-			natsNKeySeedLog = "[REDACTED]"
-		}
-
+	if err != nil {
 		log.WithFields(log.Fields{
-			"nats-servers":     natsServers,
-			"nats-name-prefix": natsNamePrefix,
-			"max-parallel":     maxParallel,
-			"nats-jwt":         natsJWT,
-			"nats-nkey-seed":   natsNKeySeedLog,
-			"kubeconfig":       kubeconfig,
-		}).Info("Got config")
+			"error": err,
+		}).Error("Could not determine hostname for use in NATS connection name")
 
-		var clientSet *kubernetes.Clientset
-		var restConfig *rest.Config
+		return 1
+	}
 
-		if kubeconfig == "" {
-			log.Info("Using in-cluster config")
+	var natsNKeySeedLog string
+	var tokenClient connect.TokenClient
 
-			restConfig, err = rest.InClusterConfig()
+	if natsNKeySeed != "" {
+		natsNKeySeedLog = "[REDACTED]"
+	}
 
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err,
-				}).Fatal("Could not load in-cluster config")
-			}
-		} else {
-			// Load kubernetes config from a file
-			restConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+	log.WithFields(log.Fields{
+		"nats-servers":     natsServers,
+		"nats-name-prefix": natsNamePrefix,
+		"max-parallel":     maxParallel,
+		"nats-jwt":         natsJWT,
+		"nats-nkey-seed":   natsNKeySeedLog,
+		"kubeconfig":       kubeconfig,
+	}).Info("Got config")
 
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err,
-				}).Fatal("Could not load kubernetes config")
-			}
-		}
+	var clientSet *kubernetes.Clientset
+	var restConfig *rest.Config
 
-		// Create clientset
-		clientSet, err = kubernetes.NewForConfig(restConfig)
+	if kubeconfig == "" {
+		log.Info("Using in-cluster config")
+
+		restConfig, err = rest.InClusterConfig()
 
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err,
-			}).Error("Could not create kubernetes client")
+			}).Error("Could not load in-cluster config")
 
-			os.Exit(1)
+			return 1
 		}
-
-		//
-		// Discover info
-		//
-		// Now that we have a connection to the kubernetes cluster we need to go
-		// about generating some sources.
-		var k8sURL *url.URL
-
-		k8sURL, err = url.Parse(restConfig.Host)
+	} else {
+		// Load kubernetes config from a file
+		restConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err,
-			}).Errorf("Could not parse kubernetes url: %v", restConfig.Host)
+			}).Error("Could not load kubernetes config")
 
-			os.Exit(1)
+			return 1
 		}
+	}
 
-		// If there is no port then set one
-		if k8sURL.Port() == "" {
-			switch k8sURL.Scheme {
-			case "http":
-				k8sURL.Host = k8sURL.Host + ":80"
-			case "https":
-				k8sURL.Host = k8sURL.Host + ":443"
-			}
+	// Create clientset
+	clientSet, err = kubernetes.NewForConfig(restConfig)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Could not create kubernetes client")
+
+		return 1
+	}
+
+	//
+	// Discover info
+	//
+	// Now that we have a connection to the kubernetes cluster we need to go
+	// about generating some sources.
+	var k8sURL *url.URL
+
+	k8sURL, err = url.Parse(restConfig.Host)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Errorf("Could not parse kubernetes url: %v", restConfig.Host)
+
+		return 1
+	}
+
+	// If there is no port then set one
+	if k8sURL.Port() == "" {
+		switch k8sURL.Scheme {
+		case "http":
+			k8sURL.Host = k8sURL.Host + ":80"
+		case "https":
+			k8sURL.Host = k8sURL.Host + ":443"
 		}
+	}
 
-		// Validate the auth params and create a token client if we are using
-		// auth
-		if natsJWT != "" || natsNKeySeed != "" {
-			var err error
+	// Validate the auth params and create a token client if we are using
+	// auth
+	if natsJWT != "" || natsNKeySeed != "" {
+		var err error
 
-			tokenClient, err = createTokenClient(natsJWT, natsNKeySeed)
+		tokenClient, err = createTokenClient(natsJWT, natsNKeySeed)
 
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err.Error(),
-				}).Fatal("Error validating authentication info")
-			}
-		}
-
-		// Calculate the SHA-1 hash of the config to use as the queue name. This
-		// means that sources with the same config will be in the same queue.
-		// Note that the config object implements redaction in the String()
-		// method so we don't have to worry about leaking secrets
-		configHash := fmt.Sprintf("%x", sha1.Sum([]byte(restConfig.String())))
-
-		e, err := discovery.NewEngine()
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err.Error(),
-			}).Fatal("Error initializing Engine")
+			}).Error("Error validating authentication info")
+
+			return 1
 		}
-		e.Name = "k8s-source"
-		e.NATSOptions = &connect.NATSOptions{
-			NumRetries:        -1,
-			RetryDelay:        5 * time.Second,
-			Servers:           natsServers,
-			ConnectionName:    fmt.Sprintf("%v.%v", natsNamePrefix, hostname),
-			ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
-			MaxReconnects:     999,                // We are in a container so wait forever
-			ReconnectWait:     2 * time.Second,
-			ReconnectJitter:   2 * time.Second,
-			TokenClient:       tokenClient,
-		}
-		e.NATSQueueName = fmt.Sprintf("k8s-source-%v", configHash)
-		e.MaxParallelExecutions = maxParallel
+	}
 
-		// Start HTTP server for status
-		healthCheckPort := viper.GetInt("health-check-port")
-		healthCheckPath := "/healthz"
+	// Calculate the SHA-1 hash of the config to use as the queue name. This
+	// means that sources with the same config will be in the same queue.
+	// Note that the config object implements redaction in the String()
+	// method so we don't have to worry about leaking secrets
+	configHash := fmt.Sprintf("%x", sha1.Sum([]byte(restConfig.String())))
 
-		http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
-			if e.IsNATSConnected() {
-				fmt.Fprint(rw, "ok")
-			} else {
-				http.Error(rw, "NATS not connected", http.StatusInternalServerError)
-			}
-		})
-
+	e, err := discovery.NewEngine()
+	if err != nil {
 		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Error("Error initializing Engine")
+
+		return 1
+	}
+	e.Name = "k8s-source"
+	e.NATSOptions = &connect.NATSOptions{
+		NumRetries:        -1,
+		RetryDelay:        5 * time.Second,
+		Servers:           natsServers,
+		ConnectionName:    fmt.Sprintf("%v.%v", natsNamePrefix, hostname),
+		ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
+		MaxReconnects:     999,                // We are in a container so wait forever
+		ReconnectWait:     2 * time.Second,
+		ReconnectJitter:   2 * time.Second,
+		TokenClient:       tokenClient,
+	}
+	e.NATSQueueName = fmt.Sprintf("k8s-source-%v", configHash)
+	e.MaxParallelExecutions = maxParallel
+
+	// Start HTTP server for status
+	healthCheckPort := viper.GetInt("health-check-port")
+	healthCheckPath := "/healthz"
+
+	http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
+		if e.IsNATSConnected() {
+			fmt.Fprint(rw, "ok")
+		} else {
+			http.Error(rw, "NATS not connected", http.StatusInternalServerError)
+		}
+	})
+
+	log.WithFields(log.Fields{
+		"port": healthCheckPort,
+		"path": healthCheckPath,
+	}).Debug("Starting healthcheck server")
+
+	go func() {
+		defer sentry.Recover()
+
+		err := http.ListenAndServe(fmt.Sprintf(":%v", healthCheckPort), nil)
+
+		log.WithError(err).WithFields(log.Fields{
 			"port": healthCheckPort,
 			"path": healthCheckPath,
-		}).Debug("Starting healthcheck server")
+		}).Error("Could not start HTTP server for /healthz health checks")
+	}()
 
-		go func() {
-			defer sentry.Recover()
+	// Create channels for interrupts
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	restart := make(chan watch.Event, 1024)
 
-			err := http.ListenAndServe(fmt.Sprintf(":%v", healthCheckPort), nil)
+	// Get the initial starting point
+	list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 
-			log.WithError(err).WithFields(log.Fields{
-				"port": healthCheckPort,
-				"path": healthCheckPath,
-			}).Error("Could not start HTTP server for /healthz health checks")
-		}()
+	if err != nil {
+		log.Errorf("Could not list namespaces: %v", err)
 
-		// Create channels for interrupts
-		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-		restart := make(chan watch.Event, 1024)
+		return 1
+	}
 
-		// Get the initial starting point
+	// Watch namespaces from here
+	wi, err := clientSet.CoreV1().Namespaces().Watch(context.Background(), metav1.ListOptions{
+		ResourceVersion: list.ResourceVersion,
+	})
+
+	if err != nil {
+		log.Errorf("Could not start watching namespaces: %v", err)
+
+		return 1
+	}
+
+	watchCtx, watchCancel := context.WithCancel(context.Background())
+	defer watchCancel()
+
+	go func() {
+		for {
+			select {
+			case event, ok := <-wi.ResultChan():
+				if !ok {
+					log.Error("Namespace watch channel closed")
+					log.Info("Re-subscribing to namespace watch")
+
+					// Get the initial starting point
+					list, err = clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+
+					if err != nil {
+						log.Errorf("Could not list namespaces: %v", err)
+
+						// Send a fatal event that will kill the main goroutine
+						restart <- watch.Event{
+							Type: watch.EventType("FATAL"),
+						}
+
+						return
+					}
+
+					// Watch namespaces from here
+					wi, err = clientSet.CoreV1().Namespaces().Watch(context.Background(), metav1.ListOptions{
+						ResourceVersion: list.ResourceVersion,
+					})
+
+					if err != nil {
+						log.Errorf("Could not start watching namespaces: %v", err)
+
+						// Send a fatal event that will kill the main goroutine
+						restart <- watch.Event{
+							Type: watch.EventType("FATAL"),
+						}
+
+						return
+					}
+				}
+
+				// Restart the engine
+				restart <- event
+			case <-watchCtx.Done():
+				return
+			}
+		}
+	}()
+
+	start := func() error {
+		// Query all namespaces
+		log.Info("Listing namespaces")
 		list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 
 		if err != nil {
-			log.Fatalf("Could not list namespaces: %v", err)
+			return err
 		}
 
-		// Watch namespaces from here
-		wi, err := clientSet.CoreV1().Namespaces().Watch(context.Background(), metav1.ListOptions{
-			ResourceVersion: list.ResourceVersion,
-		})
+		namespaces := make([]string, len(list.Items))
+
+		for i := range list.Items {
+			namespaces[i] = list.Items[i].Name
+		}
+
+		log.Infof("got %v namespaces", len(namespaces))
+
+		// Create the sources
+		sourceList := sources.LoadAllSources(clientSet, k8sURL.Host, namespaces)
+
+		// Add sources to the engine
+		e.AddSources(sourceList...)
+
+		// Start the engine
+		err = e.Start()
+
+		return err
+	}
+
+	stop := func() error {
+		// Stop the engine
+		err = e.Stop()
 
 		if err != nil {
-			log.Fatalf("Could not start watching namespaces: %v", err)
+			return err
 		}
 
-		watchCtx, watchCancel := context.WithCancel(context.Background())
-		defer watchCancel()
+		// Clear the sources
+		e.ClearSources()
 
-		go func() {
-			for {
-				select {
-				case event := <-wi.ResultChan():
-					// Restart the engine
-					restart <- event
-				case <-watchCtx.Done():
-					return
-				}
-			}
-		}()
+		return nil
+	}
 
-		start := func() {
-			// Query all namespaces
-			log.Info("Listing namespaces")
-			list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+	// Start the service initially
+	err = start()
+	defer stop()
 
-			if err != nil {
-				log.Fatal(err)
-			}
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Could not start engine")
 
-			namespaces := make([]string, len(list.Items))
+		return 1
+	}
 
-			for i := range list.Items {
-				namespaces[i] = list.Items[i].Name
-			}
+	for {
+		select {
+		case <-quit:
+			log.Info("Stopping engine")
 
-			log.Infof("got %v namespaces", len(namespaces))
+			// Stopping will be handled by deferred stop()
 
-			// Create the sources
-			sourceList := sources.LoadAllSources(clientSet, k8sURL.Host, namespaces)
-
-			// Add sources to the engine
-			e.AddSources(sourceList...)
-
-			// Start the engine
-			err = e.Start()
-
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err,
-				}).Error("Could not start engine")
-
-				os.Exit(1)
-			}
-		}
-
-		stop := func() {
-			// Stop the engine
-			err = e.Stop()
-
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err,
-				}).Error("Could not stop engine")
-
-				os.Exit(1)
-			}
-
-			// Clear the sources
-			e.ClearSources()
-		}
-
-		// Start the service initially
-		start()
-
-		for {
-			select {
-			case <-quit:
-				log.Info("Stopping engine")
-
-				err = e.Stop()
+			return 0
+		case event := <-restart:
+			switch event.Type {
+			case "":
+				// Discard empty events. After a certain period kubernetes
+				// starts sending occasional empty events, I can't work out why,
+				// maybe it's to keep the connection open. Either way they don't
+				// represent anything and should be discarded
+				log.Debug("Discarding empty event")
+			case "FATAL":
+				// This is a custom event type that should signal the main
+				// goroutine to exit
+				log.Error("Fatal error in watch goroutine")
+				return 1
+			default:
+				err = stop()
 
 				if err != nil {
 					log.WithFields(log.Fields{
 						"error": err,
 					}).Error("Could not stop engine")
 
-					os.Exit(1)
+					return 1
 				}
 
-				log.Info("Stopped")
+				err = start()
 
-				os.Exit(0)
-			case event := <-restart:
-				if event.Type == "" {
-					// Discard empty events. After a certain period kubernetes
-					// starts sending occasional empty events, I can't work out why,
-					// maybe it's to keep the connection open. Either way they don't
-					// represent anything and should be discarded
-					log.Debug("Discarding empty event")
-				} else {
-					stop()
-					start()
+				if err != nil {
+					log.WithFields(log.Fields{
+						"error": err,
+					}).Error("Could not start engine")
+
+					return 1
 				}
 			}
 		}
-	},
+	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
