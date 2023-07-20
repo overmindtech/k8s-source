@@ -22,6 +22,7 @@ import (
 	"github.com/overmindtech/k8s-source/sources"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
@@ -425,6 +426,11 @@ func init() {
 	// source-specific flags
 	rootCmd.PersistentFlags().String("kubeconfig", "", "Path to the kubeconfig file containing cluster details. If this is blank, the in-cluster config will be used")
 
+	// tracing
+	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb")
+	rootCmd.PersistentFlags().String("sentry-dsn", "", "If specified, configures sentry libraries to capture errors")
+	rootCmd.PersistentFlags().String("run-mode", "release", "Set the run mode for this service, 'release', 'debug' or 'test'. Defaults to 'release'.")
+
 	// Bind these to viper
 	viper.BindPFlags(rootCmd.PersistentFlags())
 
@@ -445,6 +451,23 @@ func init() {
 				viper.BindPFlag(f.Name, f)
 			}
 		})
+
+		honeycomb_api_key := viper.GetString("honeycomb-api-key")
+		tracingOpts := make([]otlptracehttp.Option, 0)
+		if honeycomb_api_key != "" {
+			tracingOpts = []otlptracehttp.Option{
+				otlptracehttp.WithEndpoint("api.honeycomb.io"),
+				otlptracehttp.WithHeaders(map[string]string{"x-honeycomb-team": honeycomb_api_key}),
+			}
+		}
+		if err := initTracing(tracingOpts...); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// shut down tracing at the end of the process
+	rootCmd.PersistentPostRun = func(cmd *cobra.Command, args []string) {
+		shutdownTracing()
 	}
 }
 
