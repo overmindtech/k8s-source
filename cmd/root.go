@@ -255,6 +255,9 @@ func run(cmd *cobra.Command, args []string) int {
 			select {
 			case event, ok := <-wi.ResultChan():
 				if !ok {
+					// If the channel is closed then we need to restart the
+					// watch
+
 					log.Error("Namespace watch channel closed")
 					log.Info("Re-subscribing to namespace watch")
 
@@ -289,10 +292,11 @@ func run(cmd *cobra.Command, args []string) int {
 
 						return
 					}
+				} else {
+					// If a watch event is received then we need to restart the
+					// engine
+					restart <- event
 				}
-
-				// Restart the engine
-				restart <- event
 			case <-watchCtx.Done():
 				return
 			}
