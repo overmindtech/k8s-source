@@ -22,6 +22,7 @@ import (
 	"github.com/overmindtech/k8s-source/sources"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -443,6 +444,9 @@ func init() {
 		}
 
 		log.AddHook(TerminationLogHook{})
+		log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
+			log.AllLevels[:log.GetLevel()]...,
+		)))
 
 		// Bind flags that haven't been set to the values from viper of we have them
 		cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {

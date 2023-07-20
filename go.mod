@@ -108,6 +108,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+require github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.2
+
+require github.com/uptrace/opentelemetry-go-extra/otelutil v0.2.2 // indirect
+
 exclude (
 	// For Kubernetes versions >= v1.17.0, use a corresponding v0.x.y tag from
 	// k8s.io/client-go. Previous versions should use the non-semver
