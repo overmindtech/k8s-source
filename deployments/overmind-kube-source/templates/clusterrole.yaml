@@ -3,6 +3,6 @@ kind: ClusterRole
 metadata:
   name: {{ include "overmind-kube-source.clusterRoleName" . }}
 rules:
-- apiGroups: [""]
+- apiGroups: ["*"]
   resources: ["*"]
   verbs: ["get", "list", "watch"]
