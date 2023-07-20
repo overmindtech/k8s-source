@@ -13,3 +13,7 @@ Removing the chart:
 ```
 helm uninstall k8s-source
 ```
+
+## Releasing
+
+These charts are released automatically using [helm-chart-releaser](https://github.com/marketplace/actions/helm-chart-releaser) TODO DOCUMENT HOW
