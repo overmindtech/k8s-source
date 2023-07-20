@@ -29,6 +29,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/flowcontrol"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -112,6 +113,12 @@ func run(cmd *cobra.Command, args []string) int {
 			return 1
 		}
 	}
+
+	// Set up rate limiting
+	restConfig.RateLimiter = flowcontrol.NewTokenBucketRateLimiter(
+		float32(viper.GetFloat64("rate-limit-qps")),
+		viper.GetInt("rate-limit-burst"),
+	)
 
 	// Create clientset
 	clientSet, err = kubernetes.NewForConfig(restConfig)
@@ -430,6 +437,8 @@ func init() {
 
 	// source-specific flags
 	rootCmd.PersistentFlags().String("kubeconfig", "", "Path to the kubeconfig file containing cluster details. If this is blank, the in-cluster config will be used")
+	rootCmd.PersistentFlags().Float32("rate-limit-qps", 10.0, "The maximum sustained queries per second from this source to the kubernetes API")
+	rootCmd.PersistentFlags().Int("rate-limit-burst", 30, "The maximum burst of queries from this source to the kubernetes API")
 
 	// tracing
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb")

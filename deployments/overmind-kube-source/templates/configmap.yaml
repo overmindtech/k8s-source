@@ -8,4 +8,6 @@ data:
   LOG: {{ .Values.source.log }}
   MAX_PARALLEL: {{ .Values.source.maxParallel | quote }}
   NATS_SERVERS: {{ join "," .Values.source.natsServers }}
+  RATE_LIMIT_QPS: {{ .Values.source.rateLimitQPS | quote }}
+  RATE_LIMIT_BURST: {{ .Values.source.rateLimitBurst | quote }}
 ---

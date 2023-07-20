@@ -80,3 +80,7 @@ source:
   natsNKeySeed: ""
   # How many requests to run in parallel
   maxParallel: 20
+  # The maximum sustained queries per second from this source to the kubernetes API
+  rateLimitQPS: 10
+  # The maximum burst of queries from this source to the kubernetes API
+  rateLimitBurst: 30
