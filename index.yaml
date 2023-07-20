@@ -3,6 +3,17 @@ entries:
   overmind-kube-source:
   - apiVersion: v2
     appVersion: main
+    created: "2023-07-20T12:48:16.012548233Z"
+    description: A source that allows Overmind to read from the current Kubernetes
+      cluster
+    digest: f12f9a592dd5f6d0c007048e1b51819080a8387a521b52ca04375a6bd8727043
+    name: overmind-kube-source
+    type: application
+    urls:
+    - https://github.com/overmindtech/k8s-source/releases/download/overmind-kube-source-0.3.7/overmind-kube-source-0.3.7.tgz
+    version: 0.3.7
+  - apiVersion: v2
+    appVersion: main
     created: "2023-07-20T10:13:18.498796821Z"
     description: A source that allows Overmind to read from the current Kubernetes
       cluster
@@ -34,4 +45,4 @@ entries:
     urls:
     - https://github.com/overmindtech/k8s-source/releases/download/overmind-kube-source-0.3.2/overmind-kube-source-0.3.2.tgz
     version: 0.3.2
-generated: "2023-07-20T10:13:18.498815623Z"
+generated: "2023-07-20T12:48:16.012871431Z"
