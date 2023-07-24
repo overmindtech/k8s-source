@@ -111,6 +111,8 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+require github.com/go-jose/go-jose/v3 v3.0.0 // indirect
+
 exclude (
 	// For Kubernetes versions >= v1.17.0, use a corresponding v0.x.y tag from
 	// k8s.io/client-go. Previous versions should use the non-semver
