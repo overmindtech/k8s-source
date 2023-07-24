@@ -8,7 +8,7 @@ require (
 	github.com/nats-io/jwt/v2 v2.4.1
 	github.com/nats-io/nkeys v0.4.4
 	github.com/overmindtech/discovery v0.21.7
-	github.com/overmindtech/sdp-go v0.37.0
+	github.com/overmindtech/sdp-go v0.39.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
@@ -109,6 +109,8 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+require github.com/go-jose/go-jose/v3 v3.0.0 // indirect
 
 exclude (
 	// For Kubernetes versions >= v1.17.0, use a corresponding v0.x.y tag from
