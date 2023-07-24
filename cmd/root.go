@@ -148,7 +148,14 @@ func run(cmd *cobra.Command, args []string) int {
 	// Validate the auth params and create a token client if we are using
 	// auth
 	if apiKey != "" {
-		tokenClient = auth.NewAPIKeyClient(apiPath, apiKey)
+		tokenClient, err = auth.NewAPIKeyClient(apiPath, apiKey)
+
+		if err != nil {
+			sentry.CaptureException(err)
+			log.WithError(err).Error("Could not create API key client")
+
+			return 1
+		}
 	}
 
 	// Calculate the SHA-1 hash of the config to use as the queue name. This
@@ -412,7 +419,7 @@ func init() {
 	rootCmd.PersistentFlags().StringArray("nats-servers", []string{"nats://localhost:4222", "nats://nats:4222"}, "A list of NATS servers to connect to")
 	rootCmd.PersistentFlags().String("api-key", "", "The API key to use to authenticate to the Overmind API")
 	rootCmd.MarkFlagRequired("api-key")
-	rootCmd.PersistentFlags().String("api-path", "https://api.prod.overmind.tech/api", "The URL of the Overmind API")
+	rootCmd.PersistentFlags().String("api-path", "https://api.prod.overmind.tech", "The URL of the Overmind API")
 
 	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve the /healthz endpoint")
 	rootCmd.PersistentFlags().Int("max-parallel", (runtime.NumCPU() * 2), "Max number of requests to run in parallel")
