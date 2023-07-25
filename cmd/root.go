@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"crypto/sha1"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -15,8 +14,6 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/nats-io/jwt/v2"
-	"github.com/nats-io/nkeys"
 	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/k8s-source/sources"
 	"github.com/overmindtech/sdp-go/auth"
@@ -51,11 +48,10 @@ var rootCmd = &cobra.Command{
 
 func run(cmd *cobra.Command, args []string) int {
 	natsServers := viper.GetStringSlice("nats-servers")
-	natsNamePrefix := viper.GetString("nats-name-prefix")
-	natsJWT := viper.GetString("nats-jwt")
-	natsNKeySeed := viper.GetString("nats-nkey-seed")
 	kubeconfig := viper.GetString("kubeconfig")
 	maxParallel := viper.GetInt("max-parallel")
+	apiKey := viper.GetString("api-key")
+	apiPath := viper.GetString("api-path")
 	hostname, err := os.Hostname()
 
 	if err != nil {
@@ -72,20 +68,13 @@ func run(cmd *cobra.Command, args []string) int {
 		return 1
 	}
 
-	var natsNKeySeedLog string
 	var tokenClient auth.TokenClient
 
-	if natsNKeySeed != "" {
-		natsNKeySeedLog = "[REDACTED]"
-	}
-
 	log.WithFields(log.Fields{
-		"nats-servers":     natsServers,
-		"nats-name-prefix": natsNamePrefix,
-		"max-parallel":     maxParallel,
-		"nats-jwt":         natsJWT,
-		"nats-nkey-seed":   natsNKeySeedLog,
-		"kubeconfig":       kubeconfig,
+		"nats-servers": natsServers,
+		"max-parallel": maxParallel,
+		"kubeconfig":   kubeconfig,
+		"api-path":     apiPath,
 	}).Info("Got config")
 
 	var clientSet *kubernetes.Clientset
@@ -158,14 +147,12 @@ func run(cmd *cobra.Command, args []string) int {
 
 	// Validate the auth params and create a token client if we are using
 	// auth
-	if natsJWT != "" || natsNKeySeed != "" {
-		var err error
-
-		tokenClient, err = createTokenClient(natsJWT, natsNKeySeed)
+	if apiKey != "" {
+		tokenClient, err = auth.NewAPIKeyClient(apiPath, apiKey)
 
 		if err != nil {
 			sentry.CaptureException(err)
-			log.WithError(err).Error("Error validating authentication info")
+			log.WithError(err).Error("Could not create API key client")
 
 			return 1
 		}
@@ -189,7 +176,7 @@ func run(cmd *cobra.Command, args []string) int {
 		NumRetries:        -1,
 		RetryDelay:        5 * time.Second,
 		Servers:           natsServers,
-		ConnectionName:    fmt.Sprintf("%v.%v", natsNamePrefix, hostname),
+		ConnectionName:    hostname,
 		ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
 		MaxReconnects:     999,                // We are in a container so wait forever
 		ReconnectWait:     2 * time.Second,
@@ -428,10 +415,12 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "/etc/srcman/config/k8s-source.yaml", "config file path")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 
+	// NATS
 	rootCmd.PersistentFlags().StringArray("nats-servers", []string{"nats://localhost:4222", "nats://nats:4222"}, "A list of NATS servers to connect to")
-	rootCmd.PersistentFlags().String("nats-name-prefix", "", "A name label prefix. Sources should append a dot and their hostname .{hostname} to this, then set this is the NATS connection name which will be sent to the server on CONNECT to identify the client")
-	rootCmd.PersistentFlags().String("nats-jwt", "", "The JWT token that should be used to authenticate to NATS, provided in raw format e.g. eyJ0eXAiOiJKV1Q...")
-	rootCmd.PersistentFlags().String("nats-nkey-seed", "", "The NKey seed which corresponds to the NATS JWT e.g. SUAFK6QUC...")
+	rootCmd.PersistentFlags().String("api-key", "", "The API key to use to authenticate to the Overmind API")
+	rootCmd.MarkFlagRequired("api-key")
+	rootCmd.PersistentFlags().String("api-path", "https://api.prod.overmind.tech", "The URL of the Overmind API")
+
 	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve the /healthz endpoint")
 	rootCmd.PersistentFlags().Int("max-parallel", (runtime.NumCPU() * 2), "Max number of requests to run in parallel")
 
@@ -501,31 +490,6 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		log.Infof("Using config file: %v", viper.ConfigFileUsed())
 	}
-}
-
-// createTokenClient Creates a basic token client that will authenticate to NATS
-// using the given values
-func createTokenClient(natsJWT string, natsNKeySeed string) (auth.TokenClient, error) {
-	var kp nkeys.KeyPair
-	var err error
-
-	if natsJWT == "" {
-		return nil, errors.New("nats-jwt was blank. This is required when using authentication")
-	}
-
-	if natsNKeySeed == "" {
-		return nil, errors.New("nats-nkey-seed was blank. This is required when using authentication")
-	}
-
-	if _, err = jwt.DecodeUserClaims(natsJWT); err != nil {
-		return nil, fmt.Errorf("could not parse nats-jwt: %v", err)
-	}
-
-	if kp, err = nkeys.FromSeed([]byte(natsNKeySeed)); err != nil {
-		return nil, fmt.Errorf("could not parse nats-nkey-seed: %v", err)
-	}
-
-	return auth.NewBasicTokenClient(natsJWT, kp), nil
 }
 
 // TerminationLogHook A hook that logs fatal errors to the termination log

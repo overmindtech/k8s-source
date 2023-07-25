@@ -74,10 +74,8 @@ source:
   natsServers:
     - nats://nats:4222
     - nats://nats:4223
-  # The JWT token to use to connect to the NATS server
-  natsJWT: ""
-  # The seed to use to generate the NKeys
-  natsNKeySeed: ""
+  # The API key used to connect to Overmind
+  apiKey: ""
   # How many requests to run in parallel
   maxParallel: 20
   # The maximum sustained queries per second from this source to the kubernetes API
