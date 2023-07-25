@@ -22,6 +22,12 @@ To upgrade:
 helm upgrade overmind-kube-source overmind/overmind-kube-source
 ```
 
+To uninstall:
+
+```shell
+helm uninstall overmind-kube-source
+```
+
 ## Support
 
 This source will support all Kubernetes versions that are currently maintained in the kubernetes project. The list can be found here: https://kubernetes.io/releases/
