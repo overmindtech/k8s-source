@@ -72,8 +72,7 @@ source:
   log: info
   # The list of NATS servers to connect to
   natsServers:
-    - nats://nats:4222
-    - nats://nats:4223
+    - nats://messages.prod.overmind.tech
   # The API key used to connect to Overmind
   apiKey: ""
   # How many requests to run in parallel
