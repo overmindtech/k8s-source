@@ -11,6 +11,7 @@ import (
 func NetworkPolicyExtractor(resource *v1.NetworkPolicy, scope string) ([]*sdp.LinkedItemQuery, error) {
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
+	// +overmind:link Pod
 	queries = append(queries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Type:   "Pod",
@@ -45,6 +46,7 @@ func NetworkPolicyExtractor(resource *v1.NetworkPolicy, scope string) ([]*sdp.Li
 			// matchLabels:
 			//   project: something
 
+			// +overmind:link Pod
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Scope:  scope,
@@ -65,6 +67,17 @@ func NetworkPolicyExtractor(resource *v1.NetworkPolicy, scope string) ([]*sdp.Li
 
 	return queries, nil
 }
+
+//go:generate docgen ../docs-data
+// +overmind:type NetworkPolicy
+// +overmind:descriptiveType Network Policy
+// +overmind:get Get a network policy by name
+// +overmind:list List all network policies
+// +overmind:search Search for a network policy using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
+// +overmind:terraform:queryMap kubernetes_network_policy.metadata.name
+// +overmind:terraform:queryMap kubernetes_network_policy_v1.metadata.name
+// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
 
 func newNetworkPolicySource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.NetworkPolicy, *v1.NetworkPolicyList]{

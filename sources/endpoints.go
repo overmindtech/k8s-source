@@ -19,6 +19,7 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 	for _, subset := range resource.Subsets {
 		for _, address := range subset.Addresses {
 			if address.Hostname != "" {
+				// +overmind:link DNS
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Scope:  "global",
@@ -35,6 +36,7 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 			}
 
 			if address.NodeName != nil {
+				// +overmind:link Node
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "Node",
@@ -52,6 +54,7 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 			}
 
 			if address.IP != "" {
+				// +overmind:link ip
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "ip",
@@ -68,6 +71,8 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 			}
 
 			if address.TargetRef != nil {
+				// +overmind:link Pod
+				// +overmind:link ExternalName
 				targetQuery := ObjectReferenceToQuery(address.TargetRef, sd)
 				queries = append(queries, targetQuery)
 			}
@@ -76,6 +81,17 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 
 	return queries, nil
 }
+
+//go:generate docgen ../docs-data
+// +overmind:type Endpoints
+// +overmind:descriptiveType Endpoints
+// +overmind:get Get an endpoint by name
+// +overmind:list List all endpoints
+// +overmind:search Search for an endpoint using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
+// +overmind:terraform:queryMap kubernetes_endpoints.metadata.name
+// +overmind:terraform:queryMap kubernetes_endpoints_v1.metadata.name
+// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
 
 func newEndpointsSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Endpoints, *v1.EndpointsList]{

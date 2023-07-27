@@ -8,6 +8,17 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+//go:generate docgen ../docs-data
+// +overmind:type Secret
+// +overmind:descriptiveType Secret
+// +overmind:get Get a secret by name
+// +overmind:list List all secrets
+// +overmind:search Search for a secret using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
+// +overmind:terraform:queryMap kubernetes_secret.metadata.name
+// +overmind:terraform:queryMap kubernetes_secret_v1.metadata.name
+// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+
 func newSecretSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Secret, *v1.SecretList]{
 		ClusterName: cluster,

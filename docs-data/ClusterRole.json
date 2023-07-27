@@ -1,0 +1,14 @@
+{
+	"type": "ClusterRole",
+	"descriptiveType": "Cluster Role",
+	"getDescription": "Get a cluster role by name",
+	"listDescription": "List all cluster roles",
+	"searchDescription": "Search for a THING using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_cluster_role_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}",
+	"links": []
+}

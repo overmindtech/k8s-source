@@ -1,0 +1,17 @@
+{
+	"type": "Deployment",
+	"descriptiveType": "Deployment",
+	"getDescription": "Get a deployment by name",
+	"listDescription": "List all deployments",
+	"searchDescription": "Search for a deployment using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_deployment.metadata.name",
+		"kubernetes_deployment_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"ReplicaSet"
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"type": "VolumeAttachment",
+	"descriptiveType": "Volume Attachment",
+	"getDescription": "Get a volume attachment by name",
+	"listDescription": "List all volume attachments",
+	"searchDescription": "Search for a volume attachment using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"links": [
+		"Node",
+		"PersistentVolume"
+	]
+}

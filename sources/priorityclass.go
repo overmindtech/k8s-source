@@ -7,6 +7,17 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+//go:generate docgen ../docs-data
+// +overmind:type PriorityClass
+// +overmind:descriptiveType Priority Class
+// +overmind:get Get a priority class by name
+// +overmind:list List all priority classes
+// +overmind:search Search for a THING using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
+// +overmind:terraform:queryMap kubernetes_priority_class.metadata.name
+// +overmind:terraform:queryMap kubernetes_priority_class_v1.metadata.name
+// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+
 func newPriorityClassSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.PriorityClass, *v1.PriorityClassList]{
 		ClusterName: cluster,

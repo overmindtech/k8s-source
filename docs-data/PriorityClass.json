@@ -1,0 +1,15 @@
+{
+	"type": "PriorityClass",
+	"descriptiveType": "Priority Class",
+	"getDescription": "Get a priority class by name",
+	"listDescription": "List all priority classes",
+	"searchDescription": "Search for a THING using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_priority_class.metadata.name",
+		"kubernetes_priority_class_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": []
+}

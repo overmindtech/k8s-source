@@ -7,6 +7,17 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+//go:generate docgen ../docs-data
+// +overmind:type Role
+// +overmind:descriptiveType Role
+// +overmind:get Get a role by name
+// +overmind:list List all roles
+// +overmind:search Search for a role using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
+// +overmind:terraform:queryMap kubernetes_role.metadata.name
+// +overmind:terraform:queryMap kubernetes_role_v1.metadata.name
+// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+
 func newRoleSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Role, *v1.RoleList]{
 		ClusterName: cluster,

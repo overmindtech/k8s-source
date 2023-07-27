@@ -1,0 +1,11 @@
+{
+	"type": "ReplicaSet",
+	"descriptiveType": "Replica Set",
+	"getDescription": "Get a replica set by name",
+	"listDescription": "List all replica sets",
+	"searchDescription": "Search for a replica set using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"links": [
+		"Pod"
+	]
+}

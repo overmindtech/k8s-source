@@ -1,0 +1,18 @@
+{
+	"type": "Ingress",
+	"descriptiveType": "Ingress",
+	"getDescription": "Get an ingress by name",
+	"listDescription": "List all ingresses",
+	"searchDescription": "Search for an ingress using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_ingress_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"IngressClass",
+		"Service",
+		"dns"
+	]
+}

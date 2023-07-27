@@ -1,0 +1,17 @@
+{
+	"type": "NetworkPolicy",
+	"descriptiveType": "Network Policy",
+	"getDescription": "Get a network policy by name",
+	"listDescription": "List all network policies",
+	"searchDescription": "Search for a network policy using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_network_policy.metadata.name",
+		"kubernetes_network_policy_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"Pod"
+	]
+}

@@ -1,0 +1,15 @@
+{
+	"type": "LimitRange",
+	"descriptiveType": "Limit Range",
+	"getDescription": "Get a limit range by name",
+	"listDescription": "List all limit ranges",
+	"searchDescription": "Search for a limit range using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_limit_range.metadata.name",
+		"kubernetes_limit_range_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": []
+}
