@@ -167,6 +167,13 @@ func run(cmd *cobra.Command, args []string) int {
 	// method so we don't have to worry about leaking secrets
 	configHash := fmt.Sprintf("%x", sha1.Sum([]byte(restConfig.String())))
 
+	// Work out the cluster name
+	clusterName := viper.GetString("cluster-name")
+
+	if clusterName == "" {
+		clusterName = k8sURL.Host
+	}
+
 	e, err := discovery.NewEngine()
 	if err != nil {
 		sentry.CaptureException(err)
@@ -331,7 +338,7 @@ func run(cmd *cobra.Command, args []string) int {
 		log.Infof("got %v namespaces", len(namespaces))
 
 		// Create the sources
-		sourceList := sources.LoadAllSources(clientSet, k8sURL.Host, namespaces)
+		sourceList := sources.LoadAllSources(clientSet, clusterName, namespaces)
 
 		// Add sources to the engine
 		e.AddSources(sourceList...)
@@ -467,6 +474,7 @@ func init() {
 	rootCmd.PersistentFlags().String("kubeconfig", "", "Path to the kubeconfig file containing cluster details. If this is blank, the in-cluster config will be used")
 	rootCmd.PersistentFlags().Float32("rate-limit-qps", 10.0, "The maximum sustained queries per second from this source to the kubernetes API")
 	rootCmd.PersistentFlags().Int("rate-limit-burst", 30, "The maximum burst of queries from this source to the kubernetes API")
+	rootCmd.PersistentFlags().String("cluster-name", "", "The descriptive name of the cluster this source is running on. If this is blank, the hostname will be used from the Kube config")
 
 	// tracing
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb")
