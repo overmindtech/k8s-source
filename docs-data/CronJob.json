@@ -1,0 +1,15 @@
+{
+	"type": "CronJob",
+	"descriptiveType": "Cron Job",
+	"getDescription": "Get a cron job by name",
+	"listDescription": "List all cron jobs",
+	"searchDescription": "Search for a cron job using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_cron_job.metadata.name",
+		"kubernetes_cron_job_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": []
+}

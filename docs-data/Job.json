@@ -1,0 +1,17 @@
+{
+	"type": "Job",
+	"descriptiveType": "Job",
+	"getDescription": "Get a job by name",
+	"listDescription": "List all jobs",
+	"searchDescription": "Search for a job using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_job.metadata.name",
+		"kubernetes_job_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"Pod"
+	]
+}

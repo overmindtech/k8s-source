@@ -7,6 +7,18 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+//go:generate docgen ../docs-data
+// +overmind:type DaemonSet
+// +overmind:descriptiveType Daemon Set
+// +overmind:get Get a daemon set by name
+// +overmind:list List all daemon sets
+// +overmind:search Search for a daemon set using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
+// +overmind:terraform:queryMap kubernetes_daemonset.metadata.name
+// +overmind:terraform:queryMap kubernetes_daemon_set_v1.metadata.name
+// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:link Pod
+
 func newDaemonSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.DaemonSet, *v1.DaemonSetList]{
 		ClusterName: cluster,

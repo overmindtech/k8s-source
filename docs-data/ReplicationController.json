@@ -1,0 +1,17 @@
+{
+	"type": "ReplicationController",
+	"descriptiveType": "Replication Controller",
+	"getDescription": "Get a replication controller by name",
+	"listDescription": "List all replication controllers",
+	"searchDescription": "Search for a replication controller using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_replication_controller.metadata.name",
+		"kubernetes_replication_controller_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"Pod"
+	]
+}

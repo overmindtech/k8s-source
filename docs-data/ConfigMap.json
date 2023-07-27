@@ -1,0 +1,15 @@
+{
+	"type": "ConfigMap",
+	"descriptiveType": "Config Map",
+	"getDescription": "Get a config map by name",
+	"listDescription": "List all config maps",
+	"searchDescription": "Search for a config map using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_config_map.metadata.name",
+		"kubernetes_config_map_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": []
+}

@@ -12,6 +12,7 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
+		// +overmind:link Pod
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "Pod",
@@ -43,6 +44,7 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 
 	for _, ip := range ips {
 		if ip != "" {
+			// +overmind:link ip
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "ip",
@@ -60,6 +62,7 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 	}
 
 	if resource.Spec.ExternalName != "" {
+		// +overmind:link dns
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "dns",
@@ -76,6 +79,7 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 	}
 
 	// Services also generate an endpoint with the same name
+	// +overmind:link Endpoint
 	queries = append(queries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Type:   "Endpoint",
@@ -93,6 +97,7 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 
 	for _, ingress := range resource.Status.LoadBalancer.Ingress {
 		if ingress.IP != "" {
+			// +overmind:link ip
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "ip",
@@ -109,6 +114,7 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 		}
 
 		if ingress.Hostname != "" {
+			// +overmind:link dns
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "dns",
@@ -127,6 +133,17 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 
 	return queries, nil
 }
+
+//go:generate docgen ../docs-data
+// +overmind:type Service
+// +overmind:descriptiveType Service
+// +overmind:get Get a service by name
+// +overmind:list List all services
+// +overmind:search Search for a service using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
+// +overmind:terraform:queryMap kubernetes_service.metadata.name
+// +overmind:terraform:queryMap kubernetes_service_v1.metadata.name
+// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
 
 func newServiceSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Service, *v1.ServiceList]{

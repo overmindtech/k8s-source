@@ -1,0 +1,16 @@
+{
+	"type": "PodDisruptionBudget",
+	"descriptiveType": "Pod Disruption Budget",
+	"getDescription": "Get a pod disruption budget by name",
+	"listDescription": "List all pod disruption budgets",
+	"searchDescription": "Search for a pod disruption budget using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_pod_disruption_budget_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"Pod"
+	]
+}

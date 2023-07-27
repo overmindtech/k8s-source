@@ -1,0 +1,19 @@
+{
+	"type": "EndpointSlice",
+	"descriptiveType": "Endpoint Slice",
+	"getDescription": "Get a endpoint slice by name",
+	"listDescription": "List all endpoint slices",
+	"searchDescription": "Search for a endpoint slice using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_endpoints_slice_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"Node",
+		"Pod",
+		"dns",
+		"ip"
+	]
+}

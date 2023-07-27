@@ -11,6 +11,7 @@ import (
 func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) ([]*sdp.LinkedItemQuery, error) {
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
+	// +overmind:link ClusterRole
 	queries = append(queries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Scope:  scope,
@@ -36,6 +37,9 @@ func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) 
 			sd.Namespace = subject.Namespace
 		}
 
+		// +overmind:link ServiceAccount
+		// +overmind:link User
+		// +overmind:link Group
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  sd.String(),
@@ -54,6 +58,17 @@ func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) 
 
 	return queries, nil
 }
+
+//go:generate docgen ../docs-data
+// +overmind:type ClusterRoleBinding
+// +overmind:descriptiveType Cluster Role Binding
+// +overmind:get Get a cluster role binding by name
+// +overmind:list List all cluster role bindings
+// +overmind:search Search for a cluster role binding using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
+// +overmind:terraform:queryMap kubernetes_cluster_role_binding.metadata.name
+// +overmind:terraform:queryMap kubernetes_cluster_role_binding_v1.metadata.name
+// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}
 
 func newClusterRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList]{

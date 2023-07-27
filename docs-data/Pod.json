@@ -1,0 +1,22 @@
+{
+	"type": "Pod",
+	"descriptiveType": "Pod",
+	"getDescription": "Get a pod by name",
+	"listDescription": "List all pods",
+	"searchDescription": "Search for a pod using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_pod.metadata.name",
+		"kubernetes_pod_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"ConfigMap",
+		"PersistentVolumeClaim",
+		"PriorityClass",
+		"Secret",
+		"ServiceAccount",
+		"ip"
+	]
+}

@@ -12,6 +12,7 @@ func jobExtractor(resource *v1.Job, scope string) ([]*sdp.LinkedItemQuery, error
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
+		// +overmind:link Pod
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,
@@ -30,6 +31,17 @@ func jobExtractor(resource *v1.Job, scope string) ([]*sdp.LinkedItemQuery, error
 
 	return queries, nil
 }
+
+//go:generate docgen ../docs-data
+// +overmind:type Job
+// +overmind:descriptiveType Job
+// +overmind:get Get a job by name
+// +overmind:list List all jobs
+// +overmind:search Search for a job using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
+// +overmind:terraform:queryMap kubernetes_job.metadata.name
+// +overmind:terraform:queryMap kubernetes_job_v1.metadata.name
+// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
 
 func newJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Job, *v1.JobList]{

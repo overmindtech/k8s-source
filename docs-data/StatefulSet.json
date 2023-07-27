@@ -1,0 +1,19 @@
+{
+	"type": "StatefulSet",
+	"descriptiveType": "Stateful Set",
+	"getDescription": "Get a stateful set by name",
+	"listDescription": "List all stateful sets",
+	"searchDescription": "Search for a stateful set using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_stateful_set.metadata.name",
+		"kubernetes_stateful_set_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"PersistentVolumeClaim",
+		"Pod",
+		"Service"
+	]
+}

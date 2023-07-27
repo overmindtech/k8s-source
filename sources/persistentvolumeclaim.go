@@ -17,6 +17,7 @@ func PersistentVolumeClaimExtractor(resource *v1.PersistentVolumeClaim, scope st
 	links := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.VolumeName != "" {
+		// +overmind:link PersistentVolume
 		links = append(links, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "PersistentVolume",
@@ -36,6 +37,17 @@ func PersistentVolumeClaimExtractor(resource *v1.PersistentVolumeClaim, scope st
 
 	return links, nil
 }
+
+//go:generate docgen ../docs-data
+// +overmind:type PersistentVolumeClaim
+// +overmind:descriptiveType Persistent Volume Claim
+// +overmind:get Get a persistent volume claim by name
+// +overmind:list List all persistent volume claims
+// +overmind:search Search for a persistent volume claim using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
+// +overmind:terraform:queryMap kubernetes_persistent_volume_claim.metadata.name
+// +overmind:terraform:queryMap kubernetes_persistent_volume_claim_v1.metadata.name
+// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
 
 func newPersistentVolumeClaimSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList]{

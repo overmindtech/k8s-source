@@ -12,6 +12,7 @@ func replicaSetExtractor(resource *v1.ReplicaSet, scope string) ([]*sdp.LinkedIt
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
+		// +overmind:link Pod
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,
@@ -30,6 +31,14 @@ func replicaSetExtractor(resource *v1.ReplicaSet, scope string) ([]*sdp.LinkedIt
 
 	return queries, nil
 }
+
+//go:generate docgen ../docs-data
+// +overmind:type ReplicaSet
+// +overmind:descriptiveType Replica Set
+// +overmind:get Get a replica set by name
+// +overmind:list List all replica sets
+// +overmind:search Search for a replica set using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
 
 func newReplicaSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ReplicaSet, *v1.ReplicaSetList]{

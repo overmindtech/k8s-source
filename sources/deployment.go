@@ -7,6 +7,18 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+//go:generate docgen ../docs-data
+// +overmind:type Deployment
+// +overmind:descriptiveType Deployment
+// +overmind:get Get a deployment by name
+// +overmind:list List all deployments
+// +overmind:search Search for a deployment using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
+// +overmind:group Kubernetes
+// +overmind:terraform:queryMap kubernetes_deployment.metadata.name
+// +overmind:terraform:queryMap kubernetes_deployment_v1.metadata.name
+// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:link ReplicaSet
+
 func newDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Deployment, *v1.DeploymentList]{
 		ClusterName: cluster,

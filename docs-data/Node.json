@@ -1,0 +1,18 @@
+{
+	"type": "Node",
+	"descriptiveType": "Node",
+	"getDescription": "Get a node by name",
+	"listDescription": "List all nodes",
+	"searchDescription": "Search for a node using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_node_taint.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"dns",
+		"ec2-volume",
+		"ip"
+	]
+}

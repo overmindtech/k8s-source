@@ -1,0 +1,17 @@
+{
+	"type": "DaemonSet",
+	"descriptiveType": "Daemon Set",
+	"getDescription": "Get a daemon set by name",
+	"listDescription": "List all daemon sets",
+	"searchDescription": "Search for a daemon set using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_daemon_set_v1.metadata.name",
+		"kubernetes_daemonset.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"Pod"
+	]
+}

@@ -1,0 +1,20 @@
+{
+	"type": "Service",
+	"descriptiveType": "Service",
+	"getDescription": "Get a service by name",
+	"listDescription": "List all services",
+	"searchDescription": "Search for a service using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_service.metadata.name",
+		"kubernetes_service_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": [
+		"Endpoint",
+		"Pod",
+		"dns",
+		"ip"
+	]
+}

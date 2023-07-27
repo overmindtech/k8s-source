@@ -1,0 +1,20 @@
+{
+	"type": "ClusterRoleBinding",
+	"descriptiveType": "Cluster Role Binding",
+	"getDescription": "Get a cluster role binding by name",
+	"listDescription": "List all cluster role bindings",
+	"searchDescription": "Search for a cluster role binding using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_cluster_role_binding.metadata.name",
+		"kubernetes_cluster_role_binding_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}",
+	"links": [
+		"ClusterRole",
+		"Group",
+		"ServiceAccount",
+		"User"
+	]
+}

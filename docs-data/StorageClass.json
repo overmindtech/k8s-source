@@ -1,0 +1,15 @@
+{
+	"type": "StorageClass",
+	"descriptiveType": "Storage Class",
+	"getDescription": "Get a storage class by name",
+	"listDescription": "List all storage classes",
+	"searchDescription": "Search for a storage class using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_storage_class.metadata.name",
+		"kubernetes_storage_class_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": []
+}

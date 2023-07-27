@@ -1,0 +1,15 @@
+{
+	"type": "ResourceQuota",
+	"descriptiveType": "Resource Quota",
+	"getDescription": "Get a resource quota by name",
+	"listDescription": "List all resource quotas",
+	"searchDescription": "Search for a resource quota using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
+	"group": "Kubernetes",
+	"terraformQuery": [
+		"kubernetes_resource_quota.metadata.name",
+		"kubernetes_resource_quota_v1.metadata.name"
+	],
+	"terraformMethod": "GET",
+	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"links": []
+}
