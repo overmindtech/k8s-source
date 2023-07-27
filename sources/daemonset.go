@@ -16,7 +16,7 @@ import (
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_daemonset.metadata.name
 // +overmind:terraform:queryMap kubernetes_daemon_set_v1.metadata.name
-// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
 // +overmind:link Pod
 
 func newDaemonSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {

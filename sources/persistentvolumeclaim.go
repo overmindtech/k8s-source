@@ -47,7 +47,7 @@ func PersistentVolumeClaimExtractor(resource *v1.PersistentVolumeClaim, scope st
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_persistent_volume_claim.metadata.name
 // +overmind:terraform:queryMap kubernetes_persistent_volume_claim_v1.metadata.name
-// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
 
 func newPersistentVolumeClaimSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList]{

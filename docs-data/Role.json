@@ -10,6 +10,6 @@
 		"kubernetes_role_v1.metadata.name"
 	],
 	"terraformMethod": "GET",
-	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"terraformScope": "${provider_mapping.cluster_name}.${values.metadata.namespace}",
 	"links": []
 }

@@ -39,7 +39,7 @@ func podDisruptionBudgetExtractor(resource *v1.PodDisruptionBudget, scope string
 // +overmind:search Search for a pod disruption budget using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_pod_disruption_budget_v1.metadata.name
-// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
 
 func newPodDisruptionBudgetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList]{

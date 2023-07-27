@@ -60,7 +60,7 @@ func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_service_account.metadata.name
 // +overmind:terraform:queryMap kubernetes_service_account_v1.metadata.name
-// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
 
 func newServiceAccountSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ServiceAccount, *v1.ServiceAccountList]{

@@ -143,7 +143,7 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_service.metadata.name
 // +overmind:terraform:queryMap kubernetes_service_v1.metadata.name
-// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
 
 func newServiceSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Service, *v1.ServiceList]{

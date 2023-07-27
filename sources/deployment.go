@@ -16,7 +16,7 @@ import (
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_deployment.metadata.name
 // +overmind:terraform:queryMap kubernetes_deployment_v1.metadata.name
-// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
 // +overmind:link ReplicaSet
 
 func newDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
