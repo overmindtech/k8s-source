@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -247,7 +248,8 @@ func run(cmd *cobra.Command, args []string) int {
 	defer watchCancel()
 
 	go func() {
-		var failures uint8
+		attempts := 0
+		sleep := 1 * time.Second
 
 		for {
 			select {
@@ -267,10 +269,10 @@ func run(cmd *cobra.Command, args []string) int {
 
 						if errors.As(err, &netErr) {
 							// Mark a failure
-							failures++
+							attempts++
 
 							// If we have had less than 3 failures then retry
-							if failures < 4 {
+							if attempts < 4 {
 								// The watch interface will be nil if we
 								// couldn't connect, so create a fake watcher
 								// that is closed so that we end up in this loop
@@ -278,8 +280,11 @@ func run(cmd *cobra.Command, args []string) int {
 								wi = watch.NewFake()
 								wi.Stop()
 
-								log.WithError(err).Error("Transient network error, retrying in 3 seconds")
-								time.Sleep(3 * time.Second)
+								jitter := time.Duration(rand.Int63n(int64(sleep)))
+								sleep = sleep + jitter/2
+
+								log.WithError(err).Errorf("Transient network error, retrying in %v seconds", sleep.String())
+								time.Sleep(sleep)
 								continue
 							}
 						}
@@ -296,7 +301,7 @@ func run(cmd *cobra.Command, args []string) int {
 					}
 
 					// If it's worked, reset the failure counter
-					failures = 0
+					attempts = 0
 				} else {
 					// If a watch event is received then we need to restart the
 					// engine
