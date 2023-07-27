@@ -3,7 +3,9 @@ package cmd
 import (
 	"context"
 	"crypto/sha1"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -245,6 +247,8 @@ func run(cmd *cobra.Command, args []string) int {
 	defer watchCancel()
 
 	go func() {
+		var failures uint8
+
 		for {
 			select {
 			case event, ok := <-wi.ResultChan():
@@ -255,10 +259,31 @@ func run(cmd *cobra.Command, args []string) int {
 					log.Error("Namespace watch channel closed")
 					log.Info("Re-subscribing to namespace watch")
 
-					// Get the initial starting point
-					list, err = clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+					wi, err = watchNamespaces(clientSet)
 
+					// Check for transient network errors
 					if err != nil {
+						var netErr *net.OpError
+
+						if errors.As(err, &netErr) {
+							// Mark a failure
+							failures++
+
+							// If we have had less than 3 failures then retry
+							if failures < 4 {
+								// The watch interface will be nil if we
+								// couldn't connect, so create a fake watcher
+								// that is closed so that we end up in this loop
+								// again
+								wi = watch.NewFake()
+								wi.Stop()
+
+								log.WithError(err).Error("Transient network error, retrying in 3 seconds")
+								time.Sleep(3 * time.Second)
+								continue
+							}
+						}
+
 						sentry.CaptureException(err)
 						log.WithError(err).Error("could not list namespaces")
 
@@ -270,22 +295,8 @@ func run(cmd *cobra.Command, args []string) int {
 						return
 					}
 
-					// Watch namespaces from here
-					wi, err = clientSet.CoreV1().Namespaces().Watch(context.Background(), metav1.ListOptions{
-						ResourceVersion: list.ResourceVersion,
-					})
-
-					if err != nil {
-						sentry.CaptureException(err)
-						log.WithError(err).Error("could not start watching namespaces")
-
-						// Send a fatal event that will kill the main goroutine
-						restart <- watch.Event{
-							Type: watch.EventType("FATAL"),
-						}
-
-						return
-					}
+					// If it's worked, reset the failure counter
+					failures = 0
 				} else {
 					// If a watch event is received then we need to restart the
 					// engine
@@ -372,6 +383,8 @@ func run(cmd *cobra.Command, args []string) int {
 				// goroutine to exit
 				log.Error("Fatal error in watch goroutine")
 				return 1
+			case "MODIFIED":
+				log.Debug("Namespace modified, ignoring")
 			default:
 				err = stop()
 
@@ -402,6 +415,27 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+// Watches k8s namespaces from the current state, sending new events for each change
+func watchNamespaces(clientSet *kubernetes.Clientset) (watch.Interface, error) {
+	// Get the initial starting point
+	list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Watch namespaces from here
+	wi, err := clientSet.CoreV1().Namespaces().Watch(context.Background(), metav1.ListOptions{
+		ResourceVersion: list.ResourceVersion,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return wi, nil
 }
 
 func init() {
