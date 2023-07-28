@@ -6,8 +6,8 @@
 	"searchDescription": "Search for a persistent volume using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
 	"group": "Kubernetes",
 	"terraformQuery": [
-		"kubernetes_persistent_volume.metadata.name",
-		"kubernetes_persistent_volume_v1.metadata.name"
+		"kubernetes_persistent_volume.metadata[0].name",
+		"kubernetes_persistent_volume_v1.metadata[0].name"
 	],
 	"terraformMethod": "GET",
 	"terraformScope": "${provider_mapping.cluster_name}.${values.metadata[0].namespace}",

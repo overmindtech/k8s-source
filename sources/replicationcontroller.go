@@ -41,8 +41,8 @@ func replicationControllerExtractor(resource *v1.ReplicationController, scope st
 // +overmind:list List all replication controllers
 // +overmind:search Search for a replication controller using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
 // +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_replication_controller.metadata.name
-// +overmind:terraform:queryMap kubernetes_replication_controller_v1.metadata.name
+// +overmind:terraform:queryMap kubernetes_replication_controller.metadata[0].name
+// +overmind:terraform:queryMap kubernetes_replication_controller_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newReplicationControllerSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {

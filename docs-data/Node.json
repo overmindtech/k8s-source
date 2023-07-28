@@ -6,7 +6,7 @@
 	"searchDescription": "Search for a node using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
 	"group": "Kubernetes",
 	"terraformQuery": [
-		"kubernetes_node_taint.metadata.name"
+		"kubernetes_node_taint.metadata[0].name"
 	],
 	"terraformMethod": "GET",
 	"terraformScope": "${provider_mapping.cluster_name}.${values.metadata[0].namespace}",

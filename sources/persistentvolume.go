@@ -96,8 +96,8 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 // +overmind:list List all persistent volumes
 // +overmind:search Search for a persistent volume using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
 // +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_persistent_volume.metadata.name
-// +overmind:terraform:queryMap kubernetes_persistent_volume_v1.metadata.name
+// +overmind:terraform:queryMap kubernetes_persistent_volume.metadata[0].name
+// +overmind:terraform:queryMap kubernetes_persistent_volume_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newPersistentVolumeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {

@@ -14,8 +14,8 @@ import (
 // +overmind:list List all storage classes
 // +overmind:search Search for a storage class using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
 // +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_storage_class.metadata.name
-// +overmind:terraform:queryMap kubernetes_storage_class_v1.metadata.name
+// +overmind:terraform:queryMap kubernetes_storage_class.metadata[0].name
+// +overmind:terraform:queryMap kubernetes_storage_class_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newStorageClassSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {

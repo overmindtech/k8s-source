@@ -6,8 +6,8 @@
 	"searchDescription": "Search for a daemon set using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
 	"group": "Kubernetes",
 	"terraformQuery": [
-		"kubernetes_daemon_set_v1.metadata.name",
-		"kubernetes_daemonset.metadata.name"
+		"kubernetes_daemon_set_v1.metadata[0].name",
+		"kubernetes_daemonset.metadata[0].name"
 	],
 	"terraformMethod": "GET",
 	"terraformScope": "${provider_mapping.cluster_name}.${values.metadata[0].namespace}",

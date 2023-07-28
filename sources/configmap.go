@@ -13,8 +13,8 @@ import (
 // +overmind:list List all config maps
 // +overmind:search Search for a config map using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
 // +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_config_map.metadata.name
-// +overmind:terraform:queryMap kubernetes_config_map_v1.metadata.name
+// +overmind:terraform:queryMap kubernetes_config_map.metadata[0].name
+// +overmind:terraform:queryMap kubernetes_config_map_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newConfigMapSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {

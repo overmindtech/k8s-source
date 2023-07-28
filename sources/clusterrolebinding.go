@@ -66,8 +66,8 @@ func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) 
 // +overmind:list List all cluster role bindings
 // +overmind:search Search for a cluster role binding using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
 // +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_cluster_role_binding.metadata.name
-// +overmind:terraform:queryMap kubernetes_cluster_role_binding_v1.metadata.name
+// +overmind:terraform:queryMap kubernetes_cluster_role_binding.metadata[0].name
+// +overmind:terraform:queryMap kubernetes_cluster_role_binding_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}
 
 func newClusterRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {

@@ -58,8 +58,8 @@ func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.
 // +overmind:list List all service accounts
 // +overmind:search Search for a service account using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
 // +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_service_account.metadata.name
-// +overmind:terraform:queryMap kubernetes_service_account_v1.metadata.name
+// +overmind:terraform:queryMap kubernetes_service_account.metadata[0].name
+// +overmind:terraform:queryMap kubernetes_service_account_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newServiceAccountSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {

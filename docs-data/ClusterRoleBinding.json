@@ -6,8 +6,8 @@
 	"searchDescription": "Search for a cluster role binding using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
 	"group": "Kubernetes",
 	"terraformQuery": [
-		"kubernetes_cluster_role_binding.metadata.name",
-		"kubernetes_cluster_role_binding_v1.metadata.name"
+		"kubernetes_cluster_role_binding.metadata[0].name",
+		"kubernetes_cluster_role_binding_v1.metadata[0].name"
 	],
 	"terraformMethod": "GET",
 	"terraformScope": "${provider_mapping.cluster_name}",

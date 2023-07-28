@@ -267,8 +267,8 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 // +overmind:list List all pods
 // +overmind:search Search for a pod using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
 // +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_pod.metadata.name
-// +overmind:terraform:queryMap kubernetes_pod_v1.metadata.name
+// +overmind:terraform:queryMap kubernetes_pod.metadata[0].name
+// +overmind:terraform:queryMap kubernetes_pod_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newPodSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {

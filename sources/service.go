@@ -141,8 +141,8 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 // +overmind:list List all services
 // +overmind:search Search for a service using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
 // +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_service.metadata.name
-// +overmind:terraform:queryMap kubernetes_service_v1.metadata.name
+// +overmind:terraform:queryMap kubernetes_service.metadata[0].name
+// +overmind:terraform:queryMap kubernetes_service_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newServiceSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {

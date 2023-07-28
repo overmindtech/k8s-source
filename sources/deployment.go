@@ -14,8 +14,8 @@ import (
 // +overmind:list List all deployments
 // +overmind:search Search for a deployment using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
 // +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_deployment.metadata.name
-// +overmind:terraform:queryMap kubernetes_deployment_v1.metadata.name
+// +overmind:terraform:queryMap kubernetes_deployment.metadata[0].name
+// +overmind:terraform:queryMap kubernetes_deployment_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 // +overmind:link ReplicaSet
 

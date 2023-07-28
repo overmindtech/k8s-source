@@ -14,7 +14,7 @@ import (
 // +overmind:list List all cluster roles
 // +overmind:search Search for a THING using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
 // +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_cluster_role_v1.metadata.name
+// +overmind:terraform:queryMap kubernetes_cluster_role_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}
 
 func newClusterRoleSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {

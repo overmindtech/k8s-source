@@ -6,8 +6,8 @@
 	"searchDescription": "Search for a service using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search",
 	"group": "Kubernetes",
 	"terraformQuery": [
-		"kubernetes_service.metadata.name",
-		"kubernetes_service_v1.metadata.name"
+		"kubernetes_service.metadata[0].name",
+		"kubernetes_service_v1.metadata[0].name"
 	],
 	"terraformMethod": "GET",
 	"terraformScope": "${provider_mapping.cluster_name}.${values.metadata[0].namespace}",
