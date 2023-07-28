@@ -5,7 +5,7 @@ go 1.20
 // Direct dependencies of my codebase
 require (
 	github.com/google/uuid v1.3.0
-	github.com/overmindtech/discovery v0.22.0
+	github.com/overmindtech/discovery v0.22.1
 	github.com/overmindtech/sdp-go v0.41.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
