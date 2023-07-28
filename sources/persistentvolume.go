@@ -98,7 +98,7 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_persistent_volume.metadata.name
 // +overmind:terraform:queryMap kubernetes_persistent_volume_v1.metadata.name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newPersistentVolumeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.PersistentVolume, *v1.PersistentVolumeList]{

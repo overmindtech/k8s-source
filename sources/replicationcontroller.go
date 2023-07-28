@@ -43,7 +43,7 @@ func replicationControllerExtractor(resource *v1.ReplicationController, scope st
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_replication_controller.metadata.name
 // +overmind:terraform:queryMap kubernetes_replication_controller_v1.metadata.name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newReplicationControllerSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ReplicationController, *v1.ReplicationControllerList]{

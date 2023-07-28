@@ -15,7 +15,7 @@ import (
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_limit_range.metadata.name
 // +overmind:terraform:queryMap kubernetes_limit_range_v1.metadata.name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newLimitRangeSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.LimitRange, *v1.LimitRangeList]{

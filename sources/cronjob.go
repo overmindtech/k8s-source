@@ -16,7 +16,7 @@ import (
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_cron_job.metadata.name
 // +overmind:terraform:queryMap kubernetes_cron_job_v1.metadata.name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newCronJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.CronJob, *v1.CronJobList]{

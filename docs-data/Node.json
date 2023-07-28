@@ -9,7 +9,7 @@
 		"kubernetes_node_taint.metadata.name"
 	],
 	"terraformMethod": "GET",
-	"terraformScope": "${provider_mapping.cluster_name}.${values.metadata.namespace}",
+	"terraformScope": "${provider_mapping.cluster_name}.${values.metadata[0].namespace}",
 	"links": [
 		"dns",
 		"ec2-volume",

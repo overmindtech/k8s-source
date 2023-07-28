@@ -17,7 +17,7 @@ import (
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_secret.metadata.name
 // +overmind:terraform:queryMap kubernetes_secret_v1.metadata.name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newSecretSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Secret, *v1.SecretList]{

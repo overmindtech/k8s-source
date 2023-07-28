@@ -78,7 +78,7 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_stateful_set.metadata.name
 // +overmind:terraform:queryMap kubernetes_stateful_set_v1.metadata.name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newStatefulSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.StatefulSet, *v1.StatefulSetList]{
