@@ -16,7 +16,7 @@ import (
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_priority_class.metadata.name
 // +overmind:terraform:queryMap kubernetes_priority_class_v1.metadata.name
-// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
 
 func newPriorityClassSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.PriorityClass, *v1.PriorityClassList]{

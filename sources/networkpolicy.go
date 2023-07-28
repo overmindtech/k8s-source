@@ -77,7 +77,7 @@ func NetworkPolicyExtractor(resource *v1.NetworkPolicy, scope string) ([]*sdp.Li
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_network_policy.metadata.name
 // +overmind:terraform:queryMap kubernetes_network_policy_v1.metadata.name
-// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
 
 func newNetworkPolicySource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.NetworkPolicy, *v1.NetworkPolicyList]{

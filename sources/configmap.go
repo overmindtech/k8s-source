@@ -15,7 +15,7 @@ import (
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_config_map.metadata.name
 // +overmind:terraform:queryMap kubernetes_config_map_v1.metadata.name
-// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
 
 func newConfigMapSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ConfigMap, *v1.ConfigMapList]{

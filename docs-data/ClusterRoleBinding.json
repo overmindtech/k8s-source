@@ -10,7 +10,7 @@
 		"kubernetes_cluster_role_binding_v1.metadata.name"
 	],
 	"terraformMethod": "GET",
-	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}",
+	"terraformScope": "${provider_mapping.cluster_name}",
 	"links": [
 		"ClusterRole",
 		"Group",

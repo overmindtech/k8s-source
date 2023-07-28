@@ -81,3 +81,5 @@ source:
   rateLimitQPS: 10
   # The maximum burst of queries from this source to the kubernetes API
   rateLimitBurst: 30
+  # The descriptive name of the cluster this source is running on
+  clusterName: ""

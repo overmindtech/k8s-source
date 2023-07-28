@@ -10,4 +10,7 @@ data:
   NATS_SERVERS: {{ join "," .Values.source.natsServers }}
   RATE_LIMIT_QPS: {{ .Values.source.rateLimitQPS | quote }}
   RATE_LIMIT_BURST: {{ .Values.source.rateLimitBurst | quote }}
+{{- if .Values.source.clusterName }}
+  CLUSTER_NAME: {{ .Values.source.clusterName | quote }}
+{{- end }}
 ---

@@ -269,7 +269,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_pod.metadata.name
 // +overmind:terraform:queryMap kubernetes_pod_v1.metadata.name
-// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
 
 func newPodSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Pod, *v1.PodList]{

@@ -86,7 +86,7 @@ func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Linked
 // +overmind:group Kubernetes
 // +overmind:terraform:queryMap kubernetes_role_binding.metadata.name
 // +overmind:terraform:queryMap kubernetes_role_binding_v1.metadata.name
-// +overmind:terraform:scope ${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}
+// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata.namespace}
 
 func newRoleBindingSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.RoleBinding, *v1.RoleBindingList]{

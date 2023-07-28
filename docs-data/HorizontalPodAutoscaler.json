@@ -9,7 +9,7 @@
 		"kubernetes_horizontal_pod_autoscaler_v2.metadata.name"
 	],
 	"terraformMethod": "GET",
-	"terraformScope": "${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}",
+	"terraformScope": "${provider_mapping.cluster_name}.${values.metadata.namespace}",
 	"links": [
 		"DaemonSet",
 		"Deployment",
