@@ -6,7 +6,7 @@ go 1.20
 require (
 	github.com/google/uuid v1.3.0
 	github.com/overmindtech/discovery v0.22.1
-	github.com/overmindtech/sdp-go v0.41.0
+	github.com/overmindtech/sdp-go v0.41.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
@@ -28,7 +28,7 @@ require (
 	github.com/alessio/shellescape v1.4.2 // indirect
 	github.com/auth0/go-jwt-middleware/v2 v2.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.304 // indirect
-	github.com/bufbuild/connect-go v1.9.0 // indirect
+	github.com/bufbuild/connect-go v1.10.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
