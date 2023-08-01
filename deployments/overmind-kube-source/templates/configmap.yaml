@@ -13,4 +13,7 @@ data:
 {{- if .Values.source.clusterName }}
   CLUSTER_NAME: {{ .Values.source.clusterName | quote }}
 {{- end }}
+{{- if .Values.source.apiPath }}
+  API_PATH: {{ .Values.source.apiPath | quote }}
+{{- end }}
 ---

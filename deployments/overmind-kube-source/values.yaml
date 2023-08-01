@@ -75,6 +75,8 @@ source:
     - nats://messages.prod.overmind.tech
   # The API key used to connect to Overmind
   apiKey: ""
+  # The API to use
+  apiPath: ""
   # How many requests to run in parallel
   maxParallel: 20
   # The maximum sustained queries per second from this source to the kubernetes API
