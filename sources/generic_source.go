@@ -350,7 +350,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 // request. Note that you must provide the parent scope since the reference
 // could be an object in a different namespace, if it is we need to re-use the
 // cluster name from the parent scope
-func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetails) *sdp.LinkedItemQuery {
+func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetails, blastProp *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 	if ref == nil {
 		return nil
 	}
@@ -365,5 +365,6 @@ func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetail
 			Query:  ref.Name,
 			Scope:  parentScope.String(),
 		},
+		BlastPropagation: blastProp,
 	}
 }

@@ -55,8 +55,11 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 
 		if endpoint.TargetRef != nil {
 			// +overmind:link Pod
-			newQuery := ObjectReferenceToQuery(endpoint.TargetRef, sd)
-			queries = append(queries, newQuery)
+			queries = append(queries, ObjectReferenceToQuery(endpoint.TargetRef, sd, &sdp.BlastPropagation{
+				// Changes to the pod could affect the endpoint and vice versa
+				In:  true,
+				Out: true,
+			}))
 		}
 
 		for _, address := range endpoint.Addresses {
