@@ -65,7 +65,12 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 	}
 
 	if resource.Spec.ClaimRef != nil {
-		queries = append(queries, ObjectReferenceToQuery(resource.Spec.ClaimRef, sd))
+		queries = append(queries, ObjectReferenceToQuery(resource.Spec.ClaimRef, sd, &sdp.BlastPropagation{
+			// Changing claim might not affect the PV
+			In: false,
+			// Changing the PV will definitely affect the claim
+			Out: true,
+		}))
 	}
 
 	if resource.Spec.StorageClassName != "" {

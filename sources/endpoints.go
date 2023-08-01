@@ -73,8 +73,11 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 			if address.TargetRef != nil {
 				// +overmind:link Pod
 				// +overmind:link ExternalName
-				targetQuery := ObjectReferenceToQuery(address.TargetRef, sd)
-				queries = append(queries, targetQuery)
+				queries = append(queries, ObjectReferenceToQuery(address.TargetRef, sd, &sdp.BlastPropagation{
+					// These are tightly coupled
+					In:  true,
+					Out: true,
+				}))
 			}
 		}
 	}
