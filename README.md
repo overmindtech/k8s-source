@@ -26,6 +26,8 @@ To uninstall:
 helm uninstall overmind-kube-source
 ```
 
+**NOTE:** Currently the source won't appear in your "Sources" list in Overmind since it's running on your infrastructure, not ours. We'll improve this soon.
+
 ## Support
 
 This source will support all Kubernetes versions that are currently maintained in the kubernetes project. The list can be found here: https://kubernetes.io/releases/
