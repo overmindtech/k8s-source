@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -105,6 +106,8 @@ func run(cmd *cobra.Command, args []string) int {
 			return 1
 		}
 	}
+
+	restConfig.Wrap(func(rt http.RoundTripper) http.RoundTripper { return otelhttp.NewTransport(rt) })
 
 	// Set up rate limiting
 	restConfig.RateLimiter = flowcontrol.NewTokenBucketRateLimiter(
