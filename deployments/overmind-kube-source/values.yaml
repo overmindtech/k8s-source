@@ -72,7 +72,7 @@ source:
   log: info
   # The list of NATS servers to connect to
   natsServers:
-    - nats://messages.prod.overmind.tech
+    - wss://messages.prod.overmind.tech
   # The API key used to connect to Overmind
   apiKey: ""
   # The API to use
