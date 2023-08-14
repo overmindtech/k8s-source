@@ -16,4 +16,7 @@ data:
 {{- if .Values.source.apiPath }}
   API_PATH: {{ .Values.source.apiPath | quote }}
 {{- end }}
+{{- if .Values.source.honeycombApiKey }}
+  HONEYCOMB_API_KEY: {{ .Values.source.honeycombApiKey | quote }}
+{{- end }}
 ---

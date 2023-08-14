@@ -85,3 +85,5 @@ source:
   rateLimitBurst: 30
   # The descriptive name of the cluster this source is running on
   clusterName: ""
+  # An optional Honeycomb API key to send traces and metrics
+  honeycombApiKey: ""
