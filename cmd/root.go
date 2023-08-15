@@ -465,7 +465,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 
 	// NATS
-	rootCmd.PersistentFlags().StringArray("nats-servers", []string{"nats://messages.prod.overmind.tech"}, "A list of NATS servers to connect to")
+	rootCmd.PersistentFlags().StringArray("nats-servers", []string{"wss://messages.prod.overmind.tech"}, "A list of NATS servers to connect to")
 	rootCmd.PersistentFlags().String("api-key", "", "The API key to use to authenticate to the Overmind API")
 	rootCmd.MarkFlagRequired("api-key")
 	rootCmd.PersistentFlags().String("api-path", "https://api.prod.overmind.tech", "The URL of the Overmind API")
