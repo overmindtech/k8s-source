@@ -6,7 +6,7 @@ go 1.20
 require (
 	github.com/google/uuid v1.3.0
 	github.com/overmindtech/discovery v0.23.1
-	github.com/overmindtech/sdp-go v0.44.1
+	github.com/overmindtech/sdp-go v0.44.4
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
