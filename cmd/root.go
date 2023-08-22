@@ -497,7 +497,7 @@ func init() {
 
 		log.AddHook(TerminationLogHook{})
 		log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
-			log.AllLevels[:log.GetLevel()]...,
+			log.AllLevels[:log.GetLevel()+1]...,
 		)))
 
 		// Bind flags that haven't been set to the values from viper of we have them
