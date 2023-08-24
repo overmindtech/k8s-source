@@ -1,6 +1,6 @@
 module github.com/overmindtech/k8s-source
 
-go 1.20
+go 1.21
 
 // Direct dependencies of my codebase
 require (
@@ -45,7 +45,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/safetext v0.0.0-20230106111101-7156a760e523 // indirect
@@ -124,8 +123,6 @@ exclude (
 	k8s.io/client-go v1.4.0
 	k8s.io/client-go v1.5.0
 	k8s.io/client-go v1.5.1
-	k8s.io/client-go v10.0.0+incompatible
-	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/client-go v2.0.0+incompatible
 	k8s.io/client-go v3.0.0+incompatible
 	k8s.io/client-go v4.0.0+incompatible
@@ -134,6 +131,8 @@ exclude (
 	k8s.io/client-go v6.0.0+incompatible
 	k8s.io/client-go v7.0.0+incompatible
 	k8s.io/client-go v8.0.0+incompatible
-	k8s.io/client-go v9.0.0+incompatible
 	k8s.io/client-go v9.0.0-invalid+incompatible
+	k8s.io/client-go v9.0.0+incompatible
+	k8s.io/client-go v10.0.0+incompatible
+	k8s.io/client-go v11.0.0+incompatible
 )
