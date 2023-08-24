@@ -14,11 +14,16 @@ jobs:
           - v1.26.6
           - v1.25.11
           - v1.24.15
+
+    env:
+      GOEXPERIMENT: loopvar
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
           go-version: 1.x
+          check-latest: true
 
       - name: Get dependencies
         run: |
@@ -49,6 +54,9 @@ jobs:
         include:
           - dockerfile: Dockerfile
             image_name: k8s-source
+
+    env:
+      GOEXPERIMENT: loopvar
 
     steps:
       - name: Checkout
