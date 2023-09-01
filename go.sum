@@ -263,6 +263,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/nats-io/jwt/v2 v2.4.1 h1:Y35W1dgbbz2SQUYDPCaclXcuqleVmpbRa7646Jf2EX4=
 github.com/nats-io/jwt/v2 v2.4.1/go.mod h1:24BeQtRwxRV8ruvC4CojXlx/WQ/VjuwlYiH+vu/+ibI=
+github.com/nats-io/jwt/v2 v2.5.0 h1:WQQ40AAlqqfx+f6ku+i0pOVm+ASirD4fUh+oQsiE9Ak=
+github.com/nats-io/jwt/v2 v2.5.0/go.mod h1:24BeQtRwxRV8ruvC4CojXlx/WQ/VjuwlYiH+vu/+ibI=
 github.com/nats-io/nats-server/v2 v2.9.21 h1:2TBTh0UDE74eNXQmV4HofsmRSCiVN0TH2Wgrp6BD6fk=
 github.com/nats-io/nats-server/v2 v2.9.21/go.mod h1:ozqMZc2vTHcNcblOiXMWIXkf8+0lDGAi5wQcG+O1mHU=
 github.com/nats-io/nats.go v1.28.0 h1:Th4G6zdsz2d0OqXdfzKLClo6bOfoI/b1kInhRtFIy5c=
@@ -286,6 +288,8 @@ github.com/overmindtech/sdp-go v0.44.4 h1:2u8FoAzMQDIlvYFpx60kAfw4dXbInk9wyOtHMl
 github.com/overmindtech/sdp-go v0.44.4/go.mod h1:9/yAXfMAAC0CQZ/pe3lxti/xL0cK27iOWpxYv11r5aw=
 github.com/overmindtech/sdp-go v0.45.0 h1:2nvAaVoxlNZmWGqsctK1LSv2DJLdecmns5ulHkdQVPo=
 github.com/overmindtech/sdp-go v0.45.0/go.mod h1:8bPomKpOpgy7GiTsh0rU4icSk3dKk+MaW+M8vuhEbSs=
+github.com/overmindtech/sdp-go v0.46.2 h1:y/xUHT7gva/3u1lxT7CbAXcoziMSxg8gA42pv8QdR5w=
+github.com/overmindtech/sdp-go v0.46.2/go.mod h1:Ety3j/it/DmnAE/eWBkPTMxXCc2vgTH9fXt7ePWpeYY=
 github.com/overmindtech/sdpcache v1.5.0 h1:QzHWQm1KGN9rNHPb/VZvz7WDCsyKOuVLlNUGF2CIFGc=
 github.com/overmindtech/sdpcache v1.5.0/go.mod h1:GFMMle860EWMDQXbk6dhLVSQrV0YlEqqJ6/VNxINb0o=
 github.com/pelletier/go-toml v1.9.4/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
