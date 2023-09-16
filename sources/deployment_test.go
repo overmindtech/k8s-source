@@ -1,7 +1,10 @@
 package sources
 
 import (
+	"regexp"
 	"testing"
+
+	"github.com/overmindtech/sdp-go"
 )
 
 var deploymentYAML = `
@@ -39,6 +42,17 @@ func TestDeploymentSource(t *testing.T) {
 		GetQuery:  "my-deployment",
 		GetScope:  sd.String(),
 		SetupYAML: deploymentYAML,
+		Wait: func(item *sdp.Item) bool {
+			return *item.Health == sdp.Health_HEALTH_OK
+		},
+		GetQueryTests: QueryTests{
+			{
+				ExpectedType:         "ReplicaSet",
+				ExpectedMethod:       sdp.QueryMethod_GET,
+				ExpectedScope:        "local-tests.default",
+				ExpectedQueryMatches: regexp.MustCompile("my-deployment"),
+			},
+		},
 	}
 
 	st.Execute(t)
