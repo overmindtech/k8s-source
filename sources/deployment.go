@@ -1,7 +1,10 @@
 package sources
 
 import (
+	"regexp"
+
 	"github.com/overmindtech/discovery"
+	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/apps/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -18,6 +21,8 @@ import (
 // +overmind:terraform:queryMap kubernetes_deployment_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 // +overmind:link ReplicaSet
+
+var replicaSetProgressedRegex = regexp.MustCompile(`ReplicaSet "([^"]+)" has successfully progressed`)
 
 func newDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Deployment, *v1.DeploymentList]{
@@ -36,7 +41,63 @@ func newDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []
 
 			return extracted, nil
 		},
-		// Replicasets are linked automatically
+		LinkedItemQueryExtractor: func(deployment *v1.Deployment, scope string) ([]*sdp.LinkedItemQuery, error) {
+			queries := make([]*sdp.LinkedItemQuery, 0)
+
+			for _, condition := range deployment.Status.Conditions {
+				// Parse out conditions that mention replica sets e.g.
+				//
+				// - lastTransitionTime: "2023-06-16T14:23:33Z"
+				//   lastUpdateTime: "2023-09-15T13:07:07Z"
+				//   message: ReplicaSet "gateway-5cf5578d94" has successfully progressed.
+				//   reason: NewReplicaSetAvailable
+				//   status: "True"
+				//   type: Progressing
+				if condition.Type == v1.DeploymentProgressing && condition.Reason == "NewReplicaSetAvailable" {
+					matches := replicaSetProgressedRegex.FindStringSubmatch(condition.Message)
+
+					if len(matches) > 1 {
+						queries = append(queries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   "ReplicaSet",
+								Method: sdp.QueryMethod_GET,
+								Query:  matches[1],
+								Scope:  scope,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								// These are tightly bound
+								In:  true,
+								Out: true,
+							},
+						})
+					}
+				}
+			}
+
+			return queries, nil
+		},
+		HealthExtractor: func(deployment *v1.Deployment) *sdp.Health {
+			var available bool
+			var progressing bool
+
+			for _, condition := range deployment.Status.Conditions {
+				// Extract available and progressing conditions
+				switch condition.Type {
+				case v1.DeploymentAvailable:
+					available = condition.Status == "True"
+				case v1.DeploymentProgressing:
+					progressing = condition.Status == "True"
+				}
+			}
+
+			if available {
+				return sdp.Health_HEALTH_OK.Enum()
+			} else if progressing {
+				return sdp.Health_HEALTH_PENDING.Enum()
+			} else {
+				return sdp.Health_HEALTH_ERROR.Enum()
+			}
+		},
 	}
 }
 
