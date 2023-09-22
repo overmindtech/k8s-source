@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -471,7 +470,7 @@ func init() {
 	rootCmd.PersistentFlags().String("api-path", "https://api.prod.overmind.tech", "The URL of the Overmind API")
 
 	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve the /healthz endpoint")
-	rootCmd.PersistentFlags().Int("max-parallel", (runtime.NumCPU() * 2), "Max number of requests to run in parallel")
+	rootCmd.PersistentFlags().Int("max-parallel", 2_000, "Max number of requests to run in parallel")
 
 	// source-specific flags
 	rootCmd.PersistentFlags().String("kubeconfig", "", "Path to the kubeconfig file containing cluster details. If this is blank, the in-cluster config will be used")
