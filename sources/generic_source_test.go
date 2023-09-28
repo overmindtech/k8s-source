@@ -596,7 +596,7 @@ func (s SourceTests) Execute(t *testing.T) {
 	if s.Wait != nil {
 		t.Log("waiting before executing tests")
 		err := WaitFor(20*time.Second, func() bool {
-			item, err := s.Source.Get(context.Background(), s.GetScope, getQuery, false)
+			item, err := s.Source.Get(context.Background(), s.GetScope, getQuery, true)
 
 			if err != nil {
 				return false
