@@ -4,8 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/sdpcache"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,27 +64,54 @@ type KubeTypeSource[Resource metav1.Object, ResourceList any] struct {
 	// The name of the cluster that this source is for. This is used to generate
 	// scopes
 	ClusterName string
+
+	CacheDuration time.Duration   // How long to cache items for
+	cache         *sdpcache.Cache // The sdpcache of this source
+	cacheInitMu   sync.Mutex      // Mutex to ensure cache is only initialised once
+}
+
+// DefaultCacheDuration Returns the default cache duration for this source
+func (s *KubeTypeSource[Resource, ResourceList]) DefaultCacheDuration() time.Duration {
+	if s.CacheDuration == 0 {
+		return 10 * time.Minute
+	}
+
+	return s.CacheDuration
+}
+
+func (s *KubeTypeSource[Resource, ResourceList]) ensureCache() {
+	s.cacheInitMu.Lock()
+	defer s.cacheInitMu.Unlock()
+
+	if s.cache == nil {
+		s.cache = sdpcache.NewCache()
+	}
+}
+
+func (s *KubeTypeSource[Resource, ResourceList]) Cache() *sdpcache.Cache {
+	s.ensureCache()
+	return s.cache
 }
 
 // validate Validates that the source is correctly set up
-func (k *KubeTypeSource[Resource, ResourceList]) Validate() error {
-	if k.NamespacedInterfaceBuilder == nil && k.ClusterInterfaceBuilder == nil {
+func (s *KubeTypeSource[Resource, ResourceList]) Validate() error {
+	if s.NamespacedInterfaceBuilder == nil && s.ClusterInterfaceBuilder == nil {
 		return errors.New("either NamespacedInterfaceBuilder or ClusterInterfaceBuilder must be specified")
 	}
 
-	if k.ListExtractor == nil {
+	if s.ListExtractor == nil {
 		return errors.New("listExtractor must be specified")
 	}
 
-	if k.TypeName == "" {
+	if s.TypeName == "" {
 		return errors.New("typeName must be specified")
 	}
 
-	if k.namespaced() && len(k.Namespaces) == 0 {
+	if s.namespaced() && len(s.Namespaces) == 0 {
 		return errors.New("namespaces must be specified when NamespacedInterfaceBuilder is specified")
 	}
 
-	if k.ClusterName == "" {
+	if s.ClusterName == "" {
 		return errors.New("clusterName must be specified")
 	}
 
@@ -89,29 +119,29 @@ func (k *KubeTypeSource[Resource, ResourceList]) Validate() error {
 }
 
 // namespaced Returns whether the source is namespaced or not
-func (k *KubeTypeSource[Resource, ResourceList]) namespaced() bool {
-	return k.NamespacedInterfaceBuilder != nil
+func (s *KubeTypeSource[Resource, ResourceList]) namespaced() bool {
+	return s.NamespacedInterfaceBuilder != nil
 }
 
-func (k *KubeTypeSource[Resource, ResourceList]) Type() string {
-	return k.TypeName
+func (s *KubeTypeSource[Resource, ResourceList]) Type() string {
+	return s.TypeName
 }
 
-func (k *KubeTypeSource[Resource, ResourceList]) Name() string {
-	return fmt.Sprintf("k8s-%v", k.TypeName)
+func (s *KubeTypeSource[Resource, ResourceList]) Name() string {
+	return fmt.Sprintf("k8s-%v", s.TypeName)
 }
 
-func (k *KubeTypeSource[Resource, ResourceList]) Weight() int {
+func (s *KubeTypeSource[Resource, ResourceList]) Weight() int {
 	return 10
 }
 
-func (k *KubeTypeSource[Resource, ResourceList]) Scopes() []string {
+func (s *KubeTypeSource[Resource, ResourceList]) Scopes() []string {
 	namespaces := make([]string, 0)
 
-	if k.namespaced() {
-		for _, ns := range k.Namespaces {
+	if s.namespaced() {
+		for _, ns := range s.Namespaces {
 			sd := ScopeDetails{
-				ClusterName: k.ClusterName,
+				ClusterName: s.ClusterName,
 				Namespace:   ns,
 			}
 
@@ -119,7 +149,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) Scopes() []string {
 		}
 	} else {
 		sd := ScopeDetails{
-			ClusterName: k.ClusterName,
+			ClusterName: s.ClusterName,
 		}
 
 		namespaces = append(namespaces, sd.String())
@@ -128,48 +158,81 @@ func (k *KubeTypeSource[Resource, ResourceList]) Scopes() []string {
 	return namespaces
 }
 
-func (k *KubeTypeSource[Resource, ResourceList]) Get(ctx context.Context, scope string, query string) (*sdp.Item, error) {
-	i, err := k.itemInterface(scope)
-
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
+func (s *KubeTypeSource[Resource, ResourceList]) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
+	s.ensureCache()
+	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	if qErr != nil {
+		return nil, qErr
+	}
+	if cacheHit {
+		if len(cachedItems) > 0 {
+			return cachedItems[0], nil
+		} else {
+			return nil, nil
 		}
 	}
 
-	resource, err := i.Get(ctx, query, metav1.GetOptions{})
+	i, err := s.itemInterface(scope)
+	if err != nil {
+		err = &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+		s.cache.StoreError(err, s.CacheDuration, ck)
+		return nil, err
+	}
 
+	resource, err := i.Get(ctx, query, metav1.GetOptions{})
 	if err != nil {
 		statusErr := new(k8serr.StatusError)
 
 		if errors.As(err, &statusErr) && statusErr.ErrStatus.Code == 404 {
-			return nil, &sdp.QueryError{
+			err = &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: statusErr.ErrStatus.Message,
 			}
 		}
 
+		s.cache.StoreError(err, s.CacheDuration, ck)
 		return nil, err
 	}
 
-	item, err := k.resourceToItem(resource)
-
+	item, err := s.resourceToItem(resource)
 	if err != nil {
+		s.cache.StoreError(err, s.CacheDuration, ck)
 		return nil, err
 	}
 
+	s.cache.StoreItem(item, s.CacheDuration, ck)
 	return item, nil
 }
 
-func (k *KubeTypeSource[Resource, ResourceList]) List(ctx context.Context, scope string) ([]*sdp.Item, error) {
-	return k.listWithOptions(ctx, scope, metav1.ListOptions{})
+func (s *KubeTypeSource[Resource, ResourceList]) List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
+	s.ensureCache()
+	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.Type(), "", ignoreCache)
+	if qErr != nil {
+		return nil, qErr
+	}
+	if cacheHit {
+		return cachedItems, nil
+	}
+
+	items, err := s.listWithOptions(ctx, scope, metav1.ListOptions{})
+	if err != nil {
+		s.cache.StoreError(err, s.CacheDuration, ck)
+		return nil, err
+	}
+
+	for _, item := range items {
+		s.cache.StoreItem(item, s.CacheDuration, ck)
+	}
+
+	return items, nil
 }
 
 // listWithOptions Runs the inbuilt list method with the given options
-func (k *KubeTypeSource[Resource, ResourceList]) listWithOptions(ctx context.Context, scope string, opts metav1.ListOptions) ([]*sdp.Item, error) {
-	i, err := k.itemInterface(scope)
-
+func (s *KubeTypeSource[Resource, ResourceList]) listWithOptions(ctx context.Context, scope string, opts metav1.ListOptions) ([]*sdp.Item, error) {
+	i, err := s.itemInterface(scope)
 	if err != nil {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
@@ -178,19 +241,16 @@ func (k *KubeTypeSource[Resource, ResourceList]) listWithOptions(ctx context.Con
 	}
 
 	list, err := i.List(ctx, opts)
-
 	if err != nil {
 		return nil, err
 	}
 
-	resourceList, err := k.ListExtractor(list)
-
+	resourceList, err := s.ListExtractor(list)
 	if err != nil {
 		return nil, err
 	}
 
-	items, err := k.resourcesToItems(resourceList, scope)
-
+	items, err := s.resourcesToItems(resourceList, scope)
 	if err != nil {
 		return nil, err
 	}
@@ -198,31 +258,42 @@ func (k *KubeTypeSource[Resource, ResourceList]) listWithOptions(ctx context.Con
 	return items, nil
 }
 
-func (k *KubeTypeSource[Resource, ResourceList]) Search(ctx context.Context, scope string, query string) ([]*sdp.Item, error) {
+func (s *KubeTypeSource[Resource, ResourceList]) Search(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
 	opts, err := QueryToListOptions(query)
-
 	if err != nil {
 		return nil, err
 	}
 
-	return k.listWithOptions(ctx, scope, opts)
+	ck := sdpcache.CacheKeyFromParts(s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query)
+
+	items, err := s.listWithOptions(ctx, scope, opts)
+	if err != nil {
+		s.cache.StoreError(err, s.CacheDuration, ck)
+		return nil, err
+	}
+
+	for _, item := range items {
+		s.cache.StoreItem(item, s.CacheDuration, ck)
+	}
+
+	return items, nil
 }
 
 // itemInterface Returns the correct interface depending on whether the source
 // is namespaced or not
-func (k *KubeTypeSource[Resource, ResourceList]) itemInterface(scope string) (ItemInterface[Resource, ResourceList], error) {
+func (s *KubeTypeSource[Resource, ResourceList]) itemInterface(scope string) (ItemInterface[Resource, ResourceList], error) {
 	// If this is a namespaced resource, then parse the scope to get the
 	// namespace
-	if k.namespaced() {
-		details, err := ParseScope(scope, k.namespaced())
+	if s.namespaced() {
+		details, err := ParseScope(scope, s.namespaced())
 
 		if err != nil {
 			return nil, err
 		}
 
-		return k.NamespacedInterfaceBuilder(details.Namespace), nil
+		return s.NamespacedInterfaceBuilder(details.Namespace), nil
 	} else {
-		return k.ClusterInterfaceBuilder(), nil
+		return s.ClusterInterfaceBuilder(), nil
 	}
 }
 
@@ -244,13 +315,13 @@ func ignored(key string) bool {
 }
 
 // resourcesToItems Converts a slice of resources to a slice of items
-func (k *KubeTypeSource[Resource, ResourceList]) resourcesToItems(resourceList []Resource, scope string) ([]*sdp.Item, error) {
+func (s *KubeTypeSource[Resource, ResourceList]) resourcesToItems(resourceList []Resource, scope string) ([]*sdp.Item, error) {
 	items := make([]*sdp.Item, len(resourceList))
 
 	var err error
 
 	for i := range resourceList {
-		items[i], err = k.resourceToItem(resourceList[i])
+		items[i], err = s.resourceToItem(resourceList[i])
 
 		if err != nil {
 			return nil, err
@@ -262,15 +333,15 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourcesToItems(resourceList [
 }
 
 // resourceToItem Converts a resource to an item
-func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resource) (*sdp.Item, error) {
+func (s *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resource) (*sdp.Item, error) {
 	sd := ScopeDetails{
-		ClusterName: k.ClusterName,
+		ClusterName: s.ClusterName,
 		Namespace:   resource.GetNamespace(),
 	}
 
 	// Redact sensitive data if required
-	if k.Redact != nil {
-		resource = k.Redact(resource)
+	if s.Redact != nil {
+		resource = s.Redact(resource)
 	}
 
 	attributes, err := sdp.ToAttributesViaJson(resource)
@@ -299,7 +370,7 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 	attributes.Set("name", resource.GetName())
 
 	item := &sdp.Item{
-		Type:            k.TypeName,
+		Type:            s.TypeName,
 		UniqueAttribute: "name",
 		Scope:           sd.String(),
 		Attributes:      attributes,
@@ -328,9 +399,9 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 		})
 	}
 
-	if k.LinkedItemQueryExtractor != nil {
+	if s.LinkedItemQueryExtractor != nil {
 		// Add linked items
-		newQueries, err := k.LinkedItemQueryExtractor(resource, sd.String())
+		newQueries, err := s.LinkedItemQueryExtractor(resource, sd.String())
 
 		if err != nil {
 			return nil, err
@@ -339,8 +410,8 @@ func (k *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 		item.LinkedItemQueries = append(item.LinkedItemQueries, newQueries...)
 	}
 
-	if k.HealthExtractor != nil {
-		item.Health = k.HealthExtractor(resource)
+	if s.HealthExtractor != nil {
+		item.Health = s.HealthExtractor(resource)
 	}
 
 	return item, nil

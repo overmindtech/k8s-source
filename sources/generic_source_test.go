@@ -313,7 +313,7 @@ func TestSourceGet(t *testing.T) {
 	t.Run("get existing item", func(t *testing.T) {
 		source := createSource(false)
 
-		item, err := source.Get(context.Background(), "foo", "example")
+		item, err := source.Get(context.Background(), "foo", "example", false)
 
 		if err != nil {
 			t.Errorf("expected no error, got %s", err)
@@ -347,7 +347,7 @@ func TestSourceGet(t *testing.T) {
 			}
 		}
 
-		_, err := source.Get(context.Background(), "foo", "example")
+		_, err := source.Get(context.Background(), "foo", "example", false)
 
 		if err == nil {
 			t.Errorf("expected error, got none")
@@ -361,7 +361,7 @@ func TestFailingQueryExtractor(t *testing.T) {
 		return nil, errors.New("failed to extract queries")
 	}
 
-	_, err := source.Get(context.Background(), "foo", "example")
+	_, err := source.Get(context.Background(), "foo", "example", false)
 
 	if err == nil {
 		t.Errorf("expected error, got none")
@@ -372,7 +372,7 @@ func TestList(t *testing.T) {
 	t.Run("when namespaced", func(t *testing.T) {
 		source := createSource(true)
 
-		items, err := source.List(context.Background(), "foo.bar")
+		items, err := source.List(context.Background(), "foo.bar", false)
 
 		if err != nil {
 			t.Errorf("expected no error, got %s", err)
@@ -390,7 +390,7 @@ func TestList(t *testing.T) {
 	t.Run("when not namespaced", func(t *testing.T) {
 		source := createSource(false)
 
-		items, err := source.List(context.Background(), "foo")
+		items, err := source.List(context.Background(), "foo", false)
 
 		if err != nil {
 			t.Errorf("expected no error, got %s", err)
@@ -407,7 +407,7 @@ func TestList(t *testing.T) {
 			return nil, errors.New("failed to extract list")
 		}
 
-		_, err := source.List(context.Background(), "foo")
+		_, err := source.List(context.Background(), "foo", false)
 
 		if err == nil {
 			t.Errorf("expected error, got none")
@@ -420,7 +420,7 @@ func TestList(t *testing.T) {
 			return nil, errors.New("failed to extract queries")
 		}
 
-		_, err := source.List(context.Background(), "foo")
+		_, err := source.List(context.Background(), "foo", false)
 
 		if err == nil {
 			t.Errorf("expected error, got none")
@@ -432,7 +432,7 @@ func TestSearch(t *testing.T) {
 	t.Run("with a valid query", func(t *testing.T) {
 		source := createSource(false)
 
-		items, err := source.Search(context.Background(), "foo", "{\"labelSelector\":\"app=foo\"}")
+		items, err := source.Search(context.Background(), "foo", "{\"labelSelector\":\"app=foo\"}", false)
 
 		if err != nil {
 			t.Errorf("expected no error, got %s", err)
@@ -446,7 +446,7 @@ func TestSearch(t *testing.T) {
 	t.Run("with an invalid query", func(t *testing.T) {
 		source := createSource(false)
 
-		_, err := source.Search(context.Background(), "foo", "{{{{}")
+		_, err := source.Search(context.Background(), "foo", "{{{{}", false)
 
 		if err == nil {
 			t.Errorf("expected error, got none")
@@ -462,7 +462,7 @@ func TestRedact(t *testing.T) {
 		return resource
 	}
 
-	item, err := source.Get(context.Background(), "cluster.namespace", "test")
+	item, err := source.Get(context.Background(), "cluster.namespace", "test", false)
 
 	if err != nil {
 		t.Error(err)
@@ -577,7 +577,7 @@ func (s SourceTests) Execute(t *testing.T) {
 	var getQuery string
 
 	if s.GetQueryRegexp != nil {
-		items, err := s.Source.List(context.Background(), s.GetScope)
+		items, err := s.Source.List(context.Background(), s.GetScope, false)
 
 		if err != nil {
 			t.Fatal(err)
@@ -596,7 +596,7 @@ func (s SourceTests) Execute(t *testing.T) {
 	if s.Wait != nil {
 		t.Log("waiting before executing tests")
 		err := WaitFor(20*time.Second, func() bool {
-			item, err := s.Source.Get(context.Background(), s.GetScope, getQuery)
+			item, err := s.Source.Get(context.Background(), s.GetScope, getQuery, true)
 
 			if err != nil {
 				return false
@@ -613,7 +613,7 @@ func (s SourceTests) Execute(t *testing.T) {
 	t.Run(s.Source.Name(), func(t *testing.T) {
 		if getQuery != "" {
 			t.Run(fmt.Sprintf("GET:%v", getQuery), func(t *testing.T) {
-				item, err := s.Source.Get(context.Background(), s.GetScope, getQuery)
+				item, err := s.Source.Get(context.Background(), s.GetScope, getQuery, false)
 
 				if err != nil {
 					t.Fatal(err)
@@ -632,7 +632,7 @@ func (s SourceTests) Execute(t *testing.T) {
 		}
 
 		t.Run("LIST", func(t *testing.T) {
-			items, err := s.Source.List(context.Background(), s.GetScope)
+			items, err := s.Source.List(context.Background(), s.GetScope, false)
 
 			if err != nil {
 				t.Fatal(err)
