@@ -50,7 +50,7 @@ func TestCronJobSource(t *testing.T) {
 
 	// Wait for the job to be created
 	err := WaitFor(60*time.Second, func() bool {
-		jobs, err := jobSource.List(context.Background(), sd.String())
+		jobs, err := jobSource.List(context.Background(), sd.String(), false)
 
 		if err != nil {
 			t.Fatal(err)
