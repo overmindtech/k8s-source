@@ -374,6 +374,7 @@ func (s *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 		UniqueAttribute: "name",
 		Scope:           sd.String(),
 		Attributes:      attributes,
+		Tags:            resource.GetLabels(),
 	}
 
 	// Automatically create links to owner references
