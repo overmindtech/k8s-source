@@ -1,6 +1,8 @@
 package sources
 
 import (
+	"time"
+
 	v1 "k8s.io/api/discovery/v1"
 
 	"github.com/overmindtech/discovery"
@@ -113,9 +115,10 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 
 func newEndpointSliceSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.EndpointSlice, *v1.EndpointSliceList]{
-		ClusterName: cluster,
-		Namespaces:  namespaces,
-		TypeName:    "EndpointSlice",
+		ClusterName:   cluster,
+		Namespaces:    namespaces,
+		TypeName:      "EndpointSlice",
+		CacheDuration: 1 * time.Minute, // very low since this changes a lot
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.EndpointSlice, *v1.EndpointSliceList] {
 			return cs.DiscoveryV1().EndpointSlices(namespace)
 		},
