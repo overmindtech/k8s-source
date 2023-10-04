@@ -14,6 +14,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const DefaultCacheDuration = 30 * time.Minute
+
 // NamespacedInterfaceBuilder The function that create a client to query a
 // namespaced resource. e.g. `CoreV1().Pods`
 type NamespacedInterfaceBuilder[Resource metav1.Object, ResourceList any] func(namespace string) ItemInterface[Resource, ResourceList]
@@ -70,10 +72,9 @@ type KubeTypeSource[Resource metav1.Object, ResourceList any] struct {
 	cacheInitMu   sync.Mutex      // Mutex to ensure cache is only initialised once
 }
 
-// DefaultCacheDuration Returns the default cache duration for this source
-func (s *KubeTypeSource[Resource, ResourceList]) DefaultCacheDuration() time.Duration {
+func (s *KubeTypeSource[Resource, ResourceList]) cacheDuration() time.Duration {
 	if s.CacheDuration == 0 {
-		return 10 * time.Minute
+		return DefaultCacheDuration
 	}
 
 	return s.CacheDuration
@@ -178,7 +179,7 @@ func (s *KubeTypeSource[Resource, ResourceList]) Get(ctx context.Context, scope 
 			ErrorType:   sdp.QueryError_NOSCOPE,
 			ErrorString: err.Error(),
 		}
-		s.cache.StoreError(err, s.CacheDuration, ck)
+		s.cache.StoreError(err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
@@ -193,17 +194,17 @@ func (s *KubeTypeSource[Resource, ResourceList]) Get(ctx context.Context, scope 
 			}
 		}
 
-		s.cache.StoreError(err, s.CacheDuration, ck)
+		s.cache.StoreError(err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
 	item, err := s.resourceToItem(resource)
 	if err != nil {
-		s.cache.StoreError(err, s.CacheDuration, ck)
+		s.cache.StoreError(err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
-	s.cache.StoreItem(item, s.CacheDuration, ck)
+	s.cache.StoreItem(item, s.cacheDuration(), ck)
 	return item, nil
 }
 
@@ -219,12 +220,12 @@ func (s *KubeTypeSource[Resource, ResourceList]) List(ctx context.Context, scope
 
 	items, err := s.listWithOptions(ctx, scope, metav1.ListOptions{})
 	if err != nil {
-		s.cache.StoreError(err, s.CacheDuration, ck)
+		s.cache.StoreError(err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
 	for _, item := range items {
-		s.cache.StoreItem(item, s.CacheDuration, ck)
+		s.cache.StoreItem(item, s.cacheDuration(), ck)
 	}
 
 	return items, nil
@@ -268,12 +269,12 @@ func (s *KubeTypeSource[Resource, ResourceList]) Search(ctx context.Context, sco
 
 	items, err := s.listWithOptions(ctx, scope, opts)
 	if err != nil {
-		s.cache.StoreError(err, s.CacheDuration, ck)
+		s.cache.StoreError(err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
 	for _, item := range items {
-		s.cache.StoreItem(item, s.CacheDuration, ck)
+		s.cache.StoreItem(item, s.cacheDuration(), ck)
 	}
 
 	return items, nil

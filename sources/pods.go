@@ -1,6 +1,8 @@
 package sources
 
 import (
+	"time"
+
 	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/core/v1"
@@ -273,9 +275,10 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 func newPodSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Pod, *v1.PodList]{
-		ClusterName: cluster,
-		Namespaces:  namespaces,
-		TypeName:    "Pod",
+		ClusterName:   cluster,
+		Namespaces:    namespaces,
+		TypeName:      "Pod",
+		CacheDuration: 10 * time.Minute, // somewhat low since pods are replaced a lot
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Pod, *v1.PodList] {
 			return cs.CoreV1().Pods(namespace)
 		},
