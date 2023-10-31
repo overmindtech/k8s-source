@@ -8,7 +8,7 @@ require (
 	github.com/getsentry/sentry-go v0.25.0
 	github.com/google/uuid v1.4.0
 	github.com/overmindtech/discovery v0.25.1
-	github.com/overmindtech/sdp-go v0.53.0
+	github.com/overmindtech/sdp-go v0.54.1
 	github.com/overmindtech/sdpcache v1.6.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
@@ -70,7 +70,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nats-io/jwt/v2 v2.5.2 // indirect
 	github.com/nats-io/nats.go v1.31.0 // indirect
-	github.com/nats-io/nkeys v0.4.5 // indirect
+	github.com/nats-io/nkeys v0.4.6 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/overmindtech/api-client v0.14.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect

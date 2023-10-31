@@ -257,6 +257,8 @@ github.com/nats-io/nats.go v1.31.0 h1:/WFBHEc/dOKBF6qf1TZhrdEfTmOZ5JzdJ+Y3m6Y/p7
 github.com/nats-io/nats.go v1.31.0/go.mod h1:di3Bm5MLsoB4Bx61CBTsxuarI36WbhAwOm8QrW39+i8=
 github.com/nats-io/nkeys v0.4.5 h1:Zdz2BUlFm4fJlierwvGK+yl20IAKUm7eV6AAZXEhkPk=
 github.com/nats-io/nkeys v0.4.5/go.mod h1:XUkxdLPTufzlihbamfzQ7mw/VGx6ObUs+0bN5sNvt64=
+github.com/nats-io/nkeys v0.4.6 h1:IzVe95ru2CT6ta874rt9saQRkWfe2nFj1NtvYSLqMzY=
+github.com/nats-io/nkeys v0.4.6/go.mod h1:4DxZNzenSVd1cYQoAa8948QY3QDjrHfcfVADymtkpts=
 github.com/nats-io/nuid v1.0.1 h1:5iA8DT8V7q8WK2EScv2padNa/rTESc1KdnPw4TC2paw=
 github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OSON2c=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
@@ -270,6 +272,8 @@ github.com/overmindtech/discovery v0.25.1 h1:wq96BrnSOmU0CZGdiKSnVlbaJAgioJ8wqyk
 github.com/overmindtech/discovery v0.25.1/go.mod h1:7lZNL7ke+kFgYq+cY+jn3V+3Z1x+yGfpIlCkjVFy944=
 github.com/overmindtech/sdp-go v0.53.0 h1:uXFaMaOQ8cP8fL3KEdC3wc1J0q5M+oiSbcE61YeFRoM=
 github.com/overmindtech/sdp-go v0.53.0/go.mod h1:14PtSb4/IhjHjWJk0K/+fRSwEksqNFDZxzXMv7vQrjA=
+github.com/overmindtech/sdp-go v0.54.1 h1:sLWmCt/QRgWHqzvUVygSz3F1uguPHBabT6wwH8euUIY=
+github.com/overmindtech/sdp-go v0.54.1/go.mod h1:GR65IrjaY9EopinnKSB2LvXWcR0hcwcCBcp27A9sOLw=
 github.com/overmindtech/sdpcache v1.6.1 h1:laFibDvdUGeLBIclzM0pS3XtFdby2KnfaM3+Nn/2YuA=
 github.com/overmindtech/sdpcache v1.6.1/go.mod h1:EqpA/qHcyxKmPauMtE73qjk4Xr08QkRq3kmY5cD1zfY=
 github.com/pelletier/go-toml v1.9.4/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
