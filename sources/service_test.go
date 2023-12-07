@@ -72,7 +72,7 @@ func TestServiceSource(t *testing.T) {
 			},
 			{
 				ExpectedType:   "dns",
-				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedMethod: sdp.QueryMethod_SEARCH,
 				ExpectedQuery:  "service-test-external",
 				ExpectedScope:  "global",
 			},

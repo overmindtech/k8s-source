@@ -74,7 +74,7 @@ func TestIngressSource(t *testing.T) {
 		GetQueryTests: QueryTests{
 			{
 				ExpectedType:   "dns",
-				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedMethod: sdp.QueryMethod_SEARCH,
 				ExpectedQuery:  "example.com",
 				ExpectedScope:  "global",
 			},
