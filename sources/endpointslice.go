@@ -25,7 +25,7 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "dns",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  *endpoint.Hostname,
 					Scope:  "global",
 				},
@@ -86,7 +86,7 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "dns",
-						Method: sdp.QueryMethod_GET,
+						Method: sdp.QueryMethod_SEARCH,
 						Query:  address,
 						Scope:  "global",
 					},

@@ -66,7 +66,7 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "dns",
-				Method: sdp.QueryMethod_GET,
+				Method: sdp.QueryMethod_SEARCH,
 				Query:  resource.Spec.ExternalName,
 				Scope:  "global",
 			},
@@ -118,7 +118,7 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "dns",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  ingress.Hostname,
 					Scope:  "global",
 				},

@@ -20,7 +20,7 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "dns",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  addr.Address,
 					Scope:  "global",
 				},
