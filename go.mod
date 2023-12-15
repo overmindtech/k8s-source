@@ -6,7 +6,7 @@ go 1.21.5
 require (
 	github.com/MrAlias/otel-schema-utils v0.2.1-alpha
 	github.com/getsentry/sentry-go v0.25.0
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.5.0
 	github.com/overmindtech/discovery v0.26.0
 	github.com/overmindtech/sdp-go v0.58.4
 	github.com/overmindtech/sdpcache v1.6.1
