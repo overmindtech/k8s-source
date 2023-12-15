@@ -8,7 +8,7 @@ require (
 	github.com/getsentry/sentry-go v0.25.0
 	github.com/google/uuid v1.4.0
 	github.com/overmindtech/discovery v0.26.0
-	github.com/overmindtech/sdp-go v0.58.4
+	github.com/overmindtech/sdp-go v0.59.1
 	github.com/overmindtech/sdpcache v1.6.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -29,11 +29,11 @@ require (
 
 // Transitive dependencies
 require (
-	connectrpc.com/connect v1.12.0 // indirect
+	connectrpc.com/connect v1.13.0 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/alessio/shellescape v1.4.2 // indirect
-	github.com/auth0/go-jwt-middleware/v2 v2.1.0 // indirect
+	github.com/auth0/go-jwt-middleware/v2 v2.2.0 // indirect
 	github.com/aws/aws-sdk-go v1.47.9 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -61,7 +61,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.2 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
@@ -98,7 +98,7 @@ require (
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
 	google.golang.org/grpc v1.59.0 // indirect
@@ -114,6 +114,11 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
+)
+
+require (
+	golang.org/x/sync v0.5.0 // indirect
+	gopkg.in/go-jose/go-jose.v2 v2.6.1 // indirect
 )
 
 exclude (
