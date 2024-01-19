@@ -7,9 +7,9 @@ require (
 	github.com/MrAlias/otel-schema-utils v0.2.1-alpha
 	github.com/getsentry/sentry-go v0.26.0
 	github.com/google/uuid v1.5.0
-	github.com/overmindtech/discovery v0.26.1
-	github.com/overmindtech/sdp-go v0.61.7
-	github.com/overmindtech/sdpcache v1.6.1
+	github.com/overmindtech/discovery v0.26.2
+	github.com/overmindtech/sdp-go v0.61.8
+	github.com/overmindtech/sdpcache v1.6.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
