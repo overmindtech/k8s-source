@@ -15,9 +15,6 @@ jobs:
           - v1.25.11
           - v1.24.15
 
-    env:
-      GOEXPERIMENT: loopvar
-
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -54,9 +51,6 @@ jobs:
         include:
           - dockerfile: Dockerfile
             image_name: k8s-source
-
-    env:
-      GOEXPERIMENT: loopvar
 
     steps:
       - name: Checkout
