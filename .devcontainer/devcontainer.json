@@ -43,7 +43,5 @@
 			"dockerDashComposeVersion": "none"
 		}
 	},
-	"remoteEnv": {
-		"GOEXPERIMENT": "loopvar"
-	}
+	"remoteEnv": {}
 }
