@@ -115,7 +115,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-require github.com/go-jose/go-jose/v4 v4.0.0 // indirect
+require github.com/go-jose/go-jose/v4 v4.0.1 // indirect
 
 exclude (
 	// For Kubernetes versions >= v1.17.0, use a corresponding v0.x.y tag from
