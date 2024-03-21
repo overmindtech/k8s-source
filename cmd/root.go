@@ -466,7 +466,7 @@ func init() {
 	// NATS
 	rootCmd.PersistentFlags().StringArray("nats-servers", []string{"wss://messages.prod.overmind.tech"}, "A list of NATS servers to connect to")
 	rootCmd.PersistentFlags().String("api-key", "", "The API key to use to authenticate to the Overmind API")
-	rootCmd.MarkFlagRequired("api-key")
+	cobra.CheckErr(rootCmd.MarkPersistentFlagRequired("api-key"))
 	rootCmd.PersistentFlags().String("api-path", "https://api.prod.overmind.tech", "The URL of the Overmind API")
 
 	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve the /healthz endpoint")
