@@ -464,10 +464,10 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 
 	// NATS
-	rootCmd.PersistentFlags().StringArray("nats-servers", []string{"wss://messages.prod.overmind.tech"}, "A list of NATS servers to connect to")
+	rootCmd.PersistentFlags().StringArray("nats-servers", []string{"wss://messages.app.overmind.tech"}, "A list of NATS servers to connect to")
 	rootCmd.PersistentFlags().String("api-key", "", "The API key to use to authenticate to the Overmind API")
 	cobra.CheckErr(rootCmd.MarkPersistentFlagRequired("api-key"))
-	rootCmd.PersistentFlags().String("api-path", "https://api.prod.overmind.tech", "The URL of the Overmind API")
+	rootCmd.PersistentFlags().String("api-path", "https://api.app.overmind.tech", "The URL of the Overmind API")
 
 	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve the /healthz endpoint")
 	rootCmd.PersistentFlags().Int("max-parallel", 2_000, "Max number of requests to run in parallel")
