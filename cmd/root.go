@@ -49,7 +49,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func run(cmd *cobra.Command, args []string) int {
+func run(_ *cobra.Command, _ []string) int {
 	natsServers := viper.GetStringSlice("nats-servers")
 	kubeconfig := viper.GetString("kubeconfig")
 	maxParallel := viper.GetInt("max-parallel")
@@ -70,8 +70,6 @@ func run(cmd *cobra.Command, args []string) int {
 
 		return 1
 	}
-
-	var tokenClient auth.TokenClient
 
 	log.WithFields(log.Fields{
 		"nats-servers": natsServers,
@@ -150,17 +148,22 @@ func run(cmd *cobra.Command, args []string) int {
 		}
 	}
 
+	if apiKey == "" {
+		log.Error("No API key provided, exiting")
+		return 1
+	}
+
+	var tokenClient auth.TokenClient
+
 	// Validate the auth params and create a token client if we are using
 	// auth
-	if apiKey != "" {
-		tokenClient, err = auth.NewAPIKeyClient(apiPath, apiKey)
+	tokenClient, err = auth.NewAPIKeyClient(apiPath, apiKey)
 
-		if err != nil {
-			sentry.CaptureException(err)
-			log.WithError(err).Error("Could not create API key client")
+	if err != nil {
+		sentry.CaptureException(err)
+		log.WithError(err).Error("Could not create API key client")
 
-			return 1
-		}
+		return 1
 	}
 
 	// Calculate the SHA-1 hash of the config to use as the queue name. This
@@ -466,7 +469,6 @@ func init() {
 	// NATS
 	rootCmd.PersistentFlags().StringArray("nats-servers", []string{"wss://messages.app.overmind.tech"}, "A list of NATS servers to connect to")
 	rootCmd.PersistentFlags().String("api-key", "", "The API key to use to authenticate to the Overmind API")
-	cobra.CheckErr(rootCmd.MarkPersistentFlagRequired("api-key"))
 	rootCmd.PersistentFlags().String("api-path", "https://api.app.overmind.tech", "The URL of the Overmind API")
 
 	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve the /healthz endpoint")
