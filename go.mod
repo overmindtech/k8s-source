@@ -1,6 +1,6 @@
 module github.com/overmindtech/k8s-source
 
-go 1.22.1
+go 1.22.2
 
 // Direct dependencies of my codebase
 require (
