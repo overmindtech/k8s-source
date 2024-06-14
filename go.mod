@@ -5,7 +5,7 @@ go 1.22.3
 // Direct dependencies of my codebase
 require (
 	github.com/MrAlias/otel-schema-utils v0.2.1-alpha
-	github.com/getsentry/sentry-go v0.28.0
+	github.com/getsentry/sentry-go v0.28.1
 	github.com/google/uuid v1.6.0
 	github.com/overmindtech/discovery v0.27.6
 	github.com/overmindtech/sdp-go v0.75.4
@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
-	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.0
+	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.1
 	go.opentelemetry.io/contrib/detectors/aws/ec2 v1.27.0
 	go.opentelemetry.io/otel v1.27.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.27.0
@@ -80,7 +80,7 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/uptrace/opentelemetry-go-extra/otelutil v0.3.0 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelutil v0.3.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.52.0
 	go.opentelemetry.io/otel/metric v1.27.0 // indirect
 	go.opentelemetry.io/otel/schema v0.0.7 // indirect
@@ -92,7 +92,7 @@ require (
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.20.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/term v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
