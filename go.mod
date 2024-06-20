@@ -11,7 +11,7 @@ require (
 	github.com/overmindtech/sdp-go v0.76.0
 	github.com/overmindtech/sdpcache v1.6.4
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.1
