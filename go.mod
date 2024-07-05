@@ -15,11 +15,11 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.1
-	go.opentelemetry.io/contrib/detectors/aws/ec2 v1.27.0
-	go.opentelemetry.io/otel v1.27.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.27.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.27.0
-	go.opentelemetry.io/otel/sdk v1.27.0
+	go.opentelemetry.io/contrib/detectors/aws/ec2 v1.28.0
+	go.opentelemetry.io/otel v1.28.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.28.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.28.0
+	go.opentelemetry.io/otel/sdk v1.28.0
 	go.uber.org/automaxprocs v1.5.3
 	k8s.io/api v0.30.2
 	k8s.io/apimachinery v0.30.2
@@ -34,7 +34,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/alessio/shellescape v1.4.2 // indirect
 	github.com/auth0/go-jwt-middleware/v2 v2.2.1 // indirect
-	github.com/aws/aws-sdk-go v1.53.6 // indirect
+	github.com/aws/aws-sdk-go v1.54.13 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
@@ -81,23 +81,23 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/uptrace/opentelemetry-go-extra/otelutil v0.3.1 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.52.0
-	go.opentelemetry.io/otel/metric v1.27.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0
+	go.opentelemetry.io/otel/metric v1.28.0 // indirect
 	go.opentelemetry.io/otel/schema v0.0.7 // indirect
-	go.opentelemetry.io/otel/trace v1.27.0 // indirect
-	go.opentelemetry.io/proto/otlp v1.2.0 // indirect
+	go.opentelemetry.io/otel/trace v1.28.0 // indirect
+	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb // indirect
-	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
-	golang.org/x/text v0.15.0 // indirect
+	golang.org/x/term v0.21.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240520151616-dc85e6b867a5 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240515191416-fc5f0ca64291 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240701130421-f6361c86f094 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240701130421-f6361c86f094 // indirect
 	google.golang.org/grpc v1.64.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
