@@ -8,7 +8,7 @@ require (
 	github.com/getsentry/sentry-go v0.28.1
 	github.com/google/uuid v1.6.0
 	github.com/overmindtech/discovery v0.27.6
-	github.com/overmindtech/sdp-go v0.77.0
+	github.com/overmindtech/sdp-go v0.78.0
 	github.com/overmindtech/sdpcache v1.6.4
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
