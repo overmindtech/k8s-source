@@ -8,7 +8,7 @@ require (
 	github.com/getsentry/sentry-go v0.28.1
 	github.com/google/uuid v1.6.0
 	github.com/overmindtech/discovery v0.27.6
-	github.com/overmindtech/sdp-go v0.83.0
+	github.com/overmindtech/sdp-go v0.84.0
 	github.com/overmindtech/sdpcache v1.6.4
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
@@ -114,7 +114,7 @@ require (
 )
 
 require (
-	github.com/go-jose/go-jose/v4 v4.0.3 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
 	go.opentelemetry.io/otel/log v0.3.0 // indirect
 )
 
