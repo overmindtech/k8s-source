@@ -509,16 +509,23 @@ func init() {
 			}
 		})
 
-		honeycomb_api_key := viper.GetString("honeycomb-api-key")
-		tracingOpts := make([]otlptracehttp.Option, 0)
-		if honeycomb_api_key != "" {
-			tracingOpts = []otlptracehttp.Option{
-				otlptracehttp.WithEndpoint("api.honeycomb.io"),
-				otlptracehttp.WithHeaders(map[string]string{"x-honeycomb-team": honeycomb_api_key}),
+		if sentryDSN := viper.GetString("sentry-dsn"); sentryDSN != "" {
+			err := initSentry(sentryDSN)
+
+			if err != nil {
+				log.Errorf("error initializing sentry: %s", err)
 			}
 		}
-		if err := initTracing(tracingOpts...); err != nil {
-			log.Fatal(err)
+
+		if honeycombAPIKey := viper.GetString("honeycomb-api-key"); honeycombAPIKey != "" {
+			tracingOpts := []otlptracehttp.Option{
+				otlptracehttp.WithEndpoint("api.honeycomb.io"),
+				otlptracehttp.WithHeaders(map[string]string{"x-honeycomb-team": honeycombAPIKey}),
+			}
+
+			if err := initOtel(tracingOpts...); err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 
