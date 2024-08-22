@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"net"
 	"time"
 
 	"github.com/overmindtech/discovery"
@@ -59,6 +60,25 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 			})
 		}
 
+		// Link to EBS volumes
+		if vol.AWSElasticBlockStore != nil {
+			// +overmind:link ec2-volume
+			queries = append(queries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Scope:  "*",
+					Method: sdp.QueryMethod_GET,
+					Query:  vol.AWSElasticBlockStore.VolumeID,
+					Type:   "ec2-volume",
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Changes to the volume will affect the pod
+					In: true,
+					// The pod can definitely affect the volume
+					Out: true,
+				},
+			})
+		}
+
 		// Link secrets
 		if vol.Secret != nil {
 			// +overmind:link Secret
@@ -76,6 +96,45 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 					Out: false,
 				},
 			})
+		}
+
+		if vol.NFS != nil {
+			// This is either the hostname or IP of the NFS server so we can
+			// link to that. We'll try to parse the IP and if not fall back to
+			// DNS for the hostname
+			if net.ParseIP(vol.NFS.Server) != nil {
+				// +overmind:link ip
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Scope:  "global",
+						Method: sdp.QueryMethod_GET,
+						Query:  vol.NFS.Server,
+						Type:   "ip",
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// NFS server can affect the pod
+						In: true,
+						// Pod can't affect the NFS server
+						Out: false,
+					},
+				})
+			} else {
+				// +overmind:link hostname
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Scope:  "global",
+						Method: sdp.QueryMethod_SEARCH,
+						Type:   "dns",
+						Query:  vol.NFS.Server,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// NFS server can affect the pod
+						In: true,
+						// Pod can't affect the NFS server
+						Out: false,
+					},
+				})
+			}
 		}
 
 		// Link config map volumes
@@ -198,6 +257,24 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 						// Changing the secret could easily break the pod
 						In: true,
 						// The pod however isn't going to affect a secret
+						Out: false,
+					},
+				})
+			}
+
+			if envFrom.ConfigMapRef != nil {
+				// +overmind:link ConfigMap
+				queries = append(queries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Scope:  scope,
+						Method: sdp.QueryMethod_GET,
+						Query:  envFrom.ConfigMapRef.Name,
+						Type:   "ConfigMap",
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// Changing the config map could easily break the pod
+						In: true,
+						// The pod however isn't going to affect a config map
 						Out: false,
 					},
 				})
