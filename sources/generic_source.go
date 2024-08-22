@@ -251,7 +251,7 @@ func (s *KubeTypeSource[Resource, ResourceList]) listWithOptions(ctx context.Con
 		return nil, err
 	}
 
-	items, err := s.resourcesToItems(resourceList, scope)
+	items, err := s.resourcesToItems(resourceList)
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +316,7 @@ func ignored(key string) bool {
 }
 
 // resourcesToItems Converts a slice of resources to a slice of items
-func (s *KubeTypeSource[Resource, ResourceList]) resourcesToItems(resourceList []Resource, scope string) ([]*sdp.Item, error) {
+func (s *KubeTypeSource[Resource, ResourceList]) resourcesToItems(resourceList []Resource) ([]*sdp.Item, error) {
 	items := make([]*sdp.Item, len(resourceList))
 
 	var err error
@@ -364,7 +364,7 @@ func (s *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 		}
 
 		// Remove the metadata attribute
-		delete(attributes.AttrStruct.Fields, "metadata")
+		delete(attributes.GetAttrStruct().GetFields(), "metadata")
 	}
 
 	// Make sure the name is set

@@ -78,7 +78,7 @@ func TestEndpointsSource(t *testing.T) {
 			},
 		},
 		Wait: func(item *sdp.Item) bool {
-			return len(item.LinkedItemQueries) > 0
+			return len(item.GetLinkedItemQueries()) > 0
 		},
 	}
 

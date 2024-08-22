@@ -87,6 +87,8 @@ func newDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []
 					available = condition.Status == "True"
 				case v1.DeploymentProgressing:
 					progressing = condition.Status == "True"
+				case v1.DeploymentReplicaFailure:
+					// Ignore this conditions
 				}
 			}
 

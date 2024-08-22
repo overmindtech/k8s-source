@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"context"
-	"crypto/sha1"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -170,7 +170,7 @@ func run(_ *cobra.Command, _ []string) int {
 	// means that sources with the same config will be in the same queue.
 	// Note that the config object implements redaction in the String()
 	// method so we don't have to worry about leaking secrets
-	configHash := fmt.Sprintf("%x", sha1.Sum([]byte(restConfig.String())))
+	configHash := fmt.Sprintf("%x", sha256.Sum256([]byte(restConfig.String())))
 
 	// Work out the cluster name
 	clusterName := viper.GetString("cluster-name")
@@ -221,7 +221,13 @@ func run(_ *cobra.Command, _ []string) int {
 	go func() {
 		defer sentry.Recover()
 
-		err := http.ListenAndServe(fmt.Sprintf(":%v", healthCheckPort), nil)
+		server := &http.Server{
+			Addr:         fmt.Sprintf(":%v", healthCheckPort),
+			Handler:      nil,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		err := server.ListenAndServe()
 
 		log.WithError(err).WithFields(log.Fields{
 			"port": healthCheckPort,
@@ -273,7 +279,7 @@ func run(_ *cobra.Command, _ []string) int {
 					log.Error("Namespace watch channel closed")
 					log.Info("Re-subscribing to namespace watch")
 
-					wi, err = watchNamespaces(clientSet)
+					wi, err = watchNamespaces(watchCtx, clientSet)
 
 					// Check for transient network errors
 					if err != nil {
@@ -292,7 +298,7 @@ func run(_ *cobra.Command, _ []string) int {
 								wi = watch.NewFake()
 								wi.Stop()
 
-								jitter := time.Duration(rand.Int63n(int64(sleep)))
+								jitter := time.Duration(rand.Int63n(int64(sleep))) // nolint:gosec // we don't need cryptographically secure randomness here
 								sleep = sleep + jitter/2
 
 								log.WithError(err).Errorf("Transient network error, retrying in %v seconds", sleep.String())
@@ -357,7 +363,6 @@ func run(_ *cobra.Command, _ []string) int {
 	stop := func() error {
 		// Stop the engine
 		err = e.Stop()
-
 		if err != nil {
 			return err
 		}
@@ -370,14 +375,22 @@ func run(_ *cobra.Command, _ []string) int {
 
 	// Start the service initially
 	err = start()
-	defer stop()
-
 	if err != nil {
+		err = fmt.Errorf("Could not start engine: %w", err)
 		sentry.CaptureException(err)
-		log.WithError(err).Error("Could not start engine")
+		log.WithError(err)
 
 		return 1
 	}
+
+	defer func() {
+		err := stop()
+		if err != nil {
+			err = fmt.Errorf("Could not stop engine: %w", err)
+			sentry.CaptureException(err)
+			log.WithError(err)
+		}
+	}()
 
 	for {
 		select {
@@ -388,7 +401,7 @@ func run(_ *cobra.Command, _ []string) int {
 
 			return 0
 		case event := <-restart:
-			switch event.Type {
+			switch event.Type { // nolint:exhaustive // we on purpose fall through to default
 			case "":
 				// Discard empty events. After a certain period kubernetes
 				// starts sending occasional empty events, I can't work out why,
@@ -435,16 +448,16 @@ func Execute() {
 }
 
 // Watches k8s namespaces from the current state, sending new events for each change
-func watchNamespaces(clientSet *kubernetes.Clientset) (watch.Interface, error) {
+func watchNamespaces(ctx context.Context, clientSet *kubernetes.Clientset) (watch.Interface, error) {
 	// Get the initial starting point
-	list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+	list, err := clientSet.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Watch namespaces from here
-	wi, err := clientSet.CoreV1().Namespaces().Watch(context.Background(), metav1.ListOptions{
+	wi, err := clientSet.CoreV1().Namespaces().Watch(ctx, metav1.ListOptions{
 		ResourceVersion: list.ResourceVersion,
 	})
 
@@ -486,7 +499,7 @@ func init() {
 	rootCmd.PersistentFlags().String("run-mode", "release", "Set the run mode for this service, 'release', 'debug' or 'test'. Defaults to 'release'.")
 
 	// Bind these to viper
-	viper.BindPFlags(rootCmd.PersistentFlags())
+	cobra.CheckErr(viper.BindPFlags(rootCmd.PersistentFlags()))
 
 	// Run this before we do anything to set up the loglevel
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
@@ -505,7 +518,10 @@ func init() {
 		cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
 			// Bind the flag to viper only if it has a non-empty default
 			if f.DefValue != "" || f.Changed {
-				viper.BindPFlag(f.Name, f)
+				err := viper.BindPFlag(f.Name, f)
+				if err != nil {
+					log.WithError(err).Errorf("Could not bind flag %s to viper", f.Name)
+				}
 			}
 		})
 

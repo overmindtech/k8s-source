@@ -148,14 +148,16 @@ func (t *TestCluster) kubectl(method string, yaml string) error {
 
 	// Create temp file to write config to
 	config, err := os.CreateTemp("", "*-conf.yaml")
-
 	if err != nil {
 		return err
 	}
 
-	config.WriteString(yaml)
+	_, err = config.WriteString(yaml)
+	if err != nil {
+		return err
+	}
 
-	cmd := exec.Command("kubectl", method, "-f", config.Name())
+	cmd := exec.Command("kubectl", method, "-f", config.Name()) //nolint:gosec // this is just a test
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	cmd.Dir = filepath.Dir(config.Name())
@@ -168,7 +170,6 @@ func (t *TestCluster) kubectl(method string, yaml string) error {
 
 	// Run the command
 	err = cmd.Run()
-
 	if err != nil {
 		return fmt.Errorf("%w\nstdout: %v\nstderr: %v", err, stdout.String(), stderr.String())
 	}

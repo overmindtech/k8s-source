@@ -4,6 +4,7 @@ import (
 	"testing"
 )
 
+//nolint:gosec // this is just a test
 var secretYAML = `
 apiVersion: v1
 kind: Secret

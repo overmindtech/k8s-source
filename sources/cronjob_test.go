@@ -59,9 +59,9 @@ func TestCronJobSource(t *testing.T) {
 
 		// Ensure that the job has a link back to the cronjob
 		for _, job := range jobs {
-			for _, q := range job.LinkedItemQueries {
-				if q.Query != nil {
-					if q.Query.Query == "my-cronjob" {
+			for _, q := range job.GetLinkedItemQueries() {
+				if q.GetQuery() != nil {
+					if q.GetQuery().GetQuery() == "my-cronjob" {
 						return true
 					}
 				}
