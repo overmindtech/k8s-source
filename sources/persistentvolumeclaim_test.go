@@ -70,7 +70,7 @@ func TestPersistentVolumeClaimSource(t *testing.T) {
 			},
 		},
 		Wait: func(item *sdp.Item) bool {
-			phase, _ := item.Attributes.Get("status.phase")
+			phase, _ := item.GetAttributes().Get("status.phase")
 
 			return phase != "Pending"
 		},

@@ -327,12 +327,12 @@ func TestSourceGet(t *testing.T) {
 			t.Errorf("expected item with unique attribute value 'example', got %s", item.UniqueAttributeValue())
 		}
 
-		if *item.Health != sdp.Health_HEALTH_OK {
-			t.Errorf("expected item with health HEALTH_OK, got %s", item.Health)
+		if item.GetHealth() != sdp.Health_HEALTH_OK {
+			t.Errorf("expected item with health HEALTH_OK, got %s", item.GetHealth())
 		}
 
-		if item.Type != "Pod" {
-			t.Errorf("expected item with type Pod, got %s", item.Type)
+		if item.GetType() != "Pod" {
+			t.Errorf("expected item with type Pod, got %s", item.GetType())
 		}
 	})
 
@@ -382,8 +382,8 @@ func TestList(t *testing.T) {
 			t.Errorf("expected 2 items, got %d", len(items))
 		}
 
-		if *items[0].Health != sdp.Health_HEALTH_OK {
-			t.Errorf("expected item with health HEALTH_OK, got %s", items[0].Health)
+		if items[0].GetHealth() != sdp.Health_HEALTH_OK {
+			t.Errorf("expected item with health HEALTH_OK, got %s", items[0].GetHealth())
 		}
 	})
 
@@ -468,7 +468,7 @@ func TestRedact(t *testing.T) {
 		t.Error(err)
 	}
 
-	hostname, err := item.Attributes.Get("spec.hostname")
+	hostname, err := item.GetAttributes().Get("spec.hostname")
 
 	if err != nil {
 		t.Error(err)
@@ -496,7 +496,7 @@ func (i QueryTests) Execute(t *testing.T, item *sdp.Item) {
 	for _, test := range i {
 		var found bool
 
-		for _, lir := range item.LinkedItemQueries {
+		for _, lir := range item.GetLinkedItemQueries() {
 			if lirMatches(test, lir) {
 				found = true
 				break
@@ -504,29 +504,29 @@ func (i QueryTests) Execute(t *testing.T, item *sdp.Item) {
 		}
 
 		if !found {
-			t.Errorf("could not find linked item request in %v requests.\nType: %v\nQuery: %v\nScope: %v", len(item.LinkedItemQueries), test.ExpectedType, test.ExpectedQuery, test.ExpectedScope)
+			t.Errorf("could not find linked item request in %v requests.\nType: %v\nQuery: %v\nScope: %v", len(item.GetLinkedItemQueries()), test.ExpectedType, test.ExpectedQuery, test.ExpectedScope)
 		}
 	}
 }
 
 func lirMatches(test QueryTest, req *sdp.LinkedItemQuery) bool {
-	if req.Query != nil {
-		if test.ExpectedMethod != req.Query.Method {
+	if req.GetQuery() != nil {
+		if test.ExpectedMethod != req.GetQuery().GetMethod() {
 			return false
 		}
-		if test.ExpectedScope != req.Query.Scope {
+		if test.ExpectedScope != req.GetQuery().GetScope() {
 			return false
 		}
-		if test.ExpectedType != req.Query.Type {
+		if test.ExpectedType != req.GetQuery().GetType() {
 			return false
 		}
 
 		if test.ExpectedQueryMatches != nil {
-			if !test.ExpectedQueryMatches.MatchString(req.Query.Query) {
+			if !test.ExpectedQueryMatches.MatchString(req.GetQuery().GetQuery()) {
 				return false
 			}
 		} else {
-			if test.ExpectedQuery != req.Query.Query {
+			if test.ExpectedQuery != req.GetQuery().GetQuery() {
 				return false
 			}
 		}
@@ -564,13 +564,15 @@ func (s SourceTests) Execute(t *testing.T) {
 
 	if s.SetupYAML != "" {
 		err := CurrentCluster.Apply(s.SetupYAML)
-
 		if err != nil {
-			t.Fatal(err)
+			t.Fatal(fmt.Errorf("failed to apply setup YAML: %w", err))
 		}
 
 		t.Cleanup(func() {
-			CurrentCluster.Delete(s.SetupYAML)
+			err = CurrentCluster.Delete(s.SetupYAML)
+			if err != nil {
+				t.Fatal(fmt.Errorf("failed to delete setup YAML: %w", err))
+			}
 		})
 	}
 
@@ -691,20 +693,20 @@ func TestObjectReferenceToQuery(t *testing.T) {
 			Namespace:   "default",
 		}, b)
 
-		if query.Query.Type != "Pod" {
-			t.Errorf("expected type Pod, got %s", query.Query.Type)
+		if query.GetQuery().GetType() != "Pod" {
+			t.Errorf("expected type Pod, got %s", query.GetQuery().GetType())
 		}
 
-		if query.Query.Query != "foo" {
-			t.Errorf("expected query to be foo, got %s", query.Query.Query)
+		if query.GetQuery().GetQuery() != "foo" {
+			t.Errorf("expected query to be foo, got %s", query.GetQuery().GetQuery())
 		}
 
-		if query.Query.Scope != "test-cluster.default" {
-			t.Errorf("expected scope to be test-cluster.default, got %s", query.Query.Scope)
+		if query.GetQuery().GetScope() != "test-cluster.default" {
+			t.Errorf("expected scope to be test-cluster.default, got %s", query.GetQuery().GetScope())
 		}
 
-		if query.BlastPropagation != b {
-			t.Errorf("expected blast propagation to be %v, got %v", b, query.BlastPropagation)
+		if query.GetBlastPropagation() != b {
+			t.Errorf("expected blast propagation to be %v, got %v", b, query.GetBlastPropagation())
 		}
 	})
 

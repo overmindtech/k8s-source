@@ -15,7 +15,7 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 
 	for _, addr := range resource.Status.Addresses {
 		switch addr.Type {
-		case v1.NodeExternalDNS:
+		case v1.NodeExternalDNS, v1.NodeInternalDNS, v1.NodeHostName:
 			// +overmind:link dns
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
@@ -30,6 +30,7 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 					Out: true,
 				},
 			})
+
 		case v1.NodeExternalIP, v1.NodeInternalIP:
 			// +overmind:link ip
 			queries = append(queries, &sdp.LinkedItemQuery{

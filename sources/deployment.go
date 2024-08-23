@@ -77,26 +77,35 @@ func newDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []
 			return queries, nil
 		},
 		HealthExtractor: func(deployment *v1.Deployment) *sdp.Health {
-			var available bool
-			var progressing bool
+			conditions := map[v1.DeploymentConditionType]bool{
+				v1.DeploymentAvailable:      false,
+				v1.DeploymentProgressing:    false,
+				v1.DeploymentReplicaFailure: false,
+			}
 
 			for _, condition := range deployment.Status.Conditions {
-				// Extract available and progressing conditions
-				switch condition.Type {
-				case v1.DeploymentAvailable:
-					available = condition.Status == "True"
-				case v1.DeploymentProgressing:
-					progressing = condition.Status == "True"
-				}
+				// Extract the condition
+				conditions[condition.Type] = condition.Status == "True"
 			}
 
-			if available {
-				return sdp.Health_HEALTH_OK.Enum()
-			} else if progressing {
-				return sdp.Health_HEALTH_PENDING.Enum()
-			} else {
+			// If there is a replica failure, the deployment is unhealthy
+			if conditions[v1.DeploymentReplicaFailure] {
 				return sdp.Health_HEALTH_ERROR.Enum()
 			}
+
+			// If the deployment is available then it's healthy
+			if conditions[v1.DeploymentAvailable] {
+				return sdp.Health_HEALTH_OK.Enum()
+			}
+
+			// If the deployment is progressing (but not healthy) then it's
+			// pending
+			if conditions[v1.DeploymentProgressing] {
+				return sdp.Health_HEALTH_PENDING.Enum()
+			}
+
+			// We should never reach here
+			return sdp.Health_HEALTH_UNKNOWN.Enum()
 		},
 	}
 }

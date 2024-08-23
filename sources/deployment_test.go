@@ -43,7 +43,7 @@ func TestDeploymentSource(t *testing.T) {
 		GetScope:  sd.String(),
 		SetupYAML: deploymentYAML,
 		Wait: func(item *sdp.Item) bool {
-			return *item.Health == sdp.Health_HEALTH_OK
+			return item.GetHealth() == sdp.Health_HEALTH_OK
 		},
 		GetQueryTests: QueryTests{
 			{
