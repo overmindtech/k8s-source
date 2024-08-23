@@ -21,9 +21,10 @@ import (
 
 func newDaemonSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.DaemonSet, *v1.DaemonSetList]{
-		ClusterName: cluster,
-		Namespaces:  namespaces,
-		TypeName:    "DaemonSet",
+		ClusterName:      cluster,
+		Namespaces:       namespaces,
+		TypeName:         "DaemonSet",
+		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.DaemonSet, *v1.DaemonSetList] {
 			return cs.AppsV1().DaemonSets(namespace)
 		},

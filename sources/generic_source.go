@@ -58,6 +58,11 @@ type KubeTypeSource[Resource metav1.Object, ResourceList any] struct {
 	// optional
 	Redact func(resource Resource) Resource
 
+	// Whether to automatically extract the query from the item's attributes.
+	// This should be enabled for resources that are likely to include
+	// unstructured but interesting data like environment variables
+	AutoQueryExtract bool
+
 	// The type of items that this source should return. This should be the
 	// "Kind" of the kubernetes resources, e.g. "Pod", "Node", "ServiceAccount"
 	TypeName string
@@ -410,6 +415,11 @@ func (s *KubeTypeSource[Resource, ResourceList]) resourceToItem(resource Resourc
 		}
 
 		item.LinkedItemQueries = append(item.LinkedItemQueries, newQueries...)
+	}
+
+	if s.AutoQueryExtract {
+		// Automatically extract queries from the item's attributes
+		item.LinkedItemQueries = append(item.LinkedItemQueries, sdp.ExtractLinksFromAttributes(attributes)...)
 	}
 
 	if s.HealthExtractor != nil {

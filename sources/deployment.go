@@ -26,9 +26,10 @@ var replicaSetProgressedRegex = regexp.MustCompile(`ReplicaSet "([^"]+)" has suc
 
 func newDeploymentSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Deployment, *v1.DeploymentList]{
-		ClusterName: cluster,
-		Namespaces:  namespaces,
-		TypeName:    "Deployment",
+		ClusterName:      cluster,
+		Namespaces:       namespaces,
+		TypeName:         "Deployment",
+		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Deployment, *v1.DeploymentList] {
 			return cs.AppsV1().Deployments(namespace)
 		},

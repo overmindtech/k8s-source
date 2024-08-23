@@ -42,9 +42,10 @@ func replicaSetExtractor(resource *v1.ReplicaSet, scope string) ([]*sdp.LinkedIt
 
 func newReplicaSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ReplicaSet, *v1.ReplicaSetList]{
-		ClusterName: cluster,
-		Namespaces:  namespaces,
-		TypeName:    "ReplicaSet",
+		ClusterName:      cluster,
+		Namespaces:       namespaces,
+		TypeName:         "ReplicaSet",
+		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ReplicaSet, *v1.ReplicaSetList] {
 			return cs.AppsV1().ReplicaSets(namespace)
 		},

@@ -19,9 +19,10 @@ import (
 
 func newConfigMapSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ConfigMap, *v1.ConfigMapList]{
-		ClusterName: cluster,
-		Namespaces:  namespaces,
-		TypeName:    "ConfigMap",
+		ClusterName:      cluster,
+		Namespaces:       namespaces,
+		TypeName:         "ConfigMap",
+		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ConfigMap, *v1.ConfigMapList] {
 			return cs.CoreV1().ConfigMaps(namespace)
 		},
