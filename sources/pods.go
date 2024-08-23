@@ -352,10 +352,11 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 func newPodSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Pod, *v1.PodList]{
-		ClusterName:   cluster,
-		Namespaces:    namespaces,
-		TypeName:      "Pod",
-		CacheDuration: 10 * time.Minute, // somewhat low since pods are replaced a lot
+		ClusterName:      cluster,
+		Namespaces:       namespaces,
+		TypeName:         "Pod",
+		CacheDuration:    10 * time.Minute, // somewhat low since pods are replaced a lot
+		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Pod, *v1.PodList] {
 			return cs.CoreV1().Pods(namespace)
 		},

@@ -45,9 +45,10 @@ func jobExtractor(resource *v1.Job, scope string) ([]*sdp.LinkedItemQuery, error
 
 func newJobSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.Job, *v1.JobList]{
-		ClusterName: cluster,
-		Namespaces:  namespaces,
-		TypeName:    "Job",
+		ClusterName:      cluster,
+		Namespaces:       namespaces,
+		TypeName:         "Job",
+		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Job, *v1.JobList] {
 			return cs.BatchV1().Jobs(namespace)
 		},

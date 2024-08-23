@@ -47,6 +47,16 @@ func (p PodClient) Get(ctx context.Context, name string, opts metav1.GetOptions)
 			DNSPolicy:          "ClusterFirst",
 			ServiceAccountName: "default",
 			NodeName:           "minikube",
+			Containers: []v1.Container{
+				{
+					Env: []v1.EnvVar{
+						{
+							Name:  "INTERESTING_URL",
+							Value: "http://example.com",
+						},
+					},
+				},
+			},
 		},
 		Status: v1.PodStatus{
 			Phase:  "Running",
@@ -166,9 +176,10 @@ func createSource(namespaced bool) *KubeTypeSource[*v1.Pod, *v1.PodList] {
 		HealthExtractor: func(resource *v1.Pod) *sdp.Health {
 			return sdp.Health_HEALTH_OK.Enum()
 		},
-		TypeName:    "Pod",
-		ClusterName: "minikube",
-		Namespaces:  []string{"default", "app1"},
+		AutoQueryExtract: true,
+		TypeName:         "Pod",
+		ClusterName:      "minikube",
+		Namespaces:       []string{"default", "app1"},
 	}
 }
 
@@ -334,6 +345,18 @@ func TestSourceGet(t *testing.T) {
 		if item.GetType() != "Pod" {
 			t.Errorf("expected item with type Pod, got %s", item.GetType())
 		}
+
+		var foundAutomaticLink bool
+		for _, q := range item.GetLinkedItemQueries() {
+			if q.GetQuery().GetType() == "http" && q.GetQuery().GetQuery() == "http://example.com" {
+				foundAutomaticLink = true
+				break
+			}
+		}
+
+		if !foundAutomaticLink {
+			t.Errorf("expected automatic link to http://example.com, got none")
+		}
 	})
 
 	t.Run("get non-existent item", func(t *testing.T) {
@@ -493,6 +516,8 @@ type QueryTest struct {
 type QueryTests []QueryTest
 
 func (i QueryTests) Execute(t *testing.T, item *sdp.Item) {
+	t.Helper()
+
 	for _, test := range i {
 		var found bool
 

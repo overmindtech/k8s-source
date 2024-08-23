@@ -47,9 +47,10 @@ func replicationControllerExtractor(resource *v1.ReplicationController, scope st
 
 func newReplicationControllerSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.ReplicationController, *v1.ReplicationControllerList]{
-		ClusterName: cluster,
-		Namespaces:  namespaces,
-		TypeName:    "ReplicationController",
+		ClusterName:      cluster,
+		Namespaces:       namespaces,
+		TypeName:         "ReplicationController",
+		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ReplicationController, *v1.ReplicationControllerList] {
 			return cs.CoreV1().ReplicationControllers(namespace)
 		},

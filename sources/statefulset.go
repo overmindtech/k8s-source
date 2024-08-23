@@ -82,9 +82,10 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 
 func newStatefulSetSource(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Source {
 	return &KubeTypeSource[*v1.StatefulSet, *v1.StatefulSetList]{
-		ClusterName: cluster,
-		Namespaces:  namespaces,
-		TypeName:    "StatefulSet",
+		ClusterName:      cluster,
+		Namespaces:       namespaces,
+		TypeName:         "StatefulSet",
+		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.StatefulSet, *v1.StatefulSetList] {
 			return cs.AppsV1().StatefulSets(namespace)
 		},
