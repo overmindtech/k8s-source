@@ -560,7 +560,7 @@ type SourceTests struct {
 }
 
 func (s SourceTests) Execute(t *testing.T) {
-	// t.Parallel()
+	t.Helper()
 
 	if s.SetupYAML != "" {
 		err := CurrentCluster.Apply(s.SetupYAML)

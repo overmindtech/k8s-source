@@ -40,7 +40,7 @@ spec:
     protocol: TCP
     port: 80
     targetPort: 8080
-  type: LoadBalancer
+  type: ExternalName
   externalName: service-test-external
 `
 
