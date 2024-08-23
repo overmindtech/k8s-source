@@ -45,7 +45,7 @@ jobs:
       - name: Test
         env:
           KUBE_VERSION: ${{ matrix.kube_version }}
-        run: go test -v -race -timeout 3m ./...
+        run: go test -race -timeout 3m ./...
 
   build:
     name: Build
