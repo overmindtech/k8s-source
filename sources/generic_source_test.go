@@ -516,6 +516,8 @@ type QueryTest struct {
 type QueryTests []QueryTest
 
 func (i QueryTests) Execute(t *testing.T, item *sdp.Item) {
+	t.Helper()
+
 	for _, test := range i {
 		var found bool
 

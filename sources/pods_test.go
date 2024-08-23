@@ -139,7 +139,7 @@ func TestPodSource(t *testing.T) {
 			},
 		},
 		Wait: func(item *sdp.Item) bool {
-			return len(item.GetLinkedItemQueries()) >= 7
+			return len(item.GetLinkedItemQueries()) >= 9
 		},
 	}
 
