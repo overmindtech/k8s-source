@@ -35,6 +35,7 @@ metadata:
 spec:
   selector:
     app: service-test
+  type: ExternalName
   ports:
   - name: http
     protocol: TCP
