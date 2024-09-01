@@ -7,8 +7,8 @@ require (
 	github.com/MrAlias/otel-schema-utils v0.2.1-alpha
 	github.com/getsentry/sentry-go v0.28.1
 	github.com/google/uuid v1.6.0
-	github.com/overmindtech/discovery v0.27.6
-	github.com/overmindtech/sdp-go v0.90.0
+	github.com/overmindtech/discovery v0.27.7
+	github.com/overmindtech/sdp-go v0.93.0
 	github.com/overmindtech/sdpcache v1.6.4
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
@@ -33,7 +33,7 @@ require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/alessio/shellescape v1.4.2 // indirect
-	github.com/auth0/go-jwt-middleware/v2 v2.2.1 // indirect
+	github.com/auth0/go-jwt-middleware/v2 v2.2.2 // indirect
 	github.com/aws/aws-sdk-go v1.54.13 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -59,7 +59,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.8 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -91,7 +91,7 @@ require (
 	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/term v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
