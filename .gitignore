@@ -6,3 +6,4 @@ output
 vendor
 Gopkg.lock
 build/compiled
+commit.txt
