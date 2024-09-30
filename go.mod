@@ -8,7 +8,7 @@ require (
 	github.com/getsentry/sentry-go v0.29.0
 	github.com/google/uuid v1.6.0
 	github.com/overmindtech/discovery v0.28.2
-	github.com/overmindtech/sdp-go v0.94.0
+	github.com/overmindtech/sdp-go v0.94.2
 	github.com/overmindtech/sdpcache v1.6.4
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
@@ -90,7 +90,7 @@ require (
 	golang.org/x/crypto v0.27.0 // indirect
 	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb // indirect
 	golang.org/x/net v0.29.0 // indirect
-	golang.org/x/oauth2 v0.23.0 // indirect
+	golang.org/x/oauth2 v0.23.0
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/term v0.24.0 // indirect
