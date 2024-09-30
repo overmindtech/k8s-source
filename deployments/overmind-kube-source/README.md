@@ -4,13 +4,13 @@
 
 Installing into a local cluster:
 
-```
+```shell
 helm install k8s-source deployments/overmind-kube-source --set source.natsJWT=REPLACEME,source.natsNKeySeed=REPLACEME
 ```
 
 Removing the chart:
 
-```
+```shell
 helm uninstall k8s-source
 ```
 
