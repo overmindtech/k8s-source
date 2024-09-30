@@ -18,12 +18,15 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/k8s-source/sources"
+	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/auth"
+	"github.com/overmindtech/sdp-go/sdpconnect"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"golang.org/x/oauth2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
@@ -50,11 +53,11 @@ var rootCmd = &cobra.Command{
 }
 
 func run(_ *cobra.Command, _ []string) int {
-	natsServers := viper.GetStringSlice("nats-servers")
 	kubeconfig := viper.GetString("kubeconfig")
 	maxParallel := viper.GetInt("max-parallel")
 	apiKey := viper.GetString("api-key")
-	apiPath := viper.GetString("api-path")
+	app := viper.GetString("app")
+	sourceName := viper.GetString("source-name")
 	hostname, err := os.Hostname()
 
 	if err != nil {
@@ -72,10 +75,10 @@ func run(_ *cobra.Command, _ []string) int {
 	}
 
 	log.WithFields(log.Fields{
-		"nats-servers": natsServers,
 		"max-parallel": maxParallel,
 		"kubeconfig":   kubeconfig,
-		"api-path":     apiPath,
+		"app":          app,
+		"source-name":  sourceName,
 	}).Info("Got config")
 
 	var clientSet *kubernetes.Clientset
@@ -153,11 +156,23 @@ func run(_ *cobra.Command, _ []string) int {
 		return 1
 	}
 
+	// Discover details of the Overmind instance
+	log.Debug("Getting Overmind instance details")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	oi, err := sdp.NewOvermindInstance(ctx, app)
+	if err != nil {
+		sentry.CaptureException(err)
+		log.WithError(err).Error("Could not get Overmind instance details")
+
+		return 1
+	}
+
 	var tokenClient auth.TokenClient
 
 	// Validate the auth params and create a token client if we are using
 	// auth
-	tokenClient, err = auth.NewAPIKeyClient(apiPath, apiKey)
+	tokenClient, err = auth.NewAPIKeyClient(oi.ApiUrl.String(), apiKey)
 
 	if err != nil {
 		sentry.CaptureException(err)
@@ -186,11 +201,11 @@ func run(_ *cobra.Command, _ []string) int {
 
 		return 1
 	}
-	e.Name = "k8s-source"
+	e.Name = sourceName
 	e.NATSOptions = &auth.NATSOptions{
 		NumRetries:        -1,
 		RetryDelay:        5 * time.Second,
-		Servers:           natsServers,
+		Servers:           []string{oi.NatsUrl.String()},
 		ConnectionName:    hostname,
 		ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
 		MaxReconnects:     999,                // We are in a container so wait forever
@@ -200,6 +215,43 @@ func run(_ *cobra.Command, _ []string) int {
 	}
 	e.NATSQueueName = fmt.Sprintf("k8s-source-%v", configHash)
 	e.MaxParallelExecutions = maxParallel
+
+	// Set up heartbeat
+	tokenSource := auth.NewAPIKeyTokenSource(apiKey, oi.ApiUrl.String())
+	transport := oauth2.Transport{
+		Source: tokenSource,
+		Base:   http.DefaultTransport,
+	}
+	authenticatedClient := http.Client{
+		Transport: otelhttp.NewTransport(&transport),
+	}
+
+	e.HeartbeatOptions = &discovery.HeartbeatOptions{
+		ManagementClient: sdpconnect.NewManagementServiceClient(
+			&authenticatedClient,
+			oi.ApiUrl.String(),
+		),
+		Frequency: time.Second * 30,
+		HealthCheck: func() error {
+			// Make sure we can list nodes in the cluster
+			_, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{
+				Limit: 1,
+			})
+			if err != nil {
+				return fmt.Errorf("health check (listing nodes) failed: %w", err)
+			}
+
+			// Make sure we're connected to NATS
+			if !e.IsNATSConnected() {
+				return errors.New("health check (NATS) failed: not connected")
+			}
+
+			return nil
+		},
+	}
+	e.Version = ServiceVersion
+	e.Managed = sdp.SourceManaged_LOCAL
+	e.Type = "k8s"
 
 	// Start HTTP server for status
 	healthCheckPort := viper.GetInt("health-check-port")
@@ -222,8 +274,17 @@ func run(_ *cobra.Command, _ []string) int {
 		defer sentry.Recover()
 
 		server := &http.Server{
-			Addr:         fmt.Sprintf(":%v", healthCheckPort),
-			Handler:      nil,
+			Addr: fmt.Sprintf(":%v", healthCheckPort),
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				// Check NATS connections
+				if e.IsNATSConnected() {
+					// Return 200
+					w.WriteHeader(http.StatusOK)
+				} else {
+					// Return 500 including the error
+					http.Error(w, "NATS not connected", http.StatusInternalServerError)
+				}
+			}),
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		}
@@ -479,10 +540,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "/etc/srcman/config/k8s-source.yaml", "config file path")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 
-	// NATS
-	rootCmd.PersistentFlags().StringArray("nats-servers", []string{"wss://messages.app.overmind.tech"}, "A list of NATS servers to connect to")
 	rootCmd.PersistentFlags().String("api-key", "", "The API key to use to authenticate to the Overmind API")
-	rootCmd.PersistentFlags().String("api-path", "https://api.app.overmind.tech", "The URL of the Overmind API")
+	rootCmd.PersistentFlags().String("app", "https://app.overmind.tech", "The URL of the Overmind instance to connect to")
+	rootCmd.PersistentFlags().String("source-name", "k8s-source", "The name of the source")
 
 	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve the /healthz endpoint")
 	rootCmd.PersistentFlags().Int("max-parallel", 2_000, "Max number of requests to run in parallel")

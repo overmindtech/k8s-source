@@ -70,13 +70,10 @@ affinity: {}
 source:
   # The log level for the source (info, debug, trace etc.)
   log: info
-  # The list of NATS servers to connect to
-  natsServers:
-    - wss://messages.app.overmind.tech
   # The API key used to connect to Overmind
   apiKey: ""
-  # The API to use
-  apiPath: ""
+  # The URL of the Overmind instance to connect to
+  app: "https://app.overmind.tech"
   # How many requests to run in parallel
   maxParallel: 20
   # The maximum sustained queries per second from this source to the kubernetes API
