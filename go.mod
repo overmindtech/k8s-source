@@ -7,7 +7,7 @@ require (
 	github.com/MrAlias/otel-schema-utils v0.2.1-alpha
 	github.com/getsentry/sentry-go v0.29.0
 	github.com/google/uuid v1.6.0
-	github.com/overmindtech/discovery v0.28.1
+	github.com/overmindtech/discovery v0.28.2
 	github.com/overmindtech/sdp-go v0.94.0
 	github.com/overmindtech/sdpcache v1.6.4
 	github.com/sirupsen/logrus v1.9.3
@@ -29,7 +29,7 @@ require (
 
 // Transitive dependencies
 require (
-	connectrpc.com/connect v1.16.2 // indirect
+	connectrpc.com/connect v1.17.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/alessio/shellescape v1.4.2 // indirect
