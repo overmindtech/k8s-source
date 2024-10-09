@@ -17,7 +17,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/discovery"
-	"github.com/overmindtech/k8s-source/sources"
+	"github.com/overmindtech/k8s-source/adapters"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/auth"
 	"github.com/overmindtech/sdp-go/sdpconnect"
@@ -115,7 +115,7 @@ func run(_ *cobra.Command, _ []string) int {
 		viper.GetInt("rate-limit-burst"),
 	)
 
-	// Create clientset
+	// Create clientSet
 	clientSet, err = kubernetes.NewForConfig(restConfig)
 
 	if err != nil {
@@ -129,7 +129,7 @@ func run(_ *cobra.Command, _ []string) int {
 	// Discover info
 	//
 	// Now that we have a connection to the kubernetes cluster we need to go
-	// about generating some sources.
+	// about generating some adapters.
 	var k8sURL *url.URL
 
 	k8sURL, err = url.Parse(restConfig.Host)
@@ -182,7 +182,7 @@ func run(_ *cobra.Command, _ []string) int {
 	}
 
 	// Calculate the SHA-1 hash of the config to use as the queue name. This
-	// means that sources with the same config will be in the same queue.
+	// means that adapters with the same config will be in the same queue.
 	// Note that the config object implements redaction in the String()
 	// method so we don't have to worry about leaking secrets
 	configHash := fmt.Sprintf("%x", sha256.Sum256([]byte(restConfig.String())))
@@ -409,11 +409,11 @@ func run(_ *cobra.Command, _ []string) int {
 
 		log.Infof("got %v namespaces", len(namespaces))
 
-		// Create the sources
-		sourceList := sources.LoadAllSources(clientSet, clusterName, namespaces)
+		// Create the adapter list
+		adapterList := adapters.LoadAllAdapters(clientSet, clusterName, namespaces)
 
-		// Add sources to the engine
-		e.AddSources(sourceList...)
+		// Add adapters to the engine
+		e.AddAdapters(adapterList...)
 
 		// Start the engine
 		err = e.Start()
@@ -428,8 +428,8 @@ func run(_ *cobra.Command, _ []string) int {
 			return err
 		}
 
-		// Clear the sources
-		e.ClearSources()
+		// Clear the adapters
+		e.ClearAdapters()
 
 		return nil
 	}
