@@ -458,3 +458,16 @@ func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetail
 		BlastPropagation: blastProp,
 	}
 }
+
+// Returns the default supported query methods for a given resource type. The
+// user must pass in the name of the resource type e.g. "Config Map"
+func DefaultSupportedQueryMethods(name string) *sdp.AdapterSupportedQueryMethods {
+	return &sdp.AdapterSupportedQueryMethods{
+		Get:               true,
+		GetDescription:    fmt.Sprintf("Get a %v by name", name),
+		List:              true,
+		ListDescription:   fmt.Sprintf("List all %vs", name),
+		Search:            true,
+		SearchDescription: fmt.Sprintf(`Search for a %v using the ListOptions JSON format e.g. {"labelSelector": "app=wordpress"}`, name),
+	}
+}

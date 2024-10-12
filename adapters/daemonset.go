@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"github.com/overmindtech/discovery"
+	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/apps/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -38,6 +39,22 @@ func newDaemonSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []
 			return extracted, nil
 		},
 		// Pods are linked automatically
+		AdapterMetadata: sdp.AdapterMetadata{
+			Type:                  "DaemonSet",
+			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			DescriptiveName:       "Daemon Set",
+			SupportedQueryMethods: DefaultSupportedQueryMethods("Daemon Set"),
+			TerraformMappings: []*sdp.TerraformMapping{
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_daemon_set_v1.metadata[0].name",
+				},
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_daemonset.metadata[0].name",
+				},
+			},
+		},
 	}
 }
 

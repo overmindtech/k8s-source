@@ -106,6 +106,19 @@ func newNodeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []strin
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: linkedItemExtractor,
+		AdapterMetadata: sdp.AdapterMetadata{
+			Type:                  "Node",
+			DescriptiveName:       "Node",
+			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			PotentialLinks:        []string{"dns", "ip", "ec2-volume"},
+			SupportedQueryMethods: DefaultSupportedQueryMethods("Node"),
+			TerraformMappings: []*sdp.TerraformMapping{
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_node_taint.metadata[0].name",
+				},
+			},
+		},
 	}
 }
 

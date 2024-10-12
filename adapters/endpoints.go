@@ -120,25 +120,18 @@ func newEndpointsAdapter(cs *kubernetes.Clientset, cluster string, namespaces []
 
 func EndpointMetadata() sdp.AdapterMetadata {
 	return sdp.AdapterMetadata{
-		DescriptiveName: "Endpoints",
-		Type:            "Endpoints",
-		SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
-			Get:               true,
-			List:              true,
-			Search:            true,
-			GetDescription:    "Get an endpoint by name",
-			ListDescription:   "List all endpoints",
-			SearchDescription: "Search for an endpoint using the ListOptions JSON format:",
-		},
-		PotentialLinks: []string{"Node", "ip", "Pod", "ExternalName", "DNS"},
+		DescriptiveName:       "Endpoints",
+		Type:                  "Endpoints",
+		SupportedQueryMethods: DefaultSupportedQueryMethods("Endpoints"),
+		PotentialLinks:        []string{"Node", "ip", "Pod", "ExternalName", "DNS"},
 		TerraformMappings: []*sdp.TerraformMapping{
 			{
+				TerraformMethod:   sdp.QueryMethod_GET,
 				TerraformQueryMap: "kubernetes_endpoints.metadata[0].name",
-				TerraformScope:    "${provider_mapping.cluster_name}.${values.metadata[0].namespace}",
 			},
 			{
+				TerraformMethod:   sdp.QueryMethod_GET,
 				TerraformQueryMap: "kubernetes_endpoints_v1.metadata[0].name",
-				TerraformScope:    "${provider_mapping.cluster_name}.${values.metadata[0].namespace}",
 			},
 		},
 		Category: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

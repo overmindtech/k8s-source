@@ -97,6 +97,22 @@ func newNetworkPolicyAdapter(cs *kubernetes.Clientset, cluster string, namespace
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: NetworkPolicyExtractor,
+		AdapterMetadata: sdp.AdapterMetadata{
+			Type:            "NetworkPolicy",
+			DescriptiveName: "Network Policy",
+			Category:        sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
+			PotentialLinks:  []string{"Pod"},
+			TerraformMappings: []*sdp.TerraformMapping{
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_network_policy.metadata[0].name",
+				},
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_network_policy_v1.metadata[0].name",
+				},
+			},
+		},
 	}
 }
 

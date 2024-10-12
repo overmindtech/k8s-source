@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"github.com/overmindtech/discovery"
+	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -33,6 +34,22 @@ func newLimitRangeAdapter(cs *kubernetes.Clientset, cluster string, namespaces [
 			}
 
 			return extracted, nil
+		},
+		AdapterMetadata: sdp.AdapterMetadata{
+			Type:                  "LimitRange",
+			DescriptiveName:       "Limit Range",
+			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+			SupportedQueryMethods: DefaultSupportedQueryMethods("Limit Range"),
+			TerraformMappings: []*sdp.TerraformMapping{
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_limit_range_v1.metadata[0].name",
+				},
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_limit_range.metadata[0].name",
+				},
+			},
 		},
 	}
 }

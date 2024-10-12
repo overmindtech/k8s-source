@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"github.com/overmindtech/discovery"
+	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/storage/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -34,6 +35,22 @@ func newStorageClassAdapter(cs *kubernetes.Clientset, cluster string, namespaces
 			}
 
 			return extracted, nil
+		},
+		AdapterMetadata: sdp.AdapterMetadata{
+			Type:                  "StorageClass",
+			DescriptiveName:       "Storage Class",
+			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
+			SupportedQueryMethods: DefaultSupportedQueryMethods("Storage Class"),
+			TerraformMappings: []*sdp.TerraformMapping{
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_storage_class.metadata[0].name",
+				},
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_storage_class_v1.metadata[0].name",
+				},
+			},
 		},
 	}
 }

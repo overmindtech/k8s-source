@@ -4,6 +4,7 @@ import (
 	"crypto/sha512"
 
 	"github.com/overmindtech/discovery"
+	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -53,6 +54,22 @@ func newSecretAdapter(cs *kubernetes.Clientset, cluster string, namespaces []str
 			}
 
 			return resource
+		},
+		AdapterMetadata: sdp.AdapterMetadata{
+			Type:                  "Secret",
+			DescriptiveName:       "Secret",
+			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+			SupportedQueryMethods: DefaultSupportedQueryMethods("Secret"),
+			TerraformMappings: []*sdp.TerraformMapping{
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_secret_v1.metadata[0].name",
+				},
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_secret.metadata[0].name",
+				},
+			},
 		},
 	}
 }

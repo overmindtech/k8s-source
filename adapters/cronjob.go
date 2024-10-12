@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"github.com/overmindtech/discovery"
+	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/batch/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -38,6 +39,22 @@ func newCronJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []st
 		},
 		// Cronjobs don't need linked items as the jobs they produce are linked
 		// automatically
+		AdapterMetadata: sdp.AdapterMetadata{
+			Type:                  "CronJob",
+			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			DescriptiveName:       "Cron Job",
+			SupportedQueryMethods: DefaultSupportedQueryMethods("Cron Job"),
+			TerraformMappings: []*sdp.TerraformMapping{
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_cron_job_v1.metadata[0].name",
+				},
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_cron_job.metadata[0].name",
+				},
+			},
+		},
 	}
 }
 

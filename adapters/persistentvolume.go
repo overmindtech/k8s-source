@@ -123,6 +123,23 @@ func newPersistentVolumeAdapter(cs *kubernetes.Clientset, cluster string, namesp
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: PersistentVolumeExtractor,
+		AdapterMetadata: sdp.AdapterMetadata{
+			Type:                  "PersistentVolume",
+			DescriptiveName:       "Persistent Volume",
+			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
+			PotentialLinks:        []string{"ec2-volume", "efs-access-point", "StorageClass"},
+			SupportedQueryMethods: DefaultSupportedQueryMethods("PersistentVolume"),
+			TerraformMappings: []*sdp.TerraformMapping{
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_persistent_volume.metadata[0].name",
+				},
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_persistent_volume_v1.metadata[0].name",
+				},
+			},
+		},
 	}
 }
 

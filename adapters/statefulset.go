@@ -99,6 +99,23 @@ func newStatefulSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces 
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: statefulSetExtractor,
+		AdapterMetadata: sdp.AdapterMetadata{
+			Type:                  "StatefulSet",
+			DescriptiveName:       "Stateful Set",
+			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			PotentialLinks:        []string{"Pod", "PersistentVolumeClaim", "Service"},
+			SupportedQueryMethods: DefaultSupportedQueryMethods("Stateful Set"),
+			TerraformMappings: []*sdp.TerraformMapping{
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_stateful_set_v1.metadata[0].name",
+				},
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_stateful_set.metadata[0].name",
+				},
+			},
+		},
 	}
 }
 

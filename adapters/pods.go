@@ -119,7 +119,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 					},
 				})
 			} else {
-				// +overmind:link hostname
+				// +overmind:link dns
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Scope:  "global",
@@ -385,6 +385,32 @@ func newPodAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string
 			}
 
 			return nil
+		},
+		AdapterMetadata: sdp.AdapterMetadata{
+			Type:            "Pod",
+			DescriptiveName: "Pod",
+			Category:        sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			PotentialLinks: []string{
+				"ConfigMap",
+				"ec2-volume",
+				"dns",
+				"ip",
+				"PersistentVolumeClaim",
+				"PriorityClass",
+				"Secret",
+				"ServiceAccount",
+			},
+			SupportedQueryMethods: DefaultSupportedQueryMethods("Pod"),
+			TerraformMappings: []*sdp.TerraformMapping{
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_pod.metadata[0].name",
+				},
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_pod_v1.metadata[0].name",
+				},
+			},
 		},
 	}
 }

@@ -132,6 +132,23 @@ func newEndpointSliceAdapter(cs *kubernetes.Clientset, cluster string, namespace
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: endpointSliceExtractor,
+		AdapterMetadata: sdp.AdapterMetadata{
+			Type:                  "EndpointSlice",
+			DescriptiveName:       "Endpoint Slice",
+			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
+			PotentialLinks:        []string{"Node", "Pod", "dns", "ip"},
+			SupportedQueryMethods: DefaultSupportedQueryMethods("EndpointSlice"),
+			TerraformMappings: []*sdp.TerraformMapping{
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_endpoints_slice_v1.metadata[0].name",
+				},
+				{
+					TerraformMethod:   sdp.QueryMethod_GET,
+					TerraformQueryMap: "kubernetes_endpoints_slice.metadata[0].name",
+				},
+			},
+		},
 	}
 }
 
