@@ -64,25 +64,27 @@ func newReplicationControllerAdapter(cs *kubernetes.Clientset, cluster string, n
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: replicationControllerExtractor,
-		AdapterMetadata: sdp.AdapterMetadata{
-			Type:                  "ReplicationController",
-			DescriptiveName:       "Replication Controller",
-			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			PotentialLinks:        []string{"Pod"},
-			SupportedQueryMethods: DefaultSupportedQueryMethods("ReplicationController"),
-			TerraformMappings: []*sdp.TerraformMapping{
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_replication_controller.metadata[0].name",
-				},
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_replication_controller_v1.metadata[0].name",
-				},
-			},
-		},
+		AdapterMetadata:          replicationControllerAdapterMetadata,
 	}
 }
+
+var replicationControllerAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+	Type:                  "ReplicationController",
+	DescriptiveName:       "Replication Controller",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+	PotentialLinks:        []string{"Pod"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("ReplicationController"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_replication_controller.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_replication_controller_v1.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newReplicationControllerAdapter)

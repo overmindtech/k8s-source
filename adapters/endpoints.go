@@ -98,10 +98,9 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 
 func newEndpointsAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.Endpoints, *v1.EndpointsList]{
-		ClusterName:     cluster,
-		Namespaces:      namespaces,
-		TypeName:        "Endpoints",
-		AdapterMetadata: EndpointMetadata(),
+		ClusterName: cluster,
+		Namespaces:  namespaces,
+		TypeName:    "Endpoints",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Endpoints, *v1.EndpointsList] {
 			return cs.CoreV1().Endpoints(namespace)
 		},
@@ -115,28 +114,27 @@ func newEndpointsAdapter(cs *kubernetes.Clientset, cluster string, namespaces []
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: EndpointsExtractor,
+		AdapterMetadata:          endpointsAdapterMetadata,
 	}
 }
 
-func EndpointMetadata() sdp.AdapterMetadata {
-	return sdp.AdapterMetadata{
-		DescriptiveName:       "Endpoints",
-		Type:                  "Endpoints",
-		SupportedQueryMethods: DefaultSupportedQueryMethods("Endpoints"),
-		PotentialLinks:        []string{"Node", "ip", "Pod", "ExternalName", "DNS"},
-		TerraformMappings: []*sdp.TerraformMapping{
-			{
-				TerraformMethod:   sdp.QueryMethod_GET,
-				TerraformQueryMap: "kubernetes_endpoints.metadata[0].name",
-			},
-			{
-				TerraformMethod:   sdp.QueryMethod_GET,
-				TerraformQueryMap: "kubernetes_endpoints_v1.metadata[0].name",
-			},
+var endpointsAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+	DescriptiveName:       "Endpoints",
+	Type:                  "Endpoints",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Endpoints"),
+	PotentialLinks:        []string{"Node", "ip", "Pod", "ExternalName", "DNS"},
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_endpoints.metadata[0].name",
 		},
-		Category: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-	}
-}
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_endpoints_v1.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newEndpointsAdapter)

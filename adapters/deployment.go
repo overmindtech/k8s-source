@@ -108,25 +108,27 @@ func newDeploymentAdapter(cs *kubernetes.Clientset, cluster string, namespaces [
 			// We should never reach here
 			return sdp.Health_HEALTH_UNKNOWN.Enum()
 		},
-		AdapterMetadata: sdp.AdapterMetadata{
-			Type:                  "Deployment",
-			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			PotentialLinks:        []string{"ReplicaSet"},
-			SupportedQueryMethods: DefaultSupportedQueryMethods("Deployment"),
-			DescriptiveName:       "Deployment",
-			TerraformMappings: []*sdp.TerraformMapping{
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_deployment_v1.metadata[0].name",
-				},
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_deployment.metadata[0].name",
-				},
-			},
-		},
+		AdapterMetadata: deploymentAdapterMetadata,
 	}
 }
+
+var deploymentAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+	Type:                  "Deployment",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+	PotentialLinks:        []string{"ReplicaSet"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Deployment"),
+	DescriptiveName:       "Deployment",
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_deployment_v1.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_deployment.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newDeploymentAdapter)

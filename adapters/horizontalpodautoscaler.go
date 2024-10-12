@@ -60,21 +60,22 @@ func newHorizontalPodAutoscalerAdapter(cs *kubernetes.Clientset, cluster string,
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: horizontalPodAutoscalerExtractor,
-		AdapterMetadata: sdp.AdapterMetadata{
-			Type:                  "HorizontalPodAutoscaler",
-			DescriptiveName:       "Horizontal Pod Autoscaler",
-			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-			PotentialLinks:        []string{"Deployment", "StatefulSet", "DaemonSet"},
-			SupportedQueryMethods: DefaultSupportedQueryMethods("HorizontalPodAutoscaler"),
-			TerraformMappings: []*sdp.TerraformMapping{
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_horizontal_pod_autoscaler_v2.metadata[0].name",
-				},
-			},
-		},
+		AdapterMetadata:          horizontalPodAutoscalerAdapterMetadata,
 	}
 }
+
+var horizontalPodAutoscalerAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+	Type:                  "HorizontalPodAutoscaler",
+	DescriptiveName:       "Horizontal Pod Autoscaler",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Horizontal Pod Autoscaler"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_horizontal_pod_autoscaler_v2.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newHorizontalPodAutoscalerAdapter)

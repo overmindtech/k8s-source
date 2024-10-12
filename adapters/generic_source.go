@@ -73,7 +73,7 @@ type KubeTypeAdapter[Resource metav1.Object, ResourceList any] struct {
 	ClusterName string
 
 	// AdapterMetadata for the adapter
-	AdapterMetadata sdp.AdapterMetadata
+	AdapterMetadata *sdp.AdapterMetadata
 
 	CacheDuration time.Duration   // How long to cache items for
 	cache         *sdpcache.Cache // The sdpcache of this adapter
@@ -137,7 +137,7 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Type() string {
 }
 
 func (s *KubeTypeAdapter[Resource, ResourceList]) Metadata() *sdp.AdapterMetadata {
-	return &s.AdapterMetadata
+	return s.AdapterMetadata
 }
 
 func (s *KubeTypeAdapter[Resource, ResourceList]) Name() string {

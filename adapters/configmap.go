@@ -36,24 +36,26 @@ func newConfigMapAdapter(cs *kubernetes.Clientset, cluster string, namespaces []
 
 			return bindings, nil
 		},
-		AdapterMetadata: sdp.AdapterMetadata{
-			Type:                  "ConfigMap",
-			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-			DescriptiveName:       "Config Map",
-			SupportedQueryMethods: DefaultSupportedQueryMethods("Config Map"),
-			TerraformMappings: []*sdp.TerraformMapping{
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_config_map_v1.metadata[0].name",
-				},
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_config_map.metadata[0].name",
-				},
-			},
-		},
+		AdapterMetadata: configMapAdapterMetadata,
 	}
 }
+
+var configMapAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+	Type:                  "ConfigMap",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+	DescriptiveName:       "Config Map",
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Config Map"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_config_map_v1.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_config_map.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newConfigMapAdapter)

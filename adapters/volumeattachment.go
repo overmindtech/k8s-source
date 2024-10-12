@@ -81,15 +81,17 @@ func newVolumeAttachmentAdapter(cs *kubernetes.Clientset, cluster string, namesp
 
 			return sdp.Health_HEALTH_OK.Enum()
 		},
-		AdapterMetadata: sdp.AdapterMetadata{
-			Type:                  "VolumeAttachment",
-			DescriptiveName:       "Volume Attachment",
-			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-			PotentialLinks:        []string{"PersistentVolume", "Node"},
-			SupportedQueryMethods: DefaultSupportedQueryMethods("VolumeAttachment"),
-		},
+		AdapterMetadata: volumeAttachmentAdapterMetadata,
 	}
 }
+
+var volumeAttachmentAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+	Type:                  "VolumeAttachment",
+	DescriptiveName:       "Volume Attachment",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
+	PotentialLinks:        []string{"PersistentVolume", "Node"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("VolumeAttachment"),
+})
 
 func init() {
 	registerAdapterLoader(newVolumeAttachmentAdapter)

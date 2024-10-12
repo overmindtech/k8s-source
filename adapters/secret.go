@@ -55,24 +55,26 @@ func newSecretAdapter(cs *kubernetes.Clientset, cluster string, namespaces []str
 
 			return resource
 		},
-		AdapterMetadata: sdp.AdapterMetadata{
-			Type:                  "Secret",
-			DescriptiveName:       "Secret",
-			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-			SupportedQueryMethods: DefaultSupportedQueryMethods("Secret"),
-			TerraformMappings: []*sdp.TerraformMapping{
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_secret_v1.metadata[0].name",
-				},
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_secret.metadata[0].name",
-				},
-			},
-		},
+		AdapterMetadata: secretAdapterMetadata,
 	}
 }
+
+var secretAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+	Type:                  "Secret",
+	DescriptiveName:       "Secret",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Secret"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_secret_v1.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_secret.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newSecretAdapter)

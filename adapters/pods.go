@@ -386,34 +386,36 @@ func newPodAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string
 
 			return nil
 		},
-		AdapterMetadata: sdp.AdapterMetadata{
-			Type:            "Pod",
-			DescriptiveName: "Pod",
-			Category:        sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			PotentialLinks: []string{
-				"ConfigMap",
-				"ec2-volume",
-				"dns",
-				"ip",
-				"PersistentVolumeClaim",
-				"PriorityClass",
-				"Secret",
-				"ServiceAccount",
-			},
-			SupportedQueryMethods: DefaultSupportedQueryMethods("Pod"),
-			TerraformMappings: []*sdp.TerraformMapping{
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_pod.metadata[0].name",
-				},
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_pod_v1.metadata[0].name",
-				},
-			},
-		},
+		AdapterMetadata: podAdapterMetadata,
 	}
 }
+
+var podAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+	Type:            "Pod",
+	DescriptiveName: "Pod",
+	Category:        sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+	PotentialLinks: []string{
+		"ConfigMap",
+		"ec2-volume",
+		"dns",
+		"ip",
+		"PersistentVolumeClaim",
+		"PriorityClass",
+		"Secret",
+		"ServiceAccount",
+	},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Pod"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_pod.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_pod_v1.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newPodAdapter)

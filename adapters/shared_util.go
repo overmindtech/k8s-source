@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/overmindtech/sdp-go"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -111,3 +112,5 @@ func QueryToListOptions(query string) (metav1.ListOptions, error) {
 
 	return listOptions, nil
 }
+
+var AdapterMetadata = sdp.AdapterMetadataList{}

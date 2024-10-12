@@ -62,25 +62,27 @@ func newJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: jobExtractor,
-		AdapterMetadata: sdp.AdapterMetadata{
-			Type:                  "Job",
-			DescriptiveName:       "Job",
-			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			PotentialLinks:        []string{"Pod"},
-			SupportedQueryMethods: DefaultSupportedQueryMethods("Job"),
-			TerraformMappings: []*sdp.TerraformMapping{
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_job.metadata[0].name",
-				},
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_job_v1.metadata[0].name",
-				},
-			},
-		},
+		AdapterMetadata:          jobAdapterMetadata,
 	}
 }
+
+var jobAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+	Type:                  "Job",
+	DescriptiveName:       "Job",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+	PotentialLinks:        []string{"Pod"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Job"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_job.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_job_v1.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newJobAdapter)

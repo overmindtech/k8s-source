@@ -35,24 +35,26 @@ func newResourceQuotaAdapter(cs *kubernetes.Clientset, cluster string, namespace
 
 			return extracted, nil
 		},
-		AdapterMetadata: sdp.AdapterMetadata{
-			Type:                  "ResourceQuota",
-			DescriptiveName:       "Resource Quota",
-			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-			SupportedQueryMethods: DefaultSupportedQueryMethods("Resource Quota"),
-			TerraformMappings: []*sdp.TerraformMapping{
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_resource_quota_v1.metadata[0].name",
-				},
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_resource_quota.metadata[0].name",
-				},
-			},
-		},
+		AdapterMetadata: resourceQuotaAdapterMetadata,
 	}
 }
+
+var resourceQuotaAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+	Type:                  "ResourceQuota",
+	DescriptiveName:       "Resource Quota",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Resource Quota"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_resource_quota_v1.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_resource_quota.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newResourceQuotaAdapter)

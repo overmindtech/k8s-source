@@ -67,25 +67,27 @@ func newPersistentVolumeClaimAdapter(cs *kubernetes.Clientset, cluster string, n
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: PersistentVolumeClaimExtractor,
-		AdapterMetadata: sdp.AdapterMetadata{
-			Type:                  "PersistentVolumeClaim",
-			DescriptiveName:       "Persistent Volume Claim",
-			Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-			PotentialLinks:        []string{"PersistentVolume"},
-			SupportedQueryMethods: DefaultSupportedQueryMethods("PersistentVolumeClaim"),
-			TerraformMappings: []*sdp.TerraformMapping{
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_persistent_volume_claim.metadata[0].name",
-				},
-				{
-					TerraformMethod:   sdp.QueryMethod_GET,
-					TerraformQueryMap: "kubernetes_persistent_volume_claim_v1.metadata[0].name",
-				},
-			},
-		},
+		AdapterMetadata:          persistentVolumeClaimAdapterMetadata,
 	}
 }
+
+var persistentVolumeClaimAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+	Type:                  "PersistentVolumeClaim",
+	DescriptiveName:       "Persistent Volume Claim",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
+	PotentialLinks:        []string{"PersistentVolume"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("PersistentVolumeClaim"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_persistent_volume_claim.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_persistent_volume_claim_v1.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newPersistentVolumeClaimAdapter)
