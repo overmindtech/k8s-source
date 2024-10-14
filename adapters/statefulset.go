@@ -14,7 +14,6 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 
 	if resource.Spec.Selector != nil {
 		// Stateful sets are linked to pods via their selector
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "Pod",
@@ -31,7 +30,6 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 		})
 
 		if len(resource.Spec.VolumeClaimTemplates) > 0 {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "PersistentVolumeClaim",
@@ -50,7 +48,6 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 	}
 
 	if resource.Spec.ServiceName != "" {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,

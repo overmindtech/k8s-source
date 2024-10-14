@@ -12,7 +12,6 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.IngressClassName != nil {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "IngressClass",
@@ -32,7 +31,6 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 
 	if resource.Spec.DefaultBackend != nil {
 		if resource.Spec.DefaultBackend.Service != nil {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "Service",
@@ -70,7 +68,6 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 
 	for _, rule := range resource.Spec.Rules {
 		if rule.Host != "" {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "dns",
@@ -89,7 +86,6 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 		if rule.HTTP != nil {
 			for _, path := range rule.HTTP.Paths {
 				if path.Backend.Service != nil {
-
 					queries = append(queries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "Service",

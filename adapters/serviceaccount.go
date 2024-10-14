@@ -11,7 +11,6 @@ func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	for _, secret := range resource.Secrets {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,
@@ -30,7 +29,6 @@ func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.
 	}
 
 	for _, ipSecret := range resource.ImagePullSecrets {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,

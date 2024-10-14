@@ -21,7 +21,6 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 
 	for _, endpoint := range resource.Endpoints {
 		if endpoint.Hostname != nil {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "dns",
@@ -38,7 +37,6 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 		}
 
 		if endpoint.NodeName != nil {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "Node",
@@ -56,7 +54,6 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 		}
 
 		if endpoint.TargetRef != nil {
-
 			queries = append(queries, ObjectReferenceToQuery(endpoint.TargetRef, sd, &sdp.BlastPropagation{
 				// Changes to the pod could affect the endpoint and vice versa
 				In:  true,
@@ -67,7 +64,6 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 		for _, address := range endpoint.Addresses {
 			switch resource.AddressType {
 			case v1.AddressTypeIPv4, v1.AddressTypeIPv6:
-
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "ip",
@@ -82,7 +78,6 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 					},
 				})
 			case v1.AddressTypeFQDN:
-
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "dns",

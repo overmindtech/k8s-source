@@ -12,7 +12,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "Pod",
@@ -44,7 +43,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 
 	for _, ip := range ips {
 		if ip != "" {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "ip",
@@ -62,7 +60,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 	}
 
 	if resource.Spec.ExternalName != "" {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "dns",
@@ -79,7 +76,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 	}
 
 	// Services also generate an endpoint with the same name
-
 	queries = append(queries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Type:   "Endpoint",
@@ -97,7 +93,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 
 	for _, ingress := range resource.Status.LoadBalancer.Ingress {
 		if ingress.IP != "" {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "ip",
@@ -114,7 +109,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 		}
 
 		if ingress.Hostname != "" {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "dns",

@@ -12,7 +12,6 @@ func replicationControllerExtractor(resource *v1.ReplicationController, scope st
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,

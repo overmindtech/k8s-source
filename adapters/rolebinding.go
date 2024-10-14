@@ -18,7 +18,6 @@ func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Linked
 	}
 
 	for _, subject := range resource.Subjects {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Method: sdp.QueryMethod_GET,
@@ -45,11 +44,9 @@ func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Linked
 
 	switch resource.RoleRef.Kind {
 	case "Role":
-
 		// If this binding is linked to a role then it's in the same namespace
 		refSD.Namespace = sd.Namespace
 	case "ClusterRole":
-
 		// If this is linked to a ClusterRole (which is not namespaced) we need
 		// to make sure that we are querying the root scope i.e. the
 		// non-namespaced scope

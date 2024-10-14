@@ -11,7 +11,6 @@ func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Source.PersistentVolumeName != nil {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "PersistentVolume",
@@ -28,7 +27,6 @@ func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*
 	}
 
 	if resource.Spec.NodeName != "" {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "Node",

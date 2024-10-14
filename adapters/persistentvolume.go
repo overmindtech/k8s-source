@@ -19,7 +19,6 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 	}
 
 	if resource.Spec.PersistentVolumeSource.AWSElasticBlockStore != nil {
-
 		// Link to EBS volume
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
@@ -45,7 +44,6 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 
 		if matches != nil {
 			if len(matches) == 2 {
-
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "efs-access-point",
@@ -74,7 +72,6 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 	}
 
 	if resource.Spec.StorageClassName != "" {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "StorageClass",

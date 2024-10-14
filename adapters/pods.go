@@ -21,7 +21,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 	// Link service accounts
 	if resource.Spec.ServiceAccountName != "" {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "ServiceAccount",
@@ -42,7 +41,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 	for _, vol := range resource.Spec.Volumes {
 		// Link PVCs
 		if vol.PersistentVolumeClaim != nil {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Scope:  scope,
@@ -62,7 +60,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 		// Link to EBS volumes
 		if vol.AWSElasticBlockStore != nil {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Scope:  "*",
@@ -81,7 +78,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 		// Link secrets
 		if vol.Secret != nil {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Scope:  scope,
@@ -103,7 +99,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 			// link to that. We'll try to parse the IP and if not fall back to
 			// DNS for the hostname
 			if net.ParseIP(vol.NFS.Server) != nil {
-
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Scope:  "global",
@@ -119,7 +114,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 					},
 				})
 			} else {
-
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Scope:  "global",
@@ -139,7 +133,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 		// Link config map volumes
 		if vol.ConfigMap != nil {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Scope:  scope,
@@ -160,7 +153,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 		if vol.Projected != nil {
 			for _, source := range vol.Projected.Sources {
 				if source.ConfigMap != nil {
-
 					queries = append(queries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Scope:  scope,
@@ -178,7 +170,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 				}
 
 				if source.Secret != nil {
-
 					queries = append(queries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Scope:  scope,
@@ -205,7 +196,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 			if env.ValueFrom != nil {
 				if env.ValueFrom.SecretKeyRef != nil {
 					// Add linked item from spec.containers[].env[].valueFrom.secretKeyRef
-
 					queries = append(queries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Scope:  scope,
@@ -223,7 +213,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 				}
 
 				if env.ValueFrom.ConfigMapKeyRef != nil {
-
 					queries = append(queries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Scope:  scope,
@@ -245,7 +234,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 		for _, envFrom := range container.EnvFrom {
 			if envFrom.SecretRef != nil {
 				// Add linked item from spec.containers[].EnvFrom[].secretKeyRef
-
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Scope:  scope,
@@ -263,7 +251,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 			}
 
 			if envFrom.ConfigMapRef != nil {
-
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Scope:  scope,
@@ -283,7 +270,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 	}
 
 	if resource.Spec.PriorityClassName != "" {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  sd.ClusterName,
@@ -304,7 +290,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 	if len(resource.Status.PodIPs) > 0 {
 		for _, ip := range resource.Status.PodIPs {
-
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Scope:  "global",
@@ -320,7 +305,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 			})
 		}
 	} else if resource.Status.PodIP != "" {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "ip",

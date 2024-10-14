@@ -11,7 +11,6 @@ func podDisruptionBudgetExtractor(resource *v1.PodDisruptionBudget, scope string
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "Pod",

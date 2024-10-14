@@ -17,7 +17,6 @@ func PersistentVolumeClaimExtractor(resource *v1.PersistentVolumeClaim, scope st
 	links := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.VolumeName != "" {
-
 		links = append(links, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "PersistentVolume",

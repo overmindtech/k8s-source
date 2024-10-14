@@ -12,7 +12,6 @@ func jobExtractor(resource *v1.Job, scope string) ([]*sdp.LinkedItemQuery, error
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,

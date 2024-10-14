@@ -19,7 +19,6 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 	for _, subset := range resource.Subsets {
 		for _, address := range subset.Addresses {
 			if address.Hostname != "" {
-
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Scope:  "global",
@@ -36,7 +35,6 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 			}
 
 			if address.NodeName != nil {
-
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "Node",
@@ -54,7 +52,6 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 			}
 
 			if address.IP != "" {
-
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "ip",
@@ -71,7 +68,6 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 			}
 
 			if address.TargetRef != nil {
-
 				queries = append(queries, ObjectReferenceToQuery(address.TargetRef, sd, &sdp.BlastPropagation{
 					// These are tightly coupled
 					In:  true,
