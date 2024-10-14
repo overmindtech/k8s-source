@@ -124,21 +124,3 @@ jobs:
         with:
           name: ${{ matrix.image_name }}.imageref
           path: ${{ matrix.image_name }}.imageref
-
-  publish-docs-data:
-    name: Publish Docs Data
-    runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
-    needs:
-      - test
-    permissions:
-      contents: read # required for checkout
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Upload Docs Data
-        uses: actions/upload-artifact@v4
-        with:
-          name: k8s-source-docs-data
-          path: docs-data
