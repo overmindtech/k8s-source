@@ -12,7 +12,6 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.IngressClassName != nil {
-		// +overmind:link IngressClass
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "IngressClass",
@@ -32,7 +31,6 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 
 	if resource.Spec.DefaultBackend != nil {
 		if resource.Spec.DefaultBackend.Service != nil {
-			// +overmind:link Service
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "Service",
@@ -70,7 +68,6 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 
 	for _, rule := range resource.Spec.Rules {
 		if rule.Host != "" {
-			// +overmind:link dns
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "dns",
@@ -89,7 +86,6 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 		if rule.HTTP != nil {
 			for _, path := range rule.HTTP.Paths {
 				if path.Backend.Service != nil {
-					// +overmind:link Service
 					queries = append(queries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "Service",
@@ -130,16 +126,6 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 
 	return queries, nil
 }
-
-//go:generate docgen ../docs-data
-// +overmind:type Ingress
-// +overmind:descriptiveType Ingress
-// +overmind:get Get an ingress by name
-// +overmind:list List all ingresses
-// +overmind:search Search for an ingress using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_ingress_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newIngressAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.Ingress, *v1.IngressList]{

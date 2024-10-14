@@ -7,17 +7,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-//go:generate docgen ../docs-data
-// +overmind:type ResourceQuota
-// +overmind:descriptiveType Resource Quota
-// +overmind:get Get a resource quota by name
-// +overmind:list List all resource quotas
-// +overmind:search Search for a resource quota using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_resource_quota.metadata[0].name
-// +overmind:terraform:queryMap kubernetes_resource_quota_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
-
 func newResourceQuotaAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.ResourceQuota, *v1.ResourceQuotaList]{
 		ClusterName: cluster,

@@ -19,7 +19,6 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 	}
 
 	if resource.Spec.PersistentVolumeSource.AWSElasticBlockStore != nil {
-		// +overmind:link ec2-volume
 		// Link to EBS volume
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
@@ -45,7 +44,6 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 
 		if matches != nil {
 			if len(matches) == 2 {
-				// +overmind:link efs-access-point
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "efs-access-point",
@@ -74,7 +72,6 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 	}
 
 	if resource.Spec.StorageClassName != "" {
-		// +overmind:link StorageClass
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "StorageClass",
@@ -93,17 +90,6 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 
 	return queries, nil
 }
-
-//go:generate docgen ../docs-data
-// +overmind:type PersistentVolume
-// +overmind:descriptiveType Persistent Volume
-// +overmind:get Get a persistent volume by name
-// +overmind:list List all persistent volumes
-// +overmind:search Search for a persistent volume using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_persistent_volume.metadata[0].name
-// +overmind:terraform:queryMap kubernetes_persistent_volume_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newPersistentVolumeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.PersistentVolume, *v1.PersistentVolumeList]{

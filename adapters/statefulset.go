@@ -14,7 +14,6 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 
 	if resource.Spec.Selector != nil {
 		// Stateful sets are linked to pods via their selector
-		// +overmind:link Pod
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "Pod",
@@ -31,7 +30,6 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 		})
 
 		if len(resource.Spec.VolumeClaimTemplates) > 0 {
-			// +overmind:link PersistentVolumeClaim
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "PersistentVolumeClaim",
@@ -50,7 +48,6 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 	}
 
 	if resource.Spec.ServiceName != "" {
-		// +overmind:link Service
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,
@@ -68,17 +65,6 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 
 	return queries, nil
 }
-
-//go:generate docgen ../docs-data
-// +overmind:type StatefulSet
-// +overmind:descriptiveType Stateful Set
-// +overmind:get Get a stateful set by name
-// +overmind:list List all stateful sets
-// +overmind:search Search for a stateful set using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_stateful_set.metadata[0].name
-// +overmind:terraform:queryMap kubernetes_stateful_set_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newStatefulSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.StatefulSet, *v1.StatefulSetList]{

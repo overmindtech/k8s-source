@@ -10,18 +10,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-//go:generate docgen ../docs-data
-// +overmind:type Deployment
-// +overmind:descriptiveType Deployment
-// +overmind:get Get a deployment by name
-// +overmind:list List all deployments
-// +overmind:search Search for a deployment using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_deployment.metadata[0].name
-// +overmind:terraform:queryMap kubernetes_deployment_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
-// +overmind:link ReplicaSet
-
 var replicaSetProgressedRegex = regexp.MustCompile(`ReplicaSet "([^"]+)" has successfully progressed`)
 
 func newDeploymentAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {

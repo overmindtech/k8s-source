@@ -8,17 +8,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-//go:generate docgen ../docs-data
-// +overmind:type CronJob
-// +overmind:descriptiveType Cron Job
-// +overmind:get Get a cron job by name
-// +overmind:list List all cron jobs
-// +overmind:search Search for a cron job using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_cron_job.metadata[0].name
-// +overmind:terraform:queryMap kubernetes_cron_job_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
-
 func newCronJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.CronJob, *v1.CronJobList]{
 		ClusterName:      cluster,
