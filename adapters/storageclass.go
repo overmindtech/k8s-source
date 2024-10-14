@@ -40,7 +40,7 @@ func newStorageClassAdapter(cs *kubernetes.Clientset, cluster string, namespaces
 	}
 }
 
-var storageClassAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var storageClassAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "StorageClass",
 	DescriptiveName:       "Storage Class",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,

@@ -59,7 +59,7 @@ func newSecretAdapter(cs *kubernetes.Clientset, cluster string, namespaces []str
 	}
 }
 
-var secretAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var secretAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "Secret",
 	DescriptiveName:       "Secret",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,

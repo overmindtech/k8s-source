@@ -127,7 +127,7 @@ func newPersistentVolumeAdapter(cs *kubernetes.Clientset, cluster string, namesp
 	}
 }
 
-var persistentVolumeAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var persistentVolumeAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "PersistentVolume",
 	DescriptiveName:       "Persistent Volume",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,

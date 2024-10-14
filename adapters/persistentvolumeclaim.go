@@ -71,7 +71,7 @@ func newPersistentVolumeClaimAdapter(cs *kubernetes.Clientset, cluster string, n
 	}
 }
 
-var persistentVolumeClaimAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var persistentVolumeClaimAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "PersistentVolumeClaim",
 	DescriptiveName:       "Persistent Volume Claim",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,

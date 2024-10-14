@@ -101,7 +101,7 @@ func newNetworkPolicyAdapter(cs *kubernetes.Clientset, cluster string, namespace
 	}
 }
 
-var networkPolicyAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var networkPolicyAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:            "NetworkPolicy",
 	DescriptiveName: "Network Policy",
 	Category:        sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,

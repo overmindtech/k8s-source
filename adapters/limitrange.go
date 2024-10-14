@@ -39,7 +39,7 @@ func newLimitRangeAdapter(cs *kubernetes.Clientset, cluster string, namespaces [
 	}
 }
 
-var limitRangeAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var limitRangeAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "LimitRange",
 	DescriptiveName:       "Limit Range",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,

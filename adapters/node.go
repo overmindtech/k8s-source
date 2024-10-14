@@ -110,7 +110,7 @@ func newNodeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []strin
 	}
 }
 
-var nodeAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var nodeAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "Node",
 	DescriptiveName:       "Node",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,

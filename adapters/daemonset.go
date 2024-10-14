@@ -43,7 +43,7 @@ func newDaemonSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []
 	}
 }
 
-var daemonSetAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var daemonSetAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "DaemonSet",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 	DescriptiveName:       "Daemon Set",

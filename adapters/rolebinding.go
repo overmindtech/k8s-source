@@ -110,7 +110,7 @@ func newRoleBindingAdapter(cs *kubernetes.Clientset, cluster string, namespaces 
 	}
 }
 
-var roleBindingAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var roleBindingAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "RoleBinding",
 	DescriptiveName:       "Role Binding",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,

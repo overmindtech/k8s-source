@@ -85,7 +85,7 @@ func newVolumeAttachmentAdapter(cs *kubernetes.Clientset, cluster string, namesp
 	}
 }
 
-var volumeAttachmentAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var volumeAttachmentAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "VolumeAttachment",
 	DescriptiveName:       "Volume Attachment",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,

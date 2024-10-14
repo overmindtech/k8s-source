@@ -40,7 +40,7 @@ func newConfigMapAdapter(cs *kubernetes.Clientset, cluster string, namespaces []
 	}
 }
 
-var configMapAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var configMapAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "ConfigMap",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 	DescriptiveName:       "Config Map",

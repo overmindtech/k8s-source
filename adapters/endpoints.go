@@ -118,7 +118,7 @@ func newEndpointsAdapter(cs *kubernetes.Clientset, cluster string, namespaces []
 	}
 }
 
-var endpointsAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var endpointsAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	DescriptiveName:       "Endpoints",
 	Type:                  "Endpoints",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

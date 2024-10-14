@@ -70,7 +70,7 @@ func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) 
 // +overmind:terraform:queryMap kubernetes_cluster_role_binding_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}
 
-var clusterRoleBindingAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var clusterRoleBindingAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "ClusterRoleBinding",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 	PotentialLinks:        []string{"ClusterRole", "ServiceAccount", "User", "Group"},

@@ -390,7 +390,7 @@ func newPodAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string
 	}
 }
 
-var podAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var podAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:            "Pod",
 	DescriptiveName: "Pod",
 	Category:        sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,

@@ -39,7 +39,7 @@ func newClusterRoleAdapter(cs *kubernetes.Clientset, cluster string, namespaces 
 	}
 }
 
-var clusterRoleAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var clusterRoleAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "ClusterRole",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 	DescriptiveName:       "Cluster Role",

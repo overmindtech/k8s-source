@@ -113,4 +113,4 @@ func QueryToListOptions(query string) (metav1.ListOptions, error) {
 	return listOptions, nil
 }
 
-var AdapterMetadata = sdp.AdapterMetadataList{}
+var Metadata = sdp.AdapterMetadataList{}

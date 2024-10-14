@@ -40,7 +40,7 @@ func newPriorityClassAdapter(cs *kubernetes.Clientset, cluster string, namespace
 	}
 }
 
-var priorityClassAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var priorityClassAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "PriorityClass",
 	DescriptiveName:       "Priority Class",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,

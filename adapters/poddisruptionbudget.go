@@ -63,7 +63,7 @@ func newPodDisruptionBudgetAdapter(cs *kubernetes.Clientset, cluster string, nam
 	}
 }
 
-var podDisruptionBudgetAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var podDisruptionBudgetAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "PodDisruptionBudget",
 	DescriptiveName:       "Pod Disruption Budget",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,

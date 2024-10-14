@@ -112,7 +112,7 @@ func newDeploymentAdapter(cs *kubernetes.Clientset, cluster string, namespaces [
 	}
 }
 
-var deploymentAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var deploymentAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "Deployment",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 	PotentialLinks:        []string{"ReplicaSet"},

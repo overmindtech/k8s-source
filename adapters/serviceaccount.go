@@ -84,7 +84,7 @@ func newServiceAccountAdapter(cs *kubernetes.Clientset, cluster string, namespac
 	}
 }
 
-var serviceAccountAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var serviceAccountAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "ServiceAccount",
 	DescriptiveName:       "Service Account",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,

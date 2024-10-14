@@ -136,7 +136,7 @@ func newEndpointSliceAdapter(cs *kubernetes.Clientset, cluster string, namespace
 	}
 }
 
-var endpointSliceAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var endpointSliceAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "EndpointSlice",
 	DescriptiveName:       "Endpoint Slice",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

@@ -163,7 +163,7 @@ func newIngressAdapter(cs *kubernetes.Clientset, cluster string, namespaces []st
 	}
 }
 
-var ingressAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var ingressAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "Ingress",
 	DescriptiveName:       "Ingress",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

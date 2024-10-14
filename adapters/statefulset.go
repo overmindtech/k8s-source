@@ -103,7 +103,7 @@ func newStatefulSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces 
 	}
 }
 
-var statefulSetAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var statefulSetAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "StatefulSet",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 	DescriptiveName:       "Stateful Set",

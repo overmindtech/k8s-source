@@ -39,7 +39,7 @@ func newResourceQuotaAdapter(cs *kubernetes.Clientset, cluster string, namespace
 	}
 }
 
-var resourceQuotaAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var resourceQuotaAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "ResourceQuota",
 	DescriptiveName:       "Resource Quota",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,

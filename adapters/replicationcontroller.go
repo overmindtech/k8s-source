@@ -68,7 +68,7 @@ func newReplicationControllerAdapter(cs *kubernetes.Clientset, cluster string, n
 	}
 }
 
-var replicationControllerAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var replicationControllerAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "ReplicationController",
 	DescriptiveName:       "Replication Controller",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,

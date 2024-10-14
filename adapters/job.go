@@ -66,7 +66,7 @@ func newJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string
 	}
 }
 
-var jobAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var jobAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "Job",
 	DescriptiveName:       "Job",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,

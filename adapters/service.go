@@ -167,7 +167,7 @@ func newServiceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []st
 	}
 }
 
-var serviceAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var serviceAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "Service",
 	DescriptiveName:       "Service",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

@@ -43,7 +43,7 @@ func newCronJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []st
 	}
 }
 
-var cronJobAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var cronJobAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "CronJob",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 	DescriptiveName:       "Cron Job",

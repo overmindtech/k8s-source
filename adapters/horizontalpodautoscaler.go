@@ -64,7 +64,7 @@ func newHorizontalPodAutoscalerAdapter(cs *kubernetes.Clientset, cluster string,
 	}
 }
 
-var horizontalPodAutoscalerAdapterMetadata = AdapterMetadata.Register(&sdp.AdapterMetadata{
+var horizontalPodAutoscalerAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "HorizontalPodAutoscaler",
 	DescriptiveName:       "Horizontal Pod Autoscaler",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
