@@ -16,7 +16,7 @@ RUN go mod download
 # Copy the go source
 COPY main.go main.go
 COPY cmd/ cmd/
-COPY sources/ sources/
+COPY adapters/ adapters/
 
 # Build
 RUN --mount=type=cache,target=/root/.cache/go-build \

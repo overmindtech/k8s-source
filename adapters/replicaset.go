@@ -12,7 +12,6 @@ func replicaSetExtractor(resource *v1.ReplicaSet, scope string) ([]*sdp.LinkedIt
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
-
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,
