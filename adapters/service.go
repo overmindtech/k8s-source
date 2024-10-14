@@ -163,8 +163,27 @@ func newServiceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []st
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: serviceExtractor,
+		AdapterMetadata:          serviceAdapterMetadata,
 	}
 }
+
+var serviceAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
+	Type:                  "Service",
+	DescriptiveName:       "Service",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
+	PotentialLinks:        []string{"Pod", "ip", "dns", "Endpoint"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Service"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_service.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_service_v1.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newServiceAdapter)

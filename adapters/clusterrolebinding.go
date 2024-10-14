@@ -70,6 +70,24 @@ func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) 
 // +overmind:terraform:queryMap kubernetes_cluster_role_binding_v1.metadata[0].name
 // +overmind:terraform:scope ${provider_mapping.cluster_name}
 
+var clusterRoleBindingAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
+	Type:                  "ClusterRoleBinding",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
+	PotentialLinks:        []string{"ClusterRole", "ServiceAccount", "User", "Group"},
+	DescriptiveName:       "Cluster Role Binding",
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Cluster Role Binding"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_cluster_role_binding_v1.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_cluster_role_binding.metadata[0].name",
+		},
+	},
+})
+
 func newClusterRoleBindingAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList]{
 		ClusterName: cluster,
@@ -88,6 +106,7 @@ func newClusterRoleBindingAdapter(cs *kubernetes.Clientset, cluster string, name
 			return bindings, nil
 		},
 		LinkedItemQueryExtractor: clusterRoleBindingExtractor,
+		AdapterMetadata:          clusterRoleBindingAdapterMetadata,
 	}
 }
 

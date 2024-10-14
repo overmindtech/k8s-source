@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"github.com/overmindtech/discovery"
+	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/scheduling/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -35,8 +36,26 @@ func newPriorityClassAdapter(cs *kubernetes.Clientset, cluster string, namespace
 
 			return extracted, nil
 		},
+		AdapterMetadata: priorityClassAdapterMetadata,
 	}
 }
+
+var priorityClassAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
+	Type:                  "PriorityClass",
+	DescriptiveName:       "Priority Class",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Priority Class"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_priority_class_v1.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_priority_class.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newPriorityClassAdapter)

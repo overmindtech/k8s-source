@@ -59,8 +59,23 @@ func newPodDisruptionBudgetAdapter(cs *kubernetes.Clientset, cluster string, nam
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: podDisruptionBudgetExtractor,
+		AdapterMetadata:          podDisruptionBudgetAdapterMetadata,
 	}
 }
+
+var podDisruptionBudgetAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
+	Type:                  "PodDisruptionBudget",
+	DescriptiveName:       "Pod Disruption Budget",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+	PotentialLinks:        []string{"Pod"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("PodDisruptionBudget"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_pod_disruption_budget_v1.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newPodDisruptionBudgetAdapter)

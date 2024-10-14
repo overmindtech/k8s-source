@@ -59,8 +59,17 @@ func newReplicaSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces [
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: replicaSetExtractor,
+		AdapterMetadata:          replicaSetAdapterMetadata,
 	}
 }
+
+var replicaSetAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
+	Type:                  "ReplicaSet",
+	DescriptiveName:       "Replica Set",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+	PotentialLinks:        []string{"Pod"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("ReplicaSet"),
+})
 
 func init() {
 	registerAdapterLoader(newReplicaSetAdapter)

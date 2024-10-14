@@ -80,8 +80,27 @@ func newServiceAccountAdapter(cs *kubernetes.Clientset, cluster string, namespac
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: serviceAccountExtractor,
+		AdapterMetadata:          serviceAccountAdapterMetadata,
 	}
 }
+
+var serviceAccountAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
+	Type:                  "ServiceAccount",
+	DescriptiveName:       "Service Account",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
+	PotentialLinks:        []string{"Secret"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("ServiceAccount"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_service_account.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_service_account_v1.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newServiceAccountAdapter)

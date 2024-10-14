@@ -683,6 +683,21 @@ func (s AdapterTests) Execute(t *testing.T) {
 				t.Errorf("expected %v unique items, got %v", len(items), len(itemMap))
 			}
 		})
+
+		t.Run("Adapter Metadata", func(t *testing.T) {
+			metadata := s.Adapter.Metadata()
+			if metadata == nil {
+				t.Fatal("expected metadata, got none")
+			}
+
+			if metadata.GetType() == "" {
+				t.Error("expected metadata type, got none")
+			}
+
+			if metadata.GetDescriptiveName() == "" {
+				t.Error("expected metadata descriptive name, got none")
+			}
+		})
 	})
 }
 

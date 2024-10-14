@@ -73,7 +73,7 @@ type KubeTypeAdapter[Resource metav1.Object, ResourceList any] struct {
 	ClusterName string
 
 	// AdapterMetadata for the adapter
-	AdapterMetadata sdp.AdapterMetadata
+	AdapterMetadata *sdp.AdapterMetadata
 
 	CacheDuration time.Duration   // How long to cache items for
 	cache         *sdpcache.Cache // The sdpcache of this adapter
@@ -137,7 +137,7 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Type() string {
 }
 
 func (s *KubeTypeAdapter[Resource, ResourceList]) Metadata() *sdp.AdapterMetadata {
-	return &s.AdapterMetadata
+	return s.AdapterMetadata
 }
 
 func (s *KubeTypeAdapter[Resource, ResourceList]) Name() string {
@@ -456,5 +456,18 @@ func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetail
 			Scope:  parentScope.String(),
 		},
 		BlastPropagation: blastProp,
+	}
+}
+
+// Returns the default supported query methods for a given resource type. The
+// user must pass in the name of the resource type e.g. "Config Map"
+func DefaultSupportedQueryMethods(name string) *sdp.AdapterSupportedQueryMethods {
+	return &sdp.AdapterSupportedQueryMethods{
+		Get:               true,
+		GetDescription:    fmt.Sprintf("Get a %v by name", name),
+		List:              true,
+		ListDescription:   fmt.Sprintf("List all %vs", name),
+		Search:            true,
+		SearchDescription: fmt.Sprintf(`Search for a %v using the ListOptions JSON format e.g. {"labelSelector": "app=wordpress"}`, name),
 	}
 }

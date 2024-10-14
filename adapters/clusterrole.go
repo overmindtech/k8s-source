@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"github.com/overmindtech/discovery"
+	"github.com/overmindtech/sdp-go"
 	v1 "k8s.io/api/rbac/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -34,8 +35,22 @@ func newClusterRoleAdapter(cs *kubernetes.Clientset, cluster string, namespaces 
 
 			return bindings, nil
 		},
+		AdapterMetadata: clusterRoleAdapterMetadata,
 	}
 }
+
+var clusterRoleAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
+	Type:                  "ClusterRole",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
+	DescriptiveName:       "Cluster Role",
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Cluster Role"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_cluster_role_v1.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newClusterRoleAdapter)

@@ -106,8 +106,27 @@ func newRoleBindingAdapter(cs *kubernetes.Clientset, cluster string, namespaces 
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: roleBindingExtractor,
+		AdapterMetadata:          roleBindingAdapterMetadata,
 	}
 }
+
+var roleBindingAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
+	Type:                  "RoleBinding",
+	DescriptiveName:       "Role Binding",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
+	PotentialLinks:        []string{"Role", "ClusterRole", "ServiceAccount", "User", "Group"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("RoleBinding"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_role_binding.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_role_binding_v1.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newRoleBindingAdapter)

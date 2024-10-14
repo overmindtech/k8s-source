@@ -99,8 +99,26 @@ func newStatefulSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces 
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: statefulSetExtractor,
+		AdapterMetadata:          statefulSetAdapterMetadata,
 	}
 }
+
+var statefulSetAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
+	Type:                  "StatefulSet",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+	DescriptiveName:       "Stateful Set",
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Stateful Set"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_stateful_set_v1.metadata[0].name",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_stateful_set.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newStatefulSetAdapter)

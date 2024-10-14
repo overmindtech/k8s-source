@@ -159,8 +159,23 @@ func newIngressAdapter(cs *kubernetes.Clientset, cluster string, namespaces []st
 			return extracted, nil
 		},
 		LinkedItemQueryExtractor: ingressExtractor,
+		AdapterMetadata:          ingressAdapterMetadata,
 	}
 }
+
+var ingressAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
+	Type:                  "Ingress",
+	DescriptiveName:       "Ingress",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
+	PotentialLinks:        []string{"Service", "IngressClass", "dns"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("Ingress"),
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "kubernetes_ingress_v1.metadata[0].name",
+		},
+	},
+})
 
 func init() {
 	registerAdapterLoader(newIngressAdapter)
