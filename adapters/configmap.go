@@ -7,17 +7,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-//go:generate docgen ../docs-data
-// +overmind:type ConfigMap
-// +overmind:descriptiveType Config Map
-// +overmind:get Get a config map by name
-// +overmind:list List all config maps
-// +overmind:search Search for a config map using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_config_map.metadata[0].name
-// +overmind:terraform:queryMap kubernetes_config_map_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
-
 func newConfigMapAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.ConfigMap, *v1.ConfigMapList]{
 		ClusterName:      cluster,

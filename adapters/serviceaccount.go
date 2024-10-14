@@ -11,7 +11,7 @@ func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	for _, secret := range resource.Secrets {
-		// +overmind:link Secret
+
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,
@@ -30,7 +30,7 @@ func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.
 	}
 
 	for _, ipSecret := range resource.ImagePullSecrets {
-		// +overmind:link Secret
+
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,
@@ -50,17 +50,6 @@ func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.
 
 	return queries, nil
 }
-
-//go:generate docgen ../docs-data
-// +overmind:type ServiceAccount
-// +overmind:descriptiveType Service Account
-// +overmind:get Get a service account by name
-// +overmind:list List all service accounts
-// +overmind:search Search for a service account using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_service_account.metadata[0].name
-// +overmind:terraform:queryMap kubernetes_service_account_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newServiceAccountAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.ServiceAccount, *v1.ServiceAccountList]{

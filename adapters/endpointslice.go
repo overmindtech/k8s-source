@@ -21,7 +21,7 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 
 	for _, endpoint := range resource.Endpoints {
 		if endpoint.Hostname != nil {
-			// +overmind:link dns
+
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "dns",
@@ -38,7 +38,7 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 		}
 
 		if endpoint.NodeName != nil {
-			// +overmind:link Node
+
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "Node",
@@ -56,7 +56,7 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 		}
 
 		if endpoint.TargetRef != nil {
-			// +overmind:link Pod
+
 			queries = append(queries, ObjectReferenceToQuery(endpoint.TargetRef, sd, &sdp.BlastPropagation{
 				// Changes to the pod could affect the endpoint and vice versa
 				In:  true,
@@ -67,7 +67,7 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 		for _, address := range endpoint.Addresses {
 			switch resource.AddressType {
 			case v1.AddressTypeIPv4, v1.AddressTypeIPv6:
-				// +overmind:link ip
+
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "ip",
@@ -82,7 +82,7 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 					},
 				})
 			case v1.AddressTypeFQDN:
-				// +overmind:link dns
+
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "dns",
@@ -102,16 +102,6 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 
 	return queries, nil
 }
-
-//go:generate docgen ../docs-data
-// +overmind:type EndpointSlice
-// +overmind:descriptiveType Endpoint Slice
-// +overmind:get Get a endpoint slice by name
-// +overmind:list List all endpoint slices
-// +overmind:search Search for a endpoint slice using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_endpoints_slice_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newEndpointSliceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.EndpointSlice, *v1.EndpointSliceList]{

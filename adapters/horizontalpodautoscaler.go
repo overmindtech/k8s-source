@@ -11,9 +11,6 @@ import (
 func horizontalPodAutoscalerExtractor(resource *v2.HorizontalPodAutoscaler, scope string) ([]*sdp.LinkedItemQuery, error) {
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
-	// +overmind:link Deployment
-	// +overmind:link StatefulSet
-	// +overmind:link DaemonSet
 	queries = append(queries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Type:   resource.Spec.ScaleTargetRef.Kind,
@@ -31,16 +28,6 @@ func horizontalPodAutoscalerExtractor(resource *v2.HorizontalPodAutoscaler, scop
 
 	return queries, nil
 }
-
-//go:generate docgen ../docs-data
-// +overmind:type HorizontalPodAutoscaler
-// +overmind:descriptiveType Horizontal Pod Autoscaler
-// +overmind:get Get a horizontal pod autoscaler by name
-// +overmind:list List all horizontal pod autoscalers
-// +overmind:search Search for a horizontal pod autoscaler using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_horizontal_pod_autoscaler_v2.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newHorizontalPodAutoscalerAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList]{

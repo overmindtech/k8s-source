@@ -21,7 +21,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 	// Link service accounts
 	if resource.Spec.ServiceAccountName != "" {
-		// +overmind:link ServiceAccount
+
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "ServiceAccount",
@@ -42,7 +42,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 	for _, vol := range resource.Spec.Volumes {
 		// Link PVCs
 		if vol.PersistentVolumeClaim != nil {
-			// +overmind:link PersistentVolumeClaim
+
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Scope:  scope,
@@ -62,7 +62,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 		// Link to EBS volumes
 		if vol.AWSElasticBlockStore != nil {
-			// +overmind:link ec2-volume
+
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Scope:  "*",
@@ -81,7 +81,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 		// Link secrets
 		if vol.Secret != nil {
-			// +overmind:link Secret
+
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Scope:  scope,
@@ -103,7 +103,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 			// link to that. We'll try to parse the IP and if not fall back to
 			// DNS for the hostname
 			if net.ParseIP(vol.NFS.Server) != nil {
-				// +overmind:link ip
+
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Scope:  "global",
@@ -119,7 +119,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 					},
 				})
 			} else {
-				// +overmind:link dns
+
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Scope:  "global",
@@ -139,7 +139,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 		// Link config map volumes
 		if vol.ConfigMap != nil {
-			// +overmind:link ConfigMap
+
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Scope:  scope,
@@ -160,7 +160,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 		if vol.Projected != nil {
 			for _, source := range vol.Projected.Sources {
 				if source.ConfigMap != nil {
-					// +overmind:link ConfigMap
+
 					queries = append(queries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Scope:  scope,
@@ -178,7 +178,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 				}
 
 				if source.Secret != nil {
-					// +overmind:link Secret
+
 					queries = append(queries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Scope:  scope,
@@ -205,7 +205,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 			if env.ValueFrom != nil {
 				if env.ValueFrom.SecretKeyRef != nil {
 					// Add linked item from spec.containers[].env[].valueFrom.secretKeyRef
-					// +overmind:link Secret
+
 					queries = append(queries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Scope:  scope,
@@ -223,7 +223,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 				}
 
 				if env.ValueFrom.ConfigMapKeyRef != nil {
-					// +overmind:link ConfigMap
+
 					queries = append(queries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Scope:  scope,
@@ -245,7 +245,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 		for _, envFrom := range container.EnvFrom {
 			if envFrom.SecretRef != nil {
 				// Add linked item from spec.containers[].EnvFrom[].secretKeyRef
-				// +overmind:link Secret
+
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Scope:  scope,
@@ -263,7 +263,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 			}
 
 			if envFrom.ConfigMapRef != nil {
-				// +overmind:link ConfigMap
+
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Scope:  scope,
@@ -283,7 +283,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 	}
 
 	if resource.Spec.PriorityClassName != "" {
-		// +overmind:link PriorityClass
+
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  sd.ClusterName,
@@ -304,7 +304,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 	if len(resource.Status.PodIPs) > 0 {
 		for _, ip := range resource.Status.PodIPs {
-			// +overmind:link ip
+
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Scope:  "global",
@@ -320,7 +320,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 			})
 		}
 	} else if resource.Status.PodIP != "" {
-		// +overmind:link ip
+
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "ip",
@@ -338,17 +338,6 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 
 	return queries, nil
 }
-
-//go:generate docgen ../docs-data
-// +overmind:type Pod
-// +overmind:descriptiveType Pod
-// +overmind:get Get a pod by name
-// +overmind:list List all pods
-// +overmind:search Search for a pod using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_pod.metadata[0].name
-// +overmind:terraform:queryMap kubernetes_pod_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newPodAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.Pod, *v1.PodList]{

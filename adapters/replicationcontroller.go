@@ -12,7 +12,7 @@ func replicationControllerExtractor(resource *v1.ReplicationController, scope st
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
-		// +overmind:link Pod
+
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Scope:  scope,
@@ -33,17 +33,6 @@ func replicationControllerExtractor(resource *v1.ReplicationController, scope st
 
 	return queries, nil
 }
-
-//go:generate docgen ../docs-data
-// +overmind:type ReplicationController
-// +overmind:descriptiveType Replication Controller
-// +overmind:get Get a replication controller by name
-// +overmind:list List all replication controllers
-// +overmind:search Search for a replication controller using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_replication_controller.metadata[0].name
-// +overmind:terraform:queryMap kubernetes_replication_controller_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newReplicationControllerAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.ReplicationController, *v1.ReplicationControllerList]{

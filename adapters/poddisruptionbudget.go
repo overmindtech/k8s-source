@@ -11,7 +11,7 @@ func podDisruptionBudgetExtractor(resource *v1.PodDisruptionBudget, scope string
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Selector != nil {
-		// +overmind:link Pod
+
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "Pod",
@@ -30,16 +30,6 @@ func podDisruptionBudgetExtractor(resource *v1.PodDisruptionBudget, scope string
 
 	return queries, nil
 }
-
-//go:generate docgen ../docs-data
-// +overmind:type PodDisruptionBudget
-// +overmind:descriptiveType Pod Disruption Budget
-// +overmind:get Get a pod disruption budget by name
-// +overmind:list List all pod disruption budgets
-// +overmind:search Search for a pod disruption budget using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_pod_disruption_budget_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newPodDisruptionBudgetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList]{

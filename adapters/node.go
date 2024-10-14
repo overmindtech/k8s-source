@@ -16,7 +16,7 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 	for _, addr := range resource.Status.Addresses {
 		switch addr.Type {
 		case v1.NodeExternalDNS, v1.NodeInternalDNS, v1.NodeHostName:
-			// +overmind:link dns
+
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "dns",
@@ -32,7 +32,7 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 			})
 
 		case v1.NodeExternalIP, v1.NodeInternalIP:
-			// +overmind:link ip
+
 			queries = append(queries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "ip",
@@ -56,7 +56,7 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 			sections := strings.Split(string(vol.Name), "^")
 
 			if len(sections) == 2 {
-				// +overmind:link ec2-volume
+
 				queries = append(queries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "ec2-volume",
@@ -77,16 +77,6 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 
 	return queries, nil
 }
-
-//go:generate docgen ../docs-data
-// +overmind:type Node
-// +overmind:descriptiveType Node
-// +overmind:get Get a node by name
-// +overmind:list List all nodes
-// +overmind:search Search for a node using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_node_taint.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
 
 func newNodeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.Node, *v1.NodeList]{

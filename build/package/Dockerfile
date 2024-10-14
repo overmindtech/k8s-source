@@ -18,8 +18,6 @@ COPY main.go main.go
 COPY cmd/ cmd/
 COPY sources/ sources/
 
-RUN go install github.com/overmindtech/docgen@latest
-
 # Build
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go generate ./... \

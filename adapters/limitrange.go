@@ -7,17 +7,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-//go:generate docgen ../docs-data
-// +overmind:type LimitRange
-// +overmind:descriptiveType Limit Range
-// +overmind:get Get a limit range by name
-// +overmind:list List all limit ranges
-// +overmind:search Search for a limit range using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
-// +overmind:terraform:queryMap kubernetes_limit_range.metadata[0].name
-// +overmind:terraform:queryMap kubernetes_limit_range_v1.metadata[0].name
-// +overmind:terraform:scope ${provider_mapping.cluster_name}.${values.metadata[0].namespace}
-
 func newLimitRangeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.LimitRange, *v1.LimitRangeList]{
 		ClusterName: cluster,

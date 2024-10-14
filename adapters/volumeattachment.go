@@ -11,7 +11,7 @@ func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	if resource.Spec.Source.PersistentVolumeName != nil {
-		// +overmind:link PersistentVolume
+
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "PersistentVolume",
@@ -28,7 +28,7 @@ func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*
 	}
 
 	if resource.Spec.NodeName != "" {
-		// +overmind:link Node
+
 		queries = append(queries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "Node",
@@ -47,14 +47,6 @@ func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*
 
 	return queries, nil
 }
-
-//go:generate docgen ../docs-data
-// +overmind:type VolumeAttachment
-// +overmind:descriptiveType Volume Attachment
-// +overmind:get Get a volume attachment by name
-// +overmind:list List all volume attachments
-// +overmind:search Search for a volume attachment using the ListOptions JSON format: https://github.com/overmindtech/k8s-source#search
-// +overmind:group Kubernetes
 
 func newVolumeAttachmentAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
 	return &KubeTypeAdapter[*v1.VolumeAttachment, *v1.VolumeAttachmentList]{
