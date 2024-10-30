@@ -54,10 +54,12 @@ var rootCmd = &cobra.Command{
 
 func run(_ *cobra.Command, _ []string) int {
 	kubeconfig := viper.GetString("kubeconfig")
-	maxParallel := viper.GetInt("max-parallel")
-	apiKey := viper.GetString("api-key")
-	app := viper.GetString("app")
-	sourceName := viper.GetString("source-name")
+	// get engine config
+	ec, err := discovery.EngineConfigFromViper("k8s", ServiceVersion)
+	if err != nil {
+		log.WithError(err).Fatal("Could not get engine config from viper")
+	}
+
 	hostname, err := os.Hostname()
 
 	if err != nil {
@@ -75,10 +77,10 @@ func run(_ *cobra.Command, _ []string) int {
 	}
 
 	log.WithFields(log.Fields{
-		"max-parallel": maxParallel,
+		"max-parallel": ec.MaxParallelExecutions,
 		"kubeconfig":   kubeconfig,
-		"app":          app,
-		"source-name":  sourceName,
+		"app":          ec.App,
+		"source-name":  ec.SourceName,
 	}).Info("Got config")
 
 	var clientSet *kubernetes.Clientset
@@ -151,7 +153,7 @@ func run(_ *cobra.Command, _ []string) int {
 		}
 	}
 
-	if apiKey == "" {
+	if ec.ApiKey == "" {
 		log.Error("No API key provided, exiting")
 		return 1
 	}
@@ -160,7 +162,7 @@ func run(_ *cobra.Command, _ []string) int {
 	log.Debug("Getting Overmind instance details")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	oi, err := sdp.NewOvermindInstance(ctx, app)
+	oi, err := sdp.NewOvermindInstance(ctx, ec.App)
 	if err != nil {
 		sentry.CaptureException(err)
 		log.WithError(err).Error("Could not get Overmind instance details")
@@ -172,7 +174,7 @@ func run(_ *cobra.Command, _ []string) int {
 
 	// Validate the auth params and create a token client if we are using
 	// auth
-	tokenClient, err = auth.NewAPIKeyClient(oi.ApiUrl.String(), apiKey)
+	tokenClient, err = auth.NewAPIKeyClient(oi.ApiUrl.String(), ec.ApiKey)
 
 	if err != nil {
 		sentry.CaptureException(err)
@@ -194,14 +196,13 @@ func run(_ *cobra.Command, _ []string) int {
 		clusterName = k8sURL.Host
 	}
 
-	e, err := discovery.NewEngine()
+	e, err := discovery.NewEngine(ec)
 	if err != nil {
 		sentry.CaptureException(err)
 		log.WithError(err).Error("Error initializing Engine")
 
 		return 1
 	}
-	e.Name = sourceName
 	e.NATSOptions = &auth.NATSOptions{
 		NumRetries:        -1,
 		RetryDelay:        5 * time.Second,
@@ -214,10 +215,9 @@ func run(_ *cobra.Command, _ []string) int {
 		TokenClient:       tokenClient,
 	}
 	e.NATSQueueName = fmt.Sprintf("k8s-source-%v", configHash)
-	e.MaxParallelExecutions = maxParallel
 
 	// Set up heartbeat
-	tokenSource := auth.NewAPIKeyTokenSource(apiKey, oi.ApiUrl.String())
+	tokenSource := auth.NewAPIKeyTokenSource(ec.ApiKey, oi.ApiUrl.String())
 	transport := oauth2.Transport{
 		Source: tokenSource,
 		Base:   http.DefaultTransport,
@@ -249,9 +249,7 @@ func run(_ *cobra.Command, _ []string) int {
 			return nil
 		},
 	}
-	e.Version = ServiceVersion
 	e.Managed = sdp.SourceManaged_LOCAL
-	e.Type = "k8s"
 
 	// Start HTTP server for status
 	healthCheckPort := viper.GetInt("health-check-port")
@@ -539,13 +537,10 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "/etc/srcman/config/k8s-source.yaml", "config file path")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
-
-	rootCmd.PersistentFlags().String("api-key", "", "The API key to use to authenticate to the Overmind API")
-	rootCmd.PersistentFlags().String("app", "https://app.overmind.tech", "The URL of the Overmind instance to connect to")
-	rootCmd.PersistentFlags().String("source-name", "k8s-source", "The name of the source")
-
 	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve the /healthz endpoint")
-	rootCmd.PersistentFlags().Int("max-parallel", 2_000, "Max number of requests to run in parallel")
+
+	// engine flags
+	discovery.AddEngineFlags(rootCmd)
 
 	// source-specific flags
 	rootCmd.PersistentFlags().String("kubeconfig", "", "Path to the kubeconfig file containing cluster details. If this is blank, the in-cluster config will be used")
