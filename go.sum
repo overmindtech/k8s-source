@@ -134,10 +134,14 @@ github.com/onsi/ginkgo/v2 v2.19.0 h1:9Cnnf7UHo57Hy3k6/m5k3dRfGTMXGvxhHFvkDTCTpvA
 github.com/onsi/ginkgo/v2 v2.19.0/go.mod h1:rlwLi9PilAFJ8jCg9UE1QP6VBpd6/xj3SRC0d6TU0To=
 github.com/onsi/gomega v1.19.0 h1:4ieX6qQjPP/BfC3mpsAtIGGlxTWPeA3Inl/7DtXw1tw=
 github.com/onsi/gomega v1.19.0/go.mod h1:LY+I3pBVzYsTBU1AnDwOSxaYi9WoWiqgwooUqq9yPro=
-github.com/overmindtech/discovery v0.30.0 h1:cZoYfHtLIzYTAtJO0r8+SAmtFdY+RaozD9hhOJ+6gro=
-github.com/overmindtech/discovery v0.30.0/go.mod h1:rYAyBHfdvK57fUusO4+Qh/YkKMBvbxv6HYWNo23Dhe8=
+github.com/overmindtech/discovery v0.31.0 h1:Eh+UKrVlbSve6uj5h+KWj70ko7arHyc+dSG9EXNAAx8=
+github.com/overmindtech/discovery v0.31.0/go.mod h1:kMM2pH6d3OLs8qHEfFCBkxr9eN/xknyMIagjxFIl5PY=
+github.com/overmindtech/discovery v0.31.1 h1:4/zwDSt99aFj2T3TJZnUywb1gkSsmW4eVWveIdygXF4=
+github.com/overmindtech/discovery v0.31.1/go.mod h1:9Y97Ynm15PTRSt/lsZQ68JTpgIngupxDDGdHdAFFCxE=
 github.com/overmindtech/sdp-go v0.97.0 h1:9iyln5ynbJGTxtCcRQgDSEN3WVwDsolbI2wjRGEeAT4=
 github.com/overmindtech/sdp-go v0.97.0/go.mod h1:o/u4PfocvsKgnwxPoTnCWm9MHF1mkOIeJxIRWgiRvLc=
+github.com/overmindtech/sdp-go v0.99.0 h1:DUeyG4irY8li4p+pv1LH403J3Do8QVYrREB2b2bhd00=
+github.com/overmindtech/sdp-go v0.99.0/go.mod h1:cEdHMqGWE8+fdKcNqSps5SjD02Zu0aSvXh+3q9rpySc=
 github.com/overmindtech/sdpcache v1.6.4 h1:MJoYBDqDE3s8FrRzZ0RPgFiH39HWI/Mv2ImH1NdLT8k=
 github.com/overmindtech/sdpcache v1.6.4/go.mod h1:/F9XStVdntRJEQjlZ86BPuB1Y7VPo1PFcsCNiU1IoGE=
 github.com/pelletier/go-toml v1.9.5 h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=

@@ -20,13 +20,11 @@ import (
 	"github.com/overmindtech/k8s-source/adapters"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/auth"
-	"github.com/overmindtech/sdp-go/sdpconnect"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-	"golang.org/x/oauth2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
@@ -55,20 +53,12 @@ var rootCmd = &cobra.Command{
 func run(_ *cobra.Command, _ []string) int {
 	kubeconfig := viper.GetString("kubeconfig")
 	// get engine config
-	ec, err := discovery.EngineConfigFromViper("k8s", ServiceVersion)
+	engineConfig, err := discovery.EngineConfigFromViper("k8s", ServiceVersion)
 	if err != nil {
 		log.WithError(err).Fatal("Could not get engine config from viper")
 	}
 
 	hostname, err := os.Hostname()
-
-	if err != nil {
-		sentry.CaptureException(err)
-		log.WithError(err).Error("Could not determine hostname")
-
-		return 1
-	}
-
 	if err != nil {
 		sentry.CaptureException(err)
 		log.WithError(err).Error("Could not determine hostname for use in NATS connection name")
@@ -77,10 +67,10 @@ func run(_ *cobra.Command, _ []string) int {
 	}
 
 	log.WithFields(log.Fields{
-		"max-parallel": ec.MaxParallelExecutions,
+		"max-parallel": engineConfig.MaxParallelExecutions,
 		"kubeconfig":   kubeconfig,
-		"app":          ec.App,
-		"source-name":  ec.SourceName,
+		"app":          engineConfig.App,
+		"source-name":  engineConfig.SourceName,
 	}).Info("Got config")
 
 	var clientSet *kubernetes.Clientset
@@ -110,23 +100,19 @@ func run(_ *cobra.Command, _ []string) int {
 	}
 
 	restConfig.Wrap(func(rt http.RoundTripper) http.RoundTripper { return otelhttp.NewTransport(rt) })
-
 	// Set up rate limiting
 	restConfig.RateLimiter = flowcontrol.NewTokenBucketRateLimiter(
 		float32(viper.GetFloat64("rate-limit-qps")),
 		viper.GetInt("rate-limit-burst"),
 	)
-
 	// Create clientSet
 	clientSet, err = kubernetes.NewForConfig(restConfig)
-
 	if err != nil {
 		sentry.CaptureException(err)
 		log.WithError(err).Error("Could not create kubernetes client")
 
 		return 1
 	}
-
 	//
 	// Discover info
 	//
@@ -135,7 +121,6 @@ func run(_ *cobra.Command, _ []string) int {
 	var k8sURL *url.URL
 
 	k8sURL, err = url.Parse(restConfig.Host)
-
 	if err != nil {
 		sentry.CaptureException(err)
 		log.WithError(err).Errorf("Could not parse kubernetes url: %v", restConfig.Host)
@@ -153,7 +138,7 @@ func run(_ *cobra.Command, _ []string) int {
 		}
 	}
 
-	if ec.ApiKey == "" {
+	if engineConfig.ApiKey == "" {
 		log.Error("No API key provided, exiting")
 		return 1
 	}
@@ -162,25 +147,14 @@ func run(_ *cobra.Command, _ []string) int {
 	log.Debug("Getting Overmind instance details")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	oi, err := sdp.NewOvermindInstance(ctx, ec.App)
+	oi, err := sdp.NewOvermindInstance(ctx, engineConfig.App)
 	if err != nil {
-		sentry.CaptureException(err)
-		log.WithError(err).Error("Could not get Overmind instance details")
-
-		return 1
+		log.WithError(err).Fatal("Could not determine Overmind instance URLs")
 	}
-
-	var tokenClient auth.TokenClient
-
-	// Validate the auth params and create a token client if we are using
-	// auth
-	tokenClient, err = auth.NewAPIKeyClient(oi.ApiUrl.String(), ec.ApiKey)
-
+	tokenClient, heartbeatOptions, err := engineConfig.CreateClients(oi)
 	if err != nil {
 		sentry.CaptureException(err)
-		log.WithError(err).Error("Could not create API key client")
-
-		return 1
+		log.WithError(err).Fatal("could not create auth clients")
 	}
 
 	// Calculate the SHA-1 hash of the config to use as the queue name. This
@@ -191,12 +165,11 @@ func run(_ *cobra.Command, _ []string) int {
 
 	// Work out the cluster name
 	clusterName := viper.GetString("cluster-name")
-
 	if clusterName == "" {
 		clusterName = k8sURL.Host
 	}
 
-	e, err := discovery.NewEngine(ec)
+	e, err := discovery.NewEngine(engineConfig)
 	if err != nil {
 		sentry.CaptureException(err)
 		log.WithError(err).Error("Error initializing Engine")
@@ -216,41 +189,23 @@ func run(_ *cobra.Command, _ []string) int {
 	}
 	e.NATSQueueName = fmt.Sprintf("k8s-source-%v", configHash)
 
-	// Set up heartbeat
-	tokenSource := auth.NewAPIKeyTokenSource(ec.ApiKey, oi.ApiUrl.String())
-	transport := oauth2.Transport{
-		Source: tokenSource,
-		Base:   http.DefaultTransport,
+	heartbeatOptions.HealthCheck = func() error {
+		// Make sure we can list nodes in the cluster
+		_, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{
+			Limit: 1,
+		})
+		if err != nil {
+			return fmt.Errorf("health check (listing nodes) failed: %w", err)
+		}
+
+		// Make sure we're connected to NATS
+		if !e.IsNATSConnected() {
+			return errors.New("health check (NATS) failed: not connected")
+		}
+		return nil
 	}
-	authenticatedClient := http.Client{
-		Transport: otelhttp.NewTransport(&transport),
-	}
 
-	e.HeartbeatOptions = &discovery.HeartbeatOptions{
-		ManagementClient: sdpconnect.NewManagementServiceClient(
-			&authenticatedClient,
-			oi.ApiUrl.String(),
-		),
-		Frequency: time.Second * 30,
-		HealthCheck: func() error {
-			// Make sure we can list nodes in the cluster
-			_, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{
-				Limit: 1,
-			})
-			if err != nil {
-				return fmt.Errorf("health check (listing nodes) failed: %w", err)
-			}
-
-			// Make sure we're connected to NATS
-			if !e.IsNATSConnected() {
-				return errors.New("health check (NATS) failed: not connected")
-			}
-
-			return nil
-		},
-	}
-	e.Managed = sdp.SourceManaged_LOCAL
-
+	e.HeartbeatOptions = heartbeatOptions
 	// Start HTTP server for status
 	healthCheckPort := viper.GetInt("health-check-port")
 	healthCheckPath := "/healthz"
