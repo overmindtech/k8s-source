@@ -176,7 +176,7 @@ func run(_ *cobra.Command, _ []string) int {
 
 		return 1
 	}
-	e.NATSOptions = &auth.NATSOptions{
+	engineConfig.NATSOptions = &auth.NATSOptions{
 		NumRetries:        -1,
 		RetryDelay:        5 * time.Second,
 		Servers:           []string{oi.NatsUrl.String()},
@@ -187,7 +187,7 @@ func run(_ *cobra.Command, _ []string) int {
 		ReconnectJitter:   2 * time.Second,
 		TokenClient:       tokenClient,
 	}
-	e.NATSQueueName = fmt.Sprintf("k8s-source-%v", configHash)
+	engineConfig.NATSQueueName = fmt.Sprintf("k8s-source-%v", configHash)
 
 	heartbeatOptions.HealthCheck = func() error {
 		// Make sure we can list nodes in the cluster
