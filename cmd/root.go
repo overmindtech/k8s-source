@@ -58,14 +58,6 @@ func run(_ *cobra.Command, _ []string) int {
 		log.WithError(err).Fatal("Could not get engine config from viper")
 	}
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		sentry.CaptureException(err)
-		log.WithError(err).Error("Could not determine hostname for use in NATS connection name")
-
-		return 1
-	}
-
 	log.WithFields(log.Fields{
 		"max-parallel": engineConfig.MaxParallelExecutions,
 		"kubeconfig":   kubeconfig,
@@ -176,16 +168,13 @@ func run(_ *cobra.Command, _ []string) int {
 
 		return 1
 	}
+	// all these options are specific to the k8s-source *** MAGIC ***
 	engineConfig.NATSOptions = &auth.NATSOptions{
-		NumRetries:        -1,
-		RetryDelay:        5 * time.Second,
-		Servers:           []string{oi.NatsUrl.String()},
-		ConnectionName:    hostname,
-		ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
-		MaxReconnects:     999,                // We are in a container so wait forever
-		ReconnectWait:     2 * time.Second,
-		ReconnectJitter:   2 * time.Second,
-		TokenClient:       tokenClient,
+		Servers:         []string{oi.NatsUrl.String()},
+		MaxReconnects:   999, // We are in a container so wait forever
+		ReconnectWait:   2 * time.Second,
+		ReconnectJitter: 2 * time.Second,
+		TokenClient:     tokenClient,
 	}
 	engineConfig.NATSQueueName = fmt.Sprintf("k8s-source-%v", configHash)
 
