@@ -18,8 +18,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/k8s-source/adapters"
-	"github.com/overmindtech/sdp-go"
-	"github.com/overmindtech/sdp-go/auth"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
@@ -58,19 +56,8 @@ func run(_ *cobra.Command, _ []string) int {
 		log.WithError(err).Fatal("Could not get engine config from viper")
 	}
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		sentry.CaptureException(err)
-		log.WithError(err).Error("Could not determine hostname for use in NATS connection name")
-
-		return 1
-	}
-
 	log.WithFields(log.Fields{
-		"max-parallel": engineConfig.MaxParallelExecutions,
-		"kubeconfig":   kubeconfig,
-		"app":          engineConfig.App,
-		"source-name":  engineConfig.SourceName,
+		"kubeconfig": kubeconfig,
 	}).Info("Got config")
 
 	var clientSet *kubernetes.Clientset
@@ -128,6 +115,13 @@ func run(_ *cobra.Command, _ []string) int {
 		return 1
 	}
 
+	// Calculate the SHA-1 hash of the config to use as the queue name. This
+	// means that adapters with the same config will be in the same queue.
+	// Note that the config object implements redaction in the String()
+	// method so we don't have to worry about leaking secrets
+	configHash := fmt.Sprintf("%x", sha256.Sum256([]byte(restConfig.String())))
+	engineConfig.NATSQueueName = fmt.Sprintf("k8s-source-%v", configHash)
+
 	// If there is no port then set one
 	if k8sURL.Port() == "" {
 		switch k8sURL.Scheme {
@@ -138,35 +132,29 @@ func run(_ *cobra.Command, _ []string) int {
 		}
 	}
 
-	if engineConfig.ApiKey == "" {
-		log.Error("No API key provided, exiting")
-		return 1
-	}
-
-	// Discover details of the Overmind instance
-	log.Debug("Getting Overmind instance details")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	oi, err := sdp.NewOvermindInstance(ctx, engineConfig.App)
-	if err != nil {
-		log.WithError(err).Fatal("Could not determine Overmind instance URLs")
-	}
-	tokenClient, heartbeatOptions, err := engineConfig.CreateClients(oi)
+	err = engineConfig.CreateClients()
 	if err != nil {
 		sentry.CaptureException(err)
 		log.WithError(err).Fatal("could not create auth clients")
 	}
 
-	// Calculate the SHA-1 hash of the config to use as the queue name. This
-	// means that adapters with the same config will be in the same queue.
-	// Note that the config object implements redaction in the String()
-	// method so we don't have to worry about leaking secrets
-	configHash := fmt.Sprintf("%x", sha256.Sum256([]byte(restConfig.String())))
-
 	// Work out the cluster name
 	clusterName := viper.GetString("cluster-name")
 	if clusterName == "" {
 		clusterName = k8sURL.Host
+	}
+
+	engineConfig.HeartbeatOptions.HealthCheck = func() error {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		// Make sure we can list nodes in the cluster
+		_, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{
+			Limit: 1,
+		})
+		if err != nil {
+			return fmt.Errorf("health check (listing nodes) failed: %w", err)
+		}
+		return nil
 	}
 
 	e, err := discovery.NewEngine(engineConfig)
@@ -176,36 +164,7 @@ func run(_ *cobra.Command, _ []string) int {
 
 		return 1
 	}
-	e.NATSOptions = &auth.NATSOptions{
-		NumRetries:        -1,
-		RetryDelay:        5 * time.Second,
-		Servers:           []string{oi.NatsUrl.String()},
-		ConnectionName:    hostname,
-		ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
-		MaxReconnects:     999,                // We are in a container so wait forever
-		ReconnectWait:     2 * time.Second,
-		ReconnectJitter:   2 * time.Second,
-		TokenClient:       tokenClient,
-	}
-	e.NATSQueueName = fmt.Sprintf("k8s-source-%v", configHash)
 
-	heartbeatOptions.HealthCheck = func() error {
-		// Make sure we can list nodes in the cluster
-		_, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{
-			Limit: 1,
-		})
-		if err != nil {
-			return fmt.Errorf("health check (listing nodes) failed: %w", err)
-		}
-
-		// Make sure we're connected to NATS
-		if !e.IsNATSConnected() {
-			return errors.New("health check (NATS) failed: not connected")
-		}
-		return nil
-	}
-
-	e.HeartbeatOptions = heartbeatOptions
 	// Start HTTP server for status
 	healthCheckPort := viper.GetInt("health-check-port")
 	healthCheckPath := "/healthz"
