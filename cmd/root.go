@@ -144,9 +144,9 @@ func run(_ *cobra.Command, _ []string) int {
 		clusterName = k8sURL.Host
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	engineConfig.HeartbeatOptions.HealthCheck = func() error {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 		// Make sure we can list nodes in the cluster
 		_, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{
 			Limit: 1,
