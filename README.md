@@ -2,7 +2,7 @@
 
 ## Installation
 
-Create an API Key in Overmind under Account settings > API Keys
+Create an API Key with `request:receive` scope in Overmind under Account settings > API Keys
 
 ![account settings](./doc/account_settings.png)
 ![api key](./doc/api_key.png)
