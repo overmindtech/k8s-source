@@ -25,8 +25,6 @@ jobs:
 
       - name: Install Helm
         uses: azure/setup-helm@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}    
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
@@ -34,3 +32,4 @@ jobs:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
           charts_dir: deployments
+          skip_existing: true
