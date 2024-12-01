@@ -66,7 +66,8 @@ The following table lists the configurable parameters and their default values.
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `source.log` | Log level (info, debug, trace) | `info` |
-| `source.apiKey` | Overmind API key | `""` |
+| `source.apiKey.value` | Direct API key value (not recommended for production) | `""` |
+| `source.apiKey.existingSecretName` | Name of existing secret containing API key | `""` |
 | `source.app` | Overmind instance URL | `https://app.overmind.tech` |
 | `source.maxParallel` | Max parallel requests | `20` |
 | `source.rateLimitQPS` | K8s API rate limit QPS | `10` |
@@ -143,7 +144,8 @@ The chart provides two methods for managing the required Overmind API key:
 
 ```sh
 helm install overmind-kube-source overmind/overmind-kube-source \
-  --set source.apiKey.value=YOUR_API_KEY \
+  --set source.apiKey.value=YOUR_API_KEY
+  --set source.clusterName=my-cluster-name
 ```
 
 **Warning:** This method stores the API key in clear text in your values file. Only use for development/testing.
