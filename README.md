@@ -1,5 +1,11 @@
 # Kubernetes Source
 
+## Prerequisites
+
+- Kubernetes 1.16+
+- Helm 3.x
+- An Overmind API key with `request:receive` scope
+
 ## Installation
 
 Create an API Key with `request:receive` scope in Overmind under Account settings > API Keys
@@ -9,24 +15,100 @@ Create an API Key with `request:receive` scope in Overmind under Account setting
 
 Install the source into your Kubernetes cluster using Helm:
 
-```shell
+```sh
 helm repo add overmind https://overmindtech.github.io/k8s-source
-helm install overmind-kube-source overmind/overmind-kube-source --set source.apiKey=ovm_api_YOURKEY_HERE
+helm install overmind-kube-source overmind/overmind-kube-source \
+  --set source.apiKey=YOUR_API_KEY \
+  --set source.clusterName=my-cluster-name
 ```
 
-To upgrade:
+## Uninstalling
+
+```sh
+helm uninstall overmind-kube-source
+```
+
+## Upgrading
 
 ```shell
 helm upgrade overmind-kube-source overmind/overmind-kube-source
 ```
 
-To uninstall:
+## Configuration
 
-```shell
-helm uninstall overmind-kube-source
+The following table lists the configurable parameters and their default values.
+
+### Image Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `image.repository` | Image repository | `ghcr.io/overmindtech/k8s-source` |
+| `image.pullPolicy` | Image pull policy | `Always` |
+| `image.tag` | Image tag (defaults to appVersion) | `""` |
+| `imagePullSecrets` | Image pull secrets | `[]` |
+
+### Deployment Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `replicaCount` | Number of replicas | `1` |
+| `nameOverride` | Override chart name | `""` |
+| `fullnameOverride` | Override full name | `""` |
+| `podAnnotations` | Pod annotations | `{}` |
+| `podSecurityContext` | Pod security context | `{}` |
+| `securityContext` | Container security context | `{}` |
+| `nodeSelector` | Node selector | `{}` |
+| `tolerations` | Pod tolerations | `[]` |
+| `affinity` | Pod affinity rules | `{}` |
+
+### Source Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `source.log` | Log level (info, debug, trace) | `info` |
+| `source.apiKey` | Overmind API key | `""` |
+| `source.app` | Overmind instance URL | `https://app.overmind.tech` |
+| `source.maxParallel` | Max parallel requests | `20` |
+| `source.rateLimitQPS` | K8s API rate limit QPS | `10` |
+| `source.rateLimitBurst` | K8s API rate limit burst | `30` |
+| `source.clusterName` | Cluster name | `""` |
+| `source.honeycombApiKey` | Honeycomb API key | `""` |
+
+### Autoscaling Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `autoscaling.enabled` | Enable autoscaling | `false` |
+| `autoscaling.minReplicas` | Minimum replicas | `1` |
+| `autoscaling.maxReplicas` | Maximum replicas | `3` |
+| `autoscaling.targetCPUUtilizationPercentage` | Target CPU utilization | `80` |
+| `autoscaling.targetMemoryUtilizationPercentage` | Target memory utilization | `nil` |
+
+### Example values.yaml
+
+```yaml
+source:
+  apiKey: "your-api-key"
+  clusterName: "production-cluster"
+  log: "debug"
+  maxParallel: 30
+  rateLimitQPS: 20
+  rateLimitBurst: 40
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
 ```
-
-**NOTE:** Currently the source won't appear in your "Sources" list in Overmind since it's running on your infrastructure, not ours. We'll improve this soon.
 
 ## Support
 
