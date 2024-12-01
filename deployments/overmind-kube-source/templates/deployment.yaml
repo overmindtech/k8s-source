@@ -1,3 +1,4 @@
+{{- template "overmind-kube-source.validateAPIKey" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,8 +37,13 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "overmind-kube-source.fullname" . }}-config
+            {{- if .Values.source.apiKey.existingSecretName }}
+            - secretRef:
+                name: {{ .Values.source.apiKey.existingSecretName }}
+            {{- else }}
             - secretRef:
                 name: {{ include "overmind-kube-source.fullname" . }}-secrets
+            {{- end }}
           env:
             - name: HEALTH_CHECK_PORT
               value: "8080"
