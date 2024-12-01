@@ -70,8 +70,12 @@ affinity: {}
 source:
   # The log level for the source (info, debug, trace etc.)
   log: info
-  # The API key used to connect to Overmind
-  apiKey: ""
+  # API Key configuration
+  apiKey:
+    # Directly provided value (not recommended for production)
+    value: ""
+    # Reference to existing secret
+    existingSecretName: ""
   # The URL of the Overmind instance to connect to
   app: "https://app.overmind.tech"
   # How many requests to run in parallel

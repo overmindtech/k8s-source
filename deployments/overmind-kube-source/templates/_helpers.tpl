@@ -70,3 +70,20 @@ Create the name of the cluster role binidng to use
 {{- define "overmind-kube-source.clusterRoleBindingName" -}}
 {{- default (include "overmind-kube-source.fullname" .) }}
 {{- end }}
+
+{{/*
+Validate API Key configuration
+*/}}
+{{- define "overmind-kube-source.validateAPIKey" -}}
+{{- if and .Values.source.apiKey.existingSecretName (not .Values.source.apiKey.value) }}
+  {{- $secret := lookup "v1" "Secret" .Release.Namespace .Values.source.apiKey.existingSecretName }}
+  {{- if not $secret }}
+    {{- fail (printf "Secret %q not found in namespace %q" .Values.source.apiKey.existingSecretName .Release.Namespace) }}
+  {{- end }}
+  {{- if not (get $secret.data "API_KEY") }}
+    {{- fail (printf "Secret %q does not contain required key 'API_KEY'" .Values.source.apiKey.existingSecretName) }}
+  {{- end }}
+{{- else if not .Values.source.apiKey.value }}
+  {{- fail "Either source.apiKey.value or source.apiKey.existingSecretName must be set" }}
+{{- end }}
+{{- end }}
