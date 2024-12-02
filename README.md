@@ -18,7 +18,7 @@ Install the source into your Kubernetes cluster using Helm:
 ```sh
 helm repo add overmind https://overmindtech.github.io/k8s-source
 helm install overmind-kube-source overmind/overmind-kube-source \
-  --set source.apiKey=YOUR_API_KEY \
+  --set source.apiKey.value=YOUR_API_KEY \
   --set source.clusterName=my-cluster-name
 ```
 
