@@ -15,8 +15,10 @@
                 "/home/vscode/.kube/config",
                 "--log",
                 "debug",
-                "--nats-servers",
-                "nats://localhost:4222"
+                "--nats-service-host",
+                "localhost",
+                "--nats-service-port",
+                "4222",
             ]
         }
     ]
