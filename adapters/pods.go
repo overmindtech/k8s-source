@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"net"
+	"slices"
 	"time"
 
 	"github.com/overmindtech/discovery"
@@ -346,10 +347,16 @@ func newPodAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string
 		HealthExtractor: func(resource *v1.Pod) *sdp.Health {
 			switch resource.Status.Phase {
 			case v1.PodPending:
+				//  a special case were the pod has never actually started
+				if hasWaitingContainerErrors(resource.Status.ContainerStatuses) {
+					return sdp.Health_HEALTH_ERROR.Enum()
+				}
 				return sdp.Health_HEALTH_PENDING.Enum()
-			case v1.PodRunning:
-				return sdp.Health_HEALTH_OK.Enum()
-			case v1.PodSucceeded:
+			case v1.PodRunning, v1.PodSucceeded:
+				// a special case were the pod has started but it was modified
+				if hasWaitingContainerErrors(resource.Status.ContainerStatuses) {
+					return sdp.Health_HEALTH_ERROR.Enum()
+				}
 				return sdp.Health_HEALTH_OK.Enum()
 			case v1.PodFailed:
 				return sdp.Health_HEALTH_ERROR.Enum()
@@ -361,6 +368,21 @@ func newPodAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string
 		},
 		AdapterMetadata: podAdapterMetadata,
 	}
+}
+
+// a pod's status phase can be ok, but the container may not be ok
+// this is a check for the container statuses
+// hasWaitingContainerErrors returns true if any of the container statuses are in a waiting state with an error reason
+func hasWaitingContainerErrors(containerStatuses []v1.ContainerStatus) bool {
+	for _, c := range containerStatuses {
+		if c.State.Waiting != nil {
+			// list of image errors from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/images/types.go#L27-L42
+			if slices.Contains([]string{"ImagePullBackOff", "ImageInspectError", "ErrImagePull", "ErrImageNeverPull", "InvalidImageName"}, c.State.Waiting.Reason) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 var podAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{

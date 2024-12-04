@@ -1,10 +1,13 @@
 package adapters
 
 import (
+	"context"
+	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/overmindtech/sdp-go"
+	v1 "k8s.io/api/core/v1"
 )
 
 var PodYAML = `
@@ -85,6 +88,41 @@ spec:
     envFrom:
     - secretRef:
         name: pod-test-secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-bad-pod
+spec:
+  serviceAccountName: pod-test-serviceaccount
+  volumes:
+  - name: pod-test-pvc-volume
+    persistentVolumeClaim:
+      claimName: pod-test-pvc
+  - name: database-config
+    configMap:
+      name: pod-test-configmap
+  - name: projected-config
+    projected:
+      sources:
+        - configMap:
+            name: pod-test-configmap-cert
+            items:
+              - key: ca.pem
+                path: ca.pem
+  containers:
+  - name: pod-test-container
+    image: nginx:this-tag-does-not-exist
+    volumeMounts:
+    - name: pod-test-pvc-volume
+      mountPath: /mnt/data
+    - name: database-config
+      mountPath: /etc/database
+    - name: projected-config
+      mountPath: /etc/projected
+    envFrom:
+    - secretRef:
+        name: pod-test-secret
 `
 
 func TestPodAdapter(t *testing.T) {
@@ -144,4 +182,113 @@ func TestPodAdapter(t *testing.T) {
 	}
 
 	st.Execute(t)
+	// the pods are still running let check their health
+
+	// get the bad pod
+	item, err := adapter.Get(context.Background(), sd.String(), "pod-bad-pod", true)
+	if err != nil {
+		t.Fatal(fmt.Errorf("failed to get pod: %w", err))
+	}
+	if item.GetHealth() != sdp.Health_HEALTH_ERROR {
+		t.Errorf("expected status to be unhealthy, got %s", item.GetHealth())
+	}
+	// get the healthy pod
+	item, err = adapter.Get(context.Background(), sd.String(), "pod-test-pod", true)
+	if err != nil {
+		t.Fatal(fmt.Errorf("failed to get pod: %w", err))
+	}
+	if item.GetHealth() != sdp.Health_HEALTH_OK {
+		t.Errorf("expected status to be healthy, got %s", item.GetHealth())
+	}
+}
+
+func TestHasWaitingContainerErrors(t *testing.T) {
+	tests := []struct {
+		name              string
+		containerStatuses []v1.ContainerStatus
+		expectedResult    bool
+	}{
+		{
+			name: "No waiting containers",
+			containerStatuses: []v1.ContainerStatus{
+				{
+					State: v1.ContainerState{
+						Running: &v1.ContainerStateRunning{},
+					},
+				},
+			},
+			expectedResult: false,
+		},
+		{
+			name: "Waiting container with non-error reason",
+			containerStatuses: []v1.ContainerStatus{
+				{
+					State: v1.ContainerState{
+						Waiting: &v1.ContainerStateWaiting{
+							Reason: "ContainerCreating",
+						},
+					},
+				},
+			},
+			expectedResult: false,
+		},
+		{
+			name: "Waiting container with error reason",
+			containerStatuses: []v1.ContainerStatus{
+				{
+					State: v1.ContainerState{
+						Waiting: &v1.ContainerStateWaiting{
+							Reason: "ImagePullBackOff",
+						},
+					},
+				},
+			},
+			expectedResult: true,
+		},
+		{
+			name: "Multiple containers with one error",
+			containerStatuses: []v1.ContainerStatus{
+				{
+					State: v1.ContainerState{
+						Running: &v1.ContainerStateRunning{},
+					},
+				},
+				{
+					State: v1.ContainerState{
+						Waiting: &v1.ContainerStateWaiting{
+							Reason: "ImagePullBackOff",
+						},
+					},
+				},
+			},
+			expectedResult: true,
+		},
+		{
+			name: "Multiple containers with no errors",
+			containerStatuses: []v1.ContainerStatus{
+				{
+					State: v1.ContainerState{
+						Running: &v1.ContainerStateRunning{},
+					},
+				},
+				{
+					State: v1.ContainerState{
+						Waiting: &v1.ContainerStateWaiting{
+							Reason: "ContainerCreating",
+						},
+					},
+				},
+			},
+			expectedResult: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := hasWaitingContainerErrors(tt.containerStatuses)
+			if result != tt.expectedResult {
+				t.Errorf("expected %v, got %v", tt.expectedResult, result)
+			}
+		})
+	}
 }
