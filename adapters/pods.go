@@ -377,7 +377,7 @@ func hasWaitingContainerErrors(containerStatuses []v1.ContainerStatus) bool {
 	for _, c := range containerStatuses {
 		if c.State.Waiting != nil {
 			// list of image errors from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/images/types.go#L27-L42
-			if slices.Contains([]string{"ImagePullBackOff", "ImageInspectError", "ErrImagePull", "ErrImageNeverPull", "InvalidImageName"}, c.State.Waiting.Reason) {
+			if slices.Contains([]string{"CrashLoopBackOff", "ImagePullBackOff", "ImageInspectError", "ErrImagePull", "ErrImageNeverPull", "InvalidImageName"}, c.State.Waiting.Reason) {
 				return true
 			}
 		}
