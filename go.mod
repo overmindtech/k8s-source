@@ -5,7 +5,7 @@ go 1.22.5
 // Direct dependencies of my codebase
 require (
 	github.com/MrAlias/otel-schema-utils v0.2.1-alpha
-	github.com/getsentry/sentry-go v0.29.1
+	github.com/getsentry/sentry-go v0.30.0
 	github.com/google/uuid v1.6.0
 	github.com/overmindtech/discovery v0.32.0
 	github.com/overmindtech/sdp-go v0.102.0
