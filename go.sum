@@ -134,8 +134,8 @@ github.com/onsi/ginkgo/v2 v2.19.0 h1:9Cnnf7UHo57Hy3k6/m5k3dRfGTMXGvxhHFvkDTCTpvA
 github.com/onsi/ginkgo/v2 v2.19.0/go.mod h1:rlwLi9PilAFJ8jCg9UE1QP6VBpd6/xj3SRC0d6TU0To=
 github.com/onsi/gomega v1.19.0 h1:4ieX6qQjPP/BfC3mpsAtIGGlxTWPeA3Inl/7DtXw1tw=
 github.com/onsi/gomega v1.19.0/go.mod h1:LY+I3pBVzYsTBU1AnDwOSxaYi9WoWiqgwooUqq9yPro=
-github.com/overmindtech/discovery v0.32.0 h1:TwzG6JvW5vJlLK6sHaSGpI9kKFNGMyG+ZfWdcHU/jRk=
-github.com/overmindtech/discovery v0.32.0/go.mod h1:1GjlC5SWpK2bjsCUaKL1LT6LroOwgMxCEtEyT5mgG0k=
+github.com/overmindtech/discovery v0.32.1 h1:JTrsTvpOHiMa/UJUBsYFkGIQ+TGVbO7dtu8D92AJYRM=
+github.com/overmindtech/discovery v0.32.1/go.mod h1:/mtLqJh6RKdh+V7RzFGhTOSTZTxfpmciBigvyRUSGOQ=
 github.com/overmindtech/sdp-go v0.102.0 h1:fIJo893+nhr5Wn9HmOM6afXUpUTYuQOJMC6O7Vs9YFY=
 github.com/overmindtech/sdp-go v0.102.0/go.mod h1:byGP2BXstnX3KeFLNyEbSLE75hv01EZhyU6QiKuiYb8=
 github.com/overmindtech/sdpcache v1.6.4 h1:MJoYBDqDE3s8FrRzZ0RPgFiH39HWI/Mv2ImH1NdLT8k=
@@ -208,8 +208,8 @@ go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.32.0 h1:IJFEoHiytixx8cMiVAO
 go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.32.0/go.mod h1:3rHrKNtLIoS0oZwkY2vxi+oJcwFRWdtUyRII+so45p8=
 go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.32.0 h1:cMyu9O88joYEaI47CnQkxO1XZdpoTF9fEnW2duIddhw=
 go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.32.0/go.mod h1:6Am3rn7P9TVVeXYG+wtcGE7IE1tsQ+bP3AuWcKt/gOI=
-go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.31.0 h1:UGZ1QwZWY67Z6BmckTU+9Rxn04m2bD3gD6Mk0OIOCPk=
-go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.31.0/go.mod h1:fcwWuDuaObkkChiDlhEpSq9+X1C0omv+s5mBtToAQ64=
+go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.32.0 h1:cC2yDI3IQd0Udsux7Qmq8ToKAx1XCilTQECZ0KDZyTw=
+go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.32.0/go.mod h1:2PD5Ex6z8CFzDbTdOlwyNIUywRr1DN0ospafJM1wJ+s=
 go.opentelemetry.io/otel/log v0.6.0 h1:nH66tr+dmEgW5y+F9LanGJUBYPrRgP4g2EkmPE3LeK8=
 go.opentelemetry.io/otel/log v0.6.0/go.mod h1:KdySypjQHhP069JX0z/t26VHwa8vSwzgaKmXtIB3fJM=
 go.opentelemetry.io/otel/metric v1.32.0 h1:xV2umtmNcThh2/a/aCP+h64Xx5wsj8qqnkYZktzNa0M=
