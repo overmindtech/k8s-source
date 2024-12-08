@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func newResourceQuotaAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newResourceQuotaAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.ResourceQuota, *v1.ResourceQuotaList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

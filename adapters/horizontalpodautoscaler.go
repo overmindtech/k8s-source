@@ -29,7 +29,7 @@ func horizontalPodAutoscalerExtractor(resource *v2.HorizontalPodAutoscaler, scop
 	return queries, nil
 }
 
-func newHorizontalPodAutoscalerAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newHorizontalPodAutoscalerAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

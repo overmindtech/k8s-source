@@ -66,7 +66,7 @@ func NetworkPolicyExtractor(resource *v1.NetworkPolicy, scope string) ([]*sdp.Li
 	return queries, nil
 }
 
-func newNetworkPolicyAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newNetworkPolicyAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.NetworkPolicy, *v1.NetworkPolicyList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

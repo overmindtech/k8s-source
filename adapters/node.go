@@ -75,7 +75,7 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 	return queries, nil
 }
 
-func newNodeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newNodeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Node, *v1.NodeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

@@ -324,7 +324,7 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 	return queries, nil
 }
 
-func newPodAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newPodAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Pod, *v1.PodList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,

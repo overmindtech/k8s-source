@@ -73,7 +73,7 @@ var clusterRoleBindingAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	},
 })
 
-func newClusterRoleBindingAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newClusterRoleBindingAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
