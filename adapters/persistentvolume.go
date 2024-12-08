@@ -91,7 +91,7 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 	return queries, nil
 }
 
-func newPersistentVolumeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newPersistentVolumeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.PersistentVolume, *v1.PersistentVolumeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

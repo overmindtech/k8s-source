@@ -12,7 +12,7 @@ import (
 
 var replicaSetProgressedRegex = regexp.MustCompile(`ReplicaSet "([^"]+)" has successfully progressed`)
 
-func newDeploymentAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newDeploymentAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Deployment, *v1.DeploymentList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,

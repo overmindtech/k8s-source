@@ -8,7 +8,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func newCronJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newCronJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.CronJob, *v1.CronJobList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,

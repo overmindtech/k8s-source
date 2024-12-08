@@ -72,7 +72,7 @@ func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Linked
 	return queries, nil
 }
 
-func newRoleBindingAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newRoleBindingAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.RoleBinding, *v1.RoleBindingList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

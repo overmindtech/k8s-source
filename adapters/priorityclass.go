@@ -8,7 +8,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func newPriorityClassAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newPriorityClassAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.PriorityClass, *v1.PriorityClassList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

@@ -66,7 +66,7 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 	return queries, nil
 }
 
-func newStatefulSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newStatefulSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.StatefulSet, *v1.StatefulSetList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,

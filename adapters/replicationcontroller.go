@@ -33,7 +33,7 @@ func replicationControllerExtractor(resource *v1.ReplicationController, scope st
 	return queries, nil
 }
 
-func newReplicationControllerAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newReplicationControllerAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.ReplicationController, *v1.ReplicationControllerList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,

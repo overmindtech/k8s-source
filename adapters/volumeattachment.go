@@ -46,7 +46,7 @@ func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*
 	return queries, nil
 }
 
-func newVolumeAttachmentAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newVolumeAttachmentAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.VolumeAttachment, *v1.VolumeAttachmentList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

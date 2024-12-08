@@ -8,7 +8,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func newStorageClassAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newStorageClassAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.StorageClass, *v1.StorageClassList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

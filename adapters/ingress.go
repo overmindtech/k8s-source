@@ -127,7 +127,7 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 	return queries, nil
 }
 
-func newIngressAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newIngressAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Ingress, *v1.IngressList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

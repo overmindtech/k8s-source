@@ -31,7 +31,7 @@ func replicaSetExtractor(resource *v1.ReplicaSet, scope string) ([]*sdp.LinkedIt
 	return queries, nil
 }
 
-func newReplicaSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newReplicaSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.ReplicaSet, *v1.ReplicaSetList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,

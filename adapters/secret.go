@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func newSecretAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newSecretAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Secret, *v1.SecretList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

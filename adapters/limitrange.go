@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func newLimitRangeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newLimitRangeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.LimitRange, *v1.LimitRangeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

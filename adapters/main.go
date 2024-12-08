@@ -5,7 +5,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type AdapterLoader func(clientSet *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter
+type AdapterLoader func(clientSet *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter
 
 var adapterLoaders []AdapterLoader
 
