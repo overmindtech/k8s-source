@@ -49,7 +49,7 @@ func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.
 	return queries, nil
 }
 
-func newServiceAccountAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newServiceAccountAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.ServiceAccount, *v1.ServiceAccountList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

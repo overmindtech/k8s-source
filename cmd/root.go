@@ -325,7 +325,10 @@ func run(_ *cobra.Command, _ []string) int {
 		adapterList := adapters.LoadAllAdapters(clientSet, clusterName, namespaces)
 
 		// Add adapters to the engine
-		e.AddAdapters(adapterList...)
+		err = e.AddAdapters(adapterList...)
+		if err != nil {
+			return err
+		}
 
 		// Start the engine
 		err = e.Start()

@@ -8,7 +8,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func newRoleAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newRoleAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Role, *v1.RoleList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

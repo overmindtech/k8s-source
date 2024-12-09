@@ -564,7 +564,7 @@ func lirMatches(test QueryTest, req *sdp.LinkedItemQuery) bool {
 
 type AdapterTests struct {
 	// The adapter under test
-	Adapter discovery.Adapter
+	Adapter discovery.ListableAdapter
 
 	// The get query to test
 	GetQuery      string

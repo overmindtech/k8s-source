@@ -128,7 +128,7 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 	return queries, nil
 }
 
-func newServiceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newServiceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Service, *v1.ServiceList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

@@ -80,7 +80,7 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 	return queries, nil
 }
 
-func newEndpointsAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newEndpointsAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Endpoints, *v1.EndpointsList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

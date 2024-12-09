@@ -98,7 +98,7 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 	return queries, nil
 }
 
-func newEndpointSliceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newEndpointSliceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.EndpointSlice, *v1.EndpointSliceList]{
 		ClusterName:   cluster,
 		Namespaces:    namespaces,

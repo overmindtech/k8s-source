@@ -30,7 +30,7 @@ func podDisruptionBudgetExtractor(resource *v1.PodDisruptionBudget, scope string
 	return queries, nil
 }
 
-func newPodDisruptionBudgetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newPodDisruptionBudgetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,

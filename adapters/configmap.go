@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func newConfigMapAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newConfigMapAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.ConfigMap, *v1.ConfigMapList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,

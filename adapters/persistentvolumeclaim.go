@@ -37,7 +37,7 @@ func PersistentVolumeClaimExtractor(resource *v1.PersistentVolumeClaim, scope st
 	return links, nil
 }
 
-func newPersistentVolumeClaimAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.Adapter {
+func newPersistentVolumeClaimAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
